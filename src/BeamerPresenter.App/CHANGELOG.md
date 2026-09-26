@@ -1,4 +1,24 @@
 Beamerpresenter.App Changelog
+<a name="0.14.0"></a>
+## [0.14.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v0.14.0) (2026-09-26)
+
+### Features
+
+* add German English and Spanish localization ([60636c2](https://www.github.com/sotzny/LAN-Presenter/commit/60636c201eede046dc0e1ca995fa3d4234a2026e))
+* SonarQube-Analyse und README für CI aktualisiert ([e18d6f7](https://www.github.com/sotzny/LAN-Presenter/commit/e18d6f733d76fe646153933df8390ebc8dfb0dbd))
+
+### Bug Fixes
+
+* avoid introducing new Sonar findings ([6f57284](https://www.github.com/sotzny/LAN-Presenter/commit/6f5728495d3d778144aa061dd4912700a2a7e74c))
+* clear final Sonar maintainability findings ([7e52cac](https://www.github.com/sotzny/LAN-Presenter/commit/7e52cac874440c50a58c45d2d72b18f4f80961de))
+* clear remaining Sonar maintainability findings ([68f6600](https://www.github.com/sotzny/LAN-Presenter/commit/68f6600fb1ebeb0d8c2fdfa2c23f6570ffcd596c))
+* clear Sonar findings and raise coverage ([5b18309](https://www.github.com/sotzny/LAN-Presenter/commit/5b18309d910cfca5509315833408de372c4f0acf))
+* clear Sonar maintainability findings ([8ea14b1](https://www.github.com/sotzny/LAN-Presenter/commit/8ea14b17d3af98f3981933706f6a9baf30b3b988))
+* correct Sonar coverage import and cancellation ([601dd0b](https://www.github.com/sotzny/LAN-Presenter/commit/601dd0b71ee1a126ba45944200d83171ce453995))
+* publish browser coverage report for SonarQube ([238fc4f](https://www.github.com/sotzny/LAN-Presenter/commit/238fc4f9c51c125bdacae4057965faf1de946032))
+* resolve browser LCOV paths in SonarQube ([8ab9951](https://www.github.com/sotzny/LAN-Presenter/commit/8ab9951a9ae653c024a3b1d550cbc20837a789d7))
+* Umbenannte Release-Artefakte und App-Pfade vereinheitlicht ([f07c003](https://www.github.com/sotzny/LAN-Presenter/commit/f07c0037f056e81130409f7c8301932f3988a381))
+
 <a name="0.13.1"></a>
 ## [0.13.1](https://www.github.com/DannySotzny/LAN-Presenter/releases/tag/v0.13.1) (2026-09-23)
 
