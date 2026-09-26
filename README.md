@@ -22,7 +22,7 @@ Die Wiedergabe lässt sich jederzeit pausieren, ausblenden, fortsetzen oder been
 - **News-Einblendungen:** Meldungen als Ticker, 50:50-Split-Screen oder Vollbild erstellen, planen, priorisieren und anzeigen.
 - **Beamer-Steuerung:** Chrome startet im Kioskmodus auf dem gewählten Monitor. Aktivieren, Pause, Ausblenden und Stop lassen sich zentral steuern.
 - **Übersicht und Wiederherstellung:** Dashboard mit Live-Status, Medienanalyse und Scannerzustand; automatische Erholung bei Browser- oder Wiedergabeproblemen.
-- **Lokale Datenhaltung:** Einstellungen, Bibliothek, Queue, Verlauf, Logs und Backups liegen im Benutzerprofil unter `%LOCALAPPDATA%\HouseOfLAN\Presenter`.
+- **Lokale Datenhaltung:** Einstellungen, Bibliothek, Queue, Verlauf, Logs und Backups liegen im Benutzerprofil unter `%LOCALAPPDATA%\BeamerPresenter\Presenter`.
 
 Unterstützte lokale Videoformate: `.mp4`, `.m4v`, `.mkv`, `.webm`, `.avi` und `.mov`.
 
@@ -37,8 +37,8 @@ Unterstützte lokale Videoformate: `.mp4`, `.m4v`, `.mkv`, `.webm`, `.avi` und `
 
 Die stabilen Releases veröffentlichen einen Installer und eine portable Ausgabe. Öffne [Releases](https://github.com/sotzny/LAN-Presenter/releases), lade eine der Dateien herunter und starte die Anwendung:
 
-- `HouseOfLAN-Presenter-<Version>-Setup.exe` – Installation ohne Administratorrechte
-- `HouseOfLAN-Presenter-<Version>-win-x64-portable.zip` – portable Ausgabe zum Entpacken und Starten
+- `BeamerPresenter-<Version>-Setup.exe` – Installation ohne Administratorrechte
+- `BeamerPresenter-<Version>-win-x64-portable.zip` – portable Ausgabe zum Entpacken und Starten
 
 Der Release-Workflow veröffentlicht stabile Versionen ab `v1.0.0`. Entwicklungs-Tags der Reihe `v0.x` erzeugen keinen GitHub-Release.
 

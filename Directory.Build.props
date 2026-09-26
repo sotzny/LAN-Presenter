@@ -7,7 +7,6 @@
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-    <RepositoryUrl>https://github.com/HouseOfLAN/BeamerPresenterForLanParties</RepositoryUrl>
-    <Copyright>Copyright (c) 2026 House of LAN</Copyright>
+    <Copyright>Copyright (c) 2026 Danny Sotzny</Copyright>
   </PropertyGroup>
 </Project>

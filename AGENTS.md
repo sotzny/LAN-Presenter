@@ -5,7 +5,7 @@
 - `src/BeamerPresenter.Domain` darf keine Projektabhängigkeiten besitzen.
 - `Application` referenziert nur `Domain`; UI und Infrastruktur bleiben außerhalb der Businesslogik.
 - `App` ist der einzige Composition Root. Die WinForms-Anwendung und Kestrel laufen bewusst in einem Prozess.
-- Nutzerdaten gehören unter `%LOCALAPPDATA%\HouseOfLAN\Presenter`, niemals in das Installationsverzeichnis oder Repository.
+- Nutzerdaten gehören unter `%LOCALAPPDATA%\BeamerPresenter\Presenter`, niemals in das Installationsverzeichnis oder Repository.
 
 ## Sicherheit
 
@@ -26,7 +26,7 @@
 - `PlaybackOrchestrator` ist die einzige Stelle, die Presenter-Zustände mit Chrome, SignalR und Power-Requests koordiniert. WinForms- und spätere Web-Befehle rufen nur seine asynchronen Methoden auf; bei Hidden/Stopped müssen Power-Requests freigegeben werden.
 - `PowerCreateRequest`, `PowerSetRequest` und `PowerClearRequest` werden zur Laufzeit aus `kernel32.dll` importiert. Die native Importbibliothek `PowrProf.lib` darf nicht mit einer Laufzeit-DLL verwechselt werden; der echte Windows-Smoke-Test muss den Import und das Freigeben der Requests abdecken.
 - Autostart wird unter `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` registriert. Der Wert enthält immer den vollständig quotierten Executable-Pfad plus `--autostart`; dieser Startmodus öffnet nicht automatisch das Statusfenster.
-- Serilog schreibt strukturierte Tageslogs nach `%LOCALAPPDATA%\HouseOfLAN\Presenter\Logs` und bewahrt höchstens 14 Dateien auf. Passwörter, Cookies, Tokens und Request-Bodies dürfen nie geloggt werden.
+- Serilog schreibt strukturierte Tageslogs nach `%LOCALAPPDATA%\BeamerPresenter\Presenter\Logs` und bewahrt höchstens 14 Dateien auf. Passwörter, Cookies, Tokens und Request-Bodies dürfen nie geloggt werden.
 - SQLite kann `DateTimeOffset` nicht serverseitig in `ORDER BY` übersetzen. Die kleine Videoliste wird deshalb zuerst geladen und anschließend im Speicher nach `AddedAtUtc` sortiert; Änderungen daran müssen den authentifizierten Web-Routen-Test bestehen.
 - Datenbankschemata werden ausschließlich über EF-Core-Migrationen weiterentwickelt. `PresenterDatabase` baselinet einmalig ältere `EnsureCreated`-Datenbanken auf `InitialSchema`; diese Kompatibilität muss durch einen echten SQLite-Test erhalten bleiben.
 - Vor ausstehenden Schema-Migrationen wird die SQLite-Datenbank per SQLite-Backup-API nach `Backup/` kopiert; maximal sieben Migrationsbackups bleiben erhalten.
@@ -76,4 +76,4 @@
 - `versionize` verwaltet Changelog, Release-Commit und Tag. Changelog-Dateien nicht manuell editieren.
 - `v0.x`-Tags markieren nur Entwicklungsstände und dürfen keinen GitHub-Release erzeugen. Der Release-Workflow akzeptiert erst stabile Tags ab `v1.0.0`.
 - Vor dem ersten stabilen `v1.0.0`-Tag AC-TOP-004 manuell am echten Beamer zusammen mit der vorhandenen konkurrierenden Präsentationssoftware abnehmen; diese umgebungsabhängige Prüfung niemals allein aus Unit-, Browser- oder Mock-Tests als bestanden ableiten.
-- Bei Änderungen an Release-Dateien die erwarteten Namen `HouseOfLAN-Presenter-<Version>-Setup.exe` und `HouseOfLAN-Presenter-<Version>-win-x64-portable.zip` erhalten.
+- Bei Änderungen an Release-Dateien die erwarteten Namen `BeamerPresenter-<Version>-Setup.exe` und `BeamerPresenter-<Version>-win-x64-portable.zip` erhalten.

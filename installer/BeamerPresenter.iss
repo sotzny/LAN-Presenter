@@ -1,5 +1,5 @@
 #define MyAppName "Beamer Presenter for LAN-Parties"
-#define MyAppPublisher "House of LAN"
+#define MyAppPublisher "Danny Sotzny"
 #define MyAppExeName "BeamerPresenter.App.exe"
 #ifndef MyAppVersion
   #define MyAppVersion "0.1.0"
@@ -21,7 +21,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir={#ArtifactDir}
-OutputBaseFilename=HouseOfLAN-Presenter-{#MyAppVersion}-Setup
+OutputBaseFilename=BeamerPresenter-{#MyAppVersion}-Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

@@ -12,7 +12,7 @@ internal sealed record PresenterPaths(
     {
         var rootDirectory = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "HouseOfLAN",
+            "BeamerPresenter",
             "Presenter");
         return Create(rootDirectory);
     }
