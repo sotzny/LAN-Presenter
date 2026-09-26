@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
 
 namespace BeamerPresenter.Web;
@@ -107,26 +108,31 @@ public static class WebApplicationExtensions
     }
 
     private static Task<IResult> ActivatePresenterAsync(
+        HttpContext context,
         IPresenterControlService presenter,
         CancellationToken cancellationToken) =>
-        ExecutePresenterCommandAsync(presenter.ActivateAsync, "active", cancellationToken);
+        ExecutePresenterCommandAsync(context, presenter.ActivateAsync, "active", cancellationToken);
 
     private static Task<IResult> PausePresenterAsync(
+        HttpContext context,
         IPresenterControlService presenter,
         CancellationToken cancellationToken) =>
-        ExecutePresenterCommandAsync(presenter.PauseAsync, "paused", cancellationToken);
+        ExecutePresenterCommandAsync(context, presenter.PauseAsync, "paused", cancellationToken);
 
     private static Task<IResult> HidePresenterAsync(
+        HttpContext context,
         IPresenterControlService presenter,
         CancellationToken cancellationToken) =>
-        ExecutePresenterCommandAsync(presenter.HideAsync, "hidden", cancellationToken);
+        ExecutePresenterCommandAsync(context, presenter.HideAsync, "hidden", cancellationToken);
 
     private static Task<IResult> StopPresenterAsync(
+        HttpContext context,
         IPresenterControlService presenter,
         CancellationToken cancellationToken) =>
-        ExecutePresenterCommandAsync(presenter.StopAsync, "stopped", cancellationToken);
+        ExecutePresenterCommandAsync(context, presenter.StopAsync, "stopped", cancellationToken);
 
     private static async Task<IResult> ExecutePresenterCommandAsync(
+        HttpContext context,
         Func<CancellationToken, Task> command,
         string result,
         CancellationToken cancellationToken)
@@ -138,7 +144,7 @@ public static class WebApplicationExtensions
         }
         catch (Exception exception) when (exception is InvalidOperationException or ArgumentException or IOException)
         {
-            return Results.Redirect($"{DashboardPath}?presenter=error&message={Uri.EscapeDataString(exception.Message)}");
+            return RedirectFailure(context, exception, DashboardPath, "presenter", "Der Presenter-Befehl ist fehlgeschlagen.");
         }
     }
 
@@ -153,9 +159,9 @@ public static class WebApplicationExtensions
     private static async Task<IResult> LogoutAsync(HttpContext context) { await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme); return Results.Redirect("/login"); }
     private static async Task<IResult> UploadAsync(HttpContext context, IMediaLibraryService mediaLibraryService, CancellationToken cancellationToken)
     {
-        if (!context.Request.HasFormContentType) return Results.BadRequest(new { error = "Bitte eine multipart/form-data-Anfrage senden." });
+        if (!context.Request.HasFormContentType) return Results.BadRequest(new { error = WebText.Get("Bitte eine multipart/form-data-Anfrage senden.") });
         var form = await context.Request.ReadFormAsync(cancellationToken); var video = form.Files.GetFile("video");
-        if (video is null || video.Length == 0) return Results.BadRequest(new { error = "Es wurde keine Videodatei ausgewählt." });
+        if (video is null || video.Length == 0) return Results.BadRequest(new { error = WebText.Get("Es wurde keine Videodatei ausgewählt.") });
         var returnUrl = form["returnUrl"].ToString();
         try
         {
@@ -167,9 +173,11 @@ public static class WebApplicationExtensions
         }
         catch (InvalidOperationException exception)
         {
+            LogFailure(context, exception);
+            var error = WebText.ErrorKey(exception.Message) ?? "failed";
             return IsLocalUrl(returnUrl)
-                ? Results.Redirect($"{returnUrl}?upload=error&message={Uri.EscapeDataString(exception.Message)}")
-                : Results.BadRequest(new { error = exception.Message });
+                ? Results.Redirect($"{returnUrl}?upload=error&message={Uri.EscapeDataString(error)}")
+                : Results.BadRequest(new { error = WebText.ForError(exception.Message, "Das Video konnte nicht hochgeladen werden.") });
         }
     }
 
@@ -182,10 +190,10 @@ public static class WebApplicationExtensions
         if (!int.TryParse(form["id"], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var id) ||
             !bool.TryParse(form["enabled"], out var enabled))
         {
-            return Results.Redirect($"{MediaPath}?media=error&message=Ungültige%20Videoaktion");
+            return Results.Redirect($"{MediaPath}?media=error&message={Uri.EscapeDataString("Ungültige Videoaktion")}");
         }
 
-        return await ExecuteMediaCommandAsync(
+        return await ExecuteMediaCommandAsync(context,
             () => mediaLibrary.SetEnabledAsync(id, enabled, cancellationToken),
             enabled ? "enabled" : "disabled");
     }
@@ -198,15 +206,15 @@ public static class WebApplicationExtensions
         var form = await context.Request.ReadFormAsync(cancellationToken);
         if (!int.TryParse(form["id"], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var id))
         {
-            return Results.Redirect($"{MediaPath}?media=error&message=Ungültiges%20Video");
+            return Results.Redirect($"{MediaPath}?media=error&message={Uri.EscapeDataString("Ungültiges Video")}");
         }
 
-        return await ExecuteMediaCommandAsync(
+        return await ExecuteMediaCommandAsync(context,
             () => mediaLibrary.ReanalyzeAsync(id, cancellationToken),
             "reanalyzing");
     }
 
-    private static async Task<IResult> ExecuteMediaCommandAsync(Func<Task> command, string result)
+    private static async Task<IResult> ExecuteMediaCommandAsync(HttpContext context, Func<Task> command, string result)
     {
         try
         {
@@ -215,7 +223,7 @@ public static class WebApplicationExtensions
         }
         catch (InvalidOperationException exception)
         {
-            return Results.Redirect($"{MediaPath}?media=error&message={Uri.EscapeDataString(exception.Message)}");
+            return RedirectFailure(context, exception, MediaPath, "media", "Die Videoaktion ist fehlgeschlagen.");
         }
     }
 
@@ -287,7 +295,7 @@ public static class WebApplicationExtensions
         var form = await context.Request.ReadFormAsync(context.RequestAborted);
         if (!long.TryParse(form["id"], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var id))
         {
-            return Results.Redirect($"{PlaybackPath}?queue=error&message=Ungültiger%20Queue-Eintrag");
+            return Results.Redirect($"{PlaybackPath}?queue=error&message={Uri.EscapeDataString("Ungültiger Queue-Eintrag")}");
         }
 
         try
@@ -297,7 +305,7 @@ public static class WebApplicationExtensions
         }
         catch (Exception exception) when (exception is InvalidOperationException or ArgumentOutOfRangeException)
         {
-            return Results.Redirect($"{PlaybackPath}?queue=error&message={Uri.EscapeDataString(exception.Message)}");
+            return RedirectFailure(context, exception, PlaybackPath, "queue", "Die Queue-Aktion ist fehlgeschlagen.");
         }
     }
 
@@ -324,7 +332,7 @@ public static class WebApplicationExtensions
     {
         if (!YouTubeUrlParser.TryParse(url, out var reference) || reference is null)
         {
-            return Results.BadRequest(new { error = "Die angegebene URL ist kein unterstützter YouTube-Link." });
+            return Results.BadRequest(new { error = WebText.Get("Die angegebene URL ist kein unterstützter YouTube-Link.") });
         }
 
         return Results.Ok(new
@@ -348,7 +356,7 @@ public static class WebApplicationExtensions
         var form = await context.Request.ReadFormAsync(context.RequestAborted);
         if (!int.TryParse(form["mediaId"], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var mediaId))
         {
-            return Results.Redirect($"{PlaybackPath}?queue=error&message=Ungültiges%20Video");
+            return Results.Redirect($"{PlaybackPath}?queue=error&message={Uri.EscapeDataString("Ungültiges Video")}");
         }
 
         try
@@ -360,7 +368,7 @@ public static class WebApplicationExtensions
         }
         catch (Exception exception) when (exception is InvalidOperationException or ArgumentException or FormatException)
         {
-            return Results.Redirect($"{PlaybackPath}?queue=error&message={Uri.EscapeDataString(exception.Message)}");
+            return RedirectFailure(context, exception, PlaybackPath, "queue", "Die Queue-Aktion ist fehlgeschlagen.");
         }
     }
 
@@ -388,7 +396,7 @@ public static class WebApplicationExtensions
         }
         catch (Exception exception) when (exception is InvalidOperationException or ArgumentException or FormatException)
         {
-            return Results.Redirect($"{PlaybackPath}?youtube=error&message={Uri.EscapeDataString(exception.Message)}");
+            return RedirectFailure(context, exception, PlaybackPath, "youtube", "Der YouTube-Link konnte nicht eingereiht werden.");
         }
     }
 
@@ -449,7 +457,7 @@ public static class WebApplicationExtensions
         }
         catch (Exception exception) when (exception is InvalidOperationException or ArgumentException or FormatException)
         {
-            return Results.Redirect($"{NewsPath}?news=error&message={Uri.EscapeDataString(exception.Message)}");
+            return RedirectFailure(context, exception, NewsPath, "news", "Die News-Aktion ist fehlgeschlagen.");
         }
     }
 
@@ -463,7 +471,7 @@ public static class WebApplicationExtensions
         var item = (await newsService.GetAllAsync(cancellationToken)).SingleOrDefault(news => news.Id == id);
         if (item is null)
         {
-            return Results.Redirect($"{NewsPath}?news=error&message=News%20nicht%20gefunden");
+            return Results.Redirect($"{NewsPath}?news=error&message={Uri.EscapeDataString("News nicht gefunden")}");
         }
 
         await commands.ShowNewsAsync(item, cancellationToken);
@@ -498,7 +506,7 @@ public static class WebApplicationExtensions
         }
         catch (InvalidOperationException exception)
         {
-            return Results.Redirect($"{NewsPath}?news=error&message={Uri.EscapeDataString(exception.Message)}");
+            return RedirectFailure(context, exception, NewsPath, "news", "Die News-Aktion ist fehlgeschlagen.");
         }
     }
 
@@ -530,7 +538,8 @@ public static class WebApplicationExtensions
             return null;
         }
 
-        if (DateTimeOffset.TryParse(value, System.Globalization.CultureInfo.CurrentCulture, out var result))
+        if (DateTimeOffset.TryParse(value, System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.AssumeLocal, out var result))
         {
             return result;
         }
@@ -578,16 +587,20 @@ public static class WebApplicationExtensions
         }
         catch (Exception exception) when (exception is ArgumentException or FormatException)
         {
-            return Results.BadRequest(new { error = exception.Message });
+            LogFailure(context, exception);
+            return Results.BadRequest(new { error = WebText.ForError(exception.Message, "Der Download konnte nicht gestartet werden.") });
         }
     }
 
     private static async Task<IResult> GetYouTubeDownloadAsync(
-        string videoId, YouTubeDownloadCoordinator downloads, CancellationToken cancellationToken)
+        string videoId, HttpContext context, YouTubeDownloadCoordinator downloads, CancellationToken cancellationToken)
     {
         try { return Results.Ok(ToDownloadResponse(await downloads.GetAsync(videoId, cancellationToken))); }
         catch (Exception exception) when (exception is ArgumentException or FormatException)
-        { return Results.BadRequest(new { error = exception.Message }); }
+        {
+            LogFailure(context, exception);
+            return Results.BadRequest(new { error = WebText.ForError(exception.Message, "Downloadstatus konnte nicht geladen werden.") });
+        }
     }
 
     private static async Task<IResult> SetYouTubeDownloadIntentAsync(
@@ -608,7 +621,8 @@ public static class WebApplicationExtensions
         }
         catch (Exception exception) when (exception is ArgumentException or FormatException or InvalidOperationException)
         {
-            return Results.BadRequest(new { error = exception.Message });
+            LogFailure(context, exception);
+            return Results.BadRequest(new { error = WebText.ForError(exception.Message, "Die Wiedergabe konnte nicht vorgemerkt werden.") });
         }
     }
 
@@ -617,9 +631,21 @@ public static class WebApplicationExtensions
         snapshot.VideoId,
         Phase = snapshot.Phase.ToString().ToLowerInvariant(),
         snapshot.MediaId,
-        snapshot.Error,
+        Error = snapshot.Error is null ? null : WebText.ForError(snapshot.Error, "Download fehlgeschlagen."),
         DurationSeconds = snapshot.Duration?.TotalSeconds
     };
+
+    private static IResult RedirectFailure(HttpContext context, Exception exception, string path, string operation, string message)
+    {
+        LogFailure(context, exception);
+        var detail = WebText.ErrorKey(exception.Message) ?? message;
+        return Results.Redirect($"{path}?{operation}=error&message={Uri.EscapeDataString(detail)}");
+    }
+
+    private static void LogFailure(HttpContext context, Exception exception) =>
+        context.RequestServices.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("BeamerPresenter.Web")
+            .LogWarning(exception, "Presenter request failed");
 
     private static async Task<IResult> GetMediaPreviewAsync(
         int mediaId,

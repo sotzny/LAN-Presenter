@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
@@ -51,6 +52,12 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         _application.Use(async (context, next) =>
         {
             context.Connection.RemoteIpAddress ??= IPAddress.Loopback;
+            if (context.Request.Headers.TryGetValue("X-Test-Culture", out var cultureName))
+            {
+                var culture = CultureInfo.GetCultureInfo(cultureName.ToString());
+                CultureInfo.CurrentCulture = culture;
+                CultureInfo.CurrentUICulture = culture;
+            }
             await next();
         });
         _application.UsePresenterLoopbackProtection();
@@ -71,6 +78,7 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         var cookie = await LoginAsync(client);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "/");
+        request.Headers.Add("X-Test-Culture", "de-DE");
         request.Headers.Add("Cookie", cookie);
         using var pageResponse = await client.SendAsync(request);
         var html = await pageResponse.Content.ReadAsStringAsync();
@@ -80,9 +88,75 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         Assert.Contains("href=\"/media\"", html, StringComparison.Ordinal);
         Assert.Contains("href=\"/news\"", html, StringComparison.Ordinal);
         Assert.Contains("AKTUELLE WIEDERGABE", html, StringComparison.Ordinal);
+        Assert.Contains("Gestoppt", html, StringComparison.Ordinal);
+        Assert.Contains("\"Stopped\":\"Gestoppt\"", html, StringComparison.Ordinal);
         Assert.Contains("dashboard.js", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Wiedergabe-Queue", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Videobibliothek", html, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("en-US", "en", "Protected access", "Add video", "Waiting for the next video", "The URL is not a supported YouTube link.", "Browser: status unavailable", "The news title must be between 1 and 200 characters.")]
+    [InlineData("es-ES", "es", "Acceso protegido", "Añadir vídeo", "Esperando al siguiente vídeo", "La URL no es un enlace de YouTube compatible.", "Navegador: estado no disponible", "El título de la noticia debe tener entre 1 y 200 caracteres.")]
+    public async Task Selected_language_controls_login_management_presenter_and_errors(
+        string culture, string language, string loginText, string mediaText, string presenterText,
+        string errorText, string scriptText, string validationText)
+    {
+        using var client = _application!.GetTestClient();
+        var cookie = await LoginAsync(client);
+        foreach (var (path, expected) in new[]
+        {
+            ("/login", loginText), ("/media", mediaText), ("/presenter", presenterText)
+        })
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, path);
+            request.Headers.Add("X-Test-Culture", culture);
+            request.Headers.Add("Accept-Language", culture == "en-US" ? "de-DE" : "en-US");
+            request.Headers.Add("Cookie", cookie);
+            using var response = await client.SendAsync(request);
+            var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Contains($"<html lang=\"{language}\">", html, StringComparison.Ordinal);
+            Assert.Contains(expected, html, StringComparison.Ordinal);
+            Assert.Contains(scriptText, html, StringComparison.Ordinal);
+            Assert.Contains(language == "es" ? "\"Stopped\":\"Detenido\"" : "\"Stopped\":\"Stopped\"", html, StringComparison.Ordinal);
+        }
+
+        using var errorRequest = new HttpRequestMessage(HttpMethod.Get, "/api/youtube/reference?url=invalid");
+        errorRequest.Headers.Add("X-Test-Culture", culture);
+        errorRequest.Headers.Add("Cookie", cookie);
+        using var errorResponse = await client.SendAsync(errorRequest);
+        using var error = JsonDocument.Parse(await errorResponse.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.BadRequest, errorResponse.StatusCode);
+        Assert.Equal(errorText, error.RootElement.GetProperty("error").GetString());
+
+        using var newsRequest = new HttpRequestMessage(HttpMethod.Post, "/api/news/create")
+        {
+            Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["title"] = string.Empty,
+                ["text"] = "Test",
+                ["mode"] = "Ticker",
+                ["duration"] = "00:01:00"
+            })
+        };
+        newsRequest.Headers.Add("X-Test-Culture", culture);
+        newsRequest.Headers.Add("Cookie", cookie);
+        using var newsResponse = await client.SendAsync(newsRequest);
+        Assert.Equal(HttpStatusCode.Redirect, newsResponse.StatusCode);
+        using var messageRequest = new HttpRequestMessage(HttpMethod.Get, newsResponse.Headers.Location);
+        messageRequest.Headers.Add("X-Test-Culture", culture);
+        messageRequest.Headers.Add("Cookie", cookie);
+        using var messageResponse = await client.SendAsync(messageRequest);
+        var messagePage = WebUtility.HtmlDecode(await messageResponse.Content.ReadAsStringAsync());
+        Assert.Contains(validationText, messagePage, StringComparison.Ordinal);
+
+        using var legacyRequest = new HttpRequestMessage(HttpMethod.Get, "/news?news=error&message=old%20failure");
+        legacyRequest.Headers.Add("X-Test-Culture", culture);
+        legacyRequest.Headers.Add("Cookie", cookie);
+        using var legacyResponse = await client.SendAsync(legacyRequest);
+        var legacyPage = WebUtility.HtmlDecode(await legacyResponse.Content.ReadAsStringAsync());
+        Assert.DoesNotContain("old failure", legacyPage, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -100,8 +174,8 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         var html = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains(heading, html, StringComparison.Ordinal);
-        Assert.Contains(marker, html, StringComparison.Ordinal);
+        Assert.Contains(WebUtility.HtmlDecode(heading), WebUtility.HtmlDecode(html), StringComparison.Ordinal);
+        Assert.Contains(WebUtility.HtmlDecode(marker), WebUtility.HtmlDecode(html), StringComparison.Ordinal);
         Assert.Contains("href=\"/\"", html, StringComparison.Ordinal);
         Assert.Contains("href=\"/playback\"", html, StringComparison.Ordinal);
         Assert.Contains("href=\"/media\"", html, StringComparison.Ordinal);
@@ -265,7 +339,7 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("arena-final.mp4", html, StringComparison.Ordinal);
         Assert.Contains("Bereit", html, StringComparison.Ordinal);
-        Assert.Contains("Als Nächstes", html, StringComparison.Ordinal);
+        Assert.Contains("Als Nächstes", WebUtility.HtmlDecode(html), StringComparison.Ordinal);
         Assert.Contains("Deaktivieren", html, StringComparison.Ordinal);
         Assert.Contains("Neu analysieren", html, StringComparison.Ordinal);
         Assert.Contains("1 Segment", html, StringComparison.Ordinal);

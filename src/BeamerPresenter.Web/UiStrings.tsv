@@ -1,0 +1,259 @@
+ Lokale Wiedergabe wurde als Nächstes eingereiht.| Lokale Wiedergabe wurde als Nächstes eingereiht.| Local playback was queued next.| La reproducción local se añadió como siguiente.
+ Lokale Wiedergabe wurde gestartet.| Lokale Wiedergabe wurde gestartet.| Local playback started.| Se inició la reproducción local.
+ {0} ist vorgemerkt.| {0} ist vorgemerkt.| {0} is scheduled.| {0} está programado.
+(optional)|(optional)|(optional)|(opcional)
+50:50-/Fullscreen-News beenden|50:50-/Fullscreen-News beenden|Stop split-screen/fullscreen news|Detener noticia en pantalla dividida o completa
+AKTUELLE WIEDERGABE|AKTUELLE WIEDERGABE|CURRENT PLAYBACK|REPRODUCCIÓN ACTUAL
+Abmelden|Abmelden|Log out|Cerrar sesión
+Abspielbereit|Abspielbereit|Ready to play|Listos para reproducir
+Active|Aktiv|Active|Activo
+Aktivieren|Aktivieren|Enable|Activar
+Aktion|Aktion|Action|Acción
+Aktionen|Aktionen|Actions|Acciones
+Aktueller Clip und die nächsten {0} Einträge|Aktueller Clip und die nächsten {0} Einträge|Current clip and the next {0} entries|Clip actual y las siguientes {0} entradas
+Alle Status|Alle Status|All statuses|Todos los estados
+Als Nächstes|Als Nächstes|Play next|Reproducir después
+Als Nächstes einplanen|Als Nächstes einplanen|Schedule next|Programar como siguiente
+Analyse|Analyse|Analyzing|Analizando
+Anmelden|Anmelden|Log in|Iniciar sesión
+Auflösung wird ermittelt|Auflösung wird ermittelt|Detecting resolution|Detectando resolución
+Automatisch|Automatisch|Automatic|Automático
+Automatisch bis zur maximalen Laufzeit|Automatisch bis zur maximalen Laufzeit|Automatic up to maximum duration|Automático hasta la duración máxima
+Autoplay wurde abgelehnt.|Autoplay wurde abgelehnt.|Autoplay was blocked.|Se bloqueó la reproducción automática.
+BEAMER PRESENTER|BEAMER PRESENTER|BEAMER PRESENTER|PRESENTADOR BEAMER
+Beamer Presenter|Beamer Presenter|Beamer Presenter|Presentador Beamer
+Beamer Presenter for LAN-Parties|Beamer Presenter for LAN-Parties|Beamer Presenter for LAN-Parties|Presentador Beamer para fiestas LAN
+Bereit|Bereit|Ready|Listo
+Bereit für den nächsten Clip.|Bereit für den nächsten Clip.|Ready for the next clip.|Listo para el siguiente clip.
+Bereit für die nächste Wiedergabe.|Bereit für die nächste Wiedergabe.|Ready for the next playback.|Listo para la siguiente reproducción.
+Bitte eine multipart/form-data-Anfrage senden.|Bitte eine multipart/form-data-Anfrage senden.|Send a multipart/form-data request.|Envía una solicitud multipart/form-data.
+Browser: Status nicht erreichbar|Browser: Status nicht erreichbar|Browser: status unavailable|Navegador: estado no disponible
+Browser: {0}|Browser: {0}|Browser: {0}|Navegador: {0}
+Completed|Completed|Completed|Completado
+Das Passwort ist nicht korrekt.|Das Passwort ist nicht korrekt.|The password is incorrect.|La contraseña no es correcta.
+Das Video konnte nicht geladen werden.|Das Video konnte nicht geladen werden.|The video could not be loaded.|No se pudo cargar el vídeo.
+Das Video konnte nicht hochgeladen werden.|Das Video konnte nicht hochgeladen werden.|The video could not be uploaded.|No se pudo subir el vídeo.
+Das Video konnte nicht wiedergegeben werden.|Das Video konnte nicht wiedergegeben werden.|The video could not be played.|No se pudo reproducir el vídeo.
+Das Video wird lokal geladen und danach automatisch eingereiht.|Das Video wird lokal geladen und danach automatisch eingereiht.|The video is being downloaded locally and will then be queued automatically.|El vídeo se está descargando localmente y después se añadirá a la cola automáticamente.
+Das Video wurde gespeichert und für die Medienanalyse eingereiht.|Das Video wurde gespeichert und für die Medienanalyse eingereiht.|The video was saved and queued for media analysis.|El vídeo se guardó y se añadió a la cola de análisis.
+Das lokal gespeicherte Video wurde in die Queue aufgenommen.|Das lokal gespeicherte Video wurde in die Queue aufgenommen.|The locally saved video was added to the queue.|El vídeo guardado localmente se añadió a la cola.
+Dashboard|Dashboard|Dashboard|Panel de control
+Datei auswählen|Datei auswählen|Choose file|Elegir archivo
+Datei nicht verfügbar|Datei nicht verfügbar|File unavailable|Archivo no disponible
+Datei, Codec oder Container|Datei, Codec oder Container|File, codec or container|Archivo, códec o contenedor
+Dauer|Dauer|Duration|Duración
+Dauer: lokal analysiert|Dauer: lokal analysiert|Duration: analyzed locally|Duración: analizada localmente
+Dauer: {0}|Dauer: {0}|Duration: {0}|Duración: {0}
+Dauer: –|Dauer: –|Duration: –|Duración: –
+Deaktiviert|Deaktiviert|Disabled|Desactivado
+Deaktivieren|Deaktivieren|Disable|Desactivar
+Der Download konnte nicht gestartet werden.|Der Download konnte nicht gestartet werden.|The download could not be started.|No se pudo iniciar la descarga.
+Der Presenter-Befehl ist fehlgeschlagen.|Der Presenter-Befehl ist fehlgeschlagen.|The presenter command failed.|Falló el comando del presentador.
+Der Ticker wurde beendet.|Der Ticker wurde beendet.|The ticker was stopped.|Se detuvo el teletipo.
+Der YouTube-Link konnte nicht eingereiht werden.|Der YouTube-Link konnte nicht eingereiht werden.|The YouTube link could not be queued.|No se pudo añadir el enlace de YouTube a la cola.
+Die 50:50- oder Fullscreen-News wurde beendet.|Die 50:50- oder Fullscreen-News wurde beendet.|The split-screen or fullscreen news was stopped.|Se detuvo la noticia en pantalla dividida o completa.
+Die Datei landet im ersten aktiven Videoordner. Analyse und Status aktualisieren sich automatisch.|Die Datei landet im ersten aktiven Videoordner. Analyse und Status aktualisieren sich automatisch.|The file goes into the first active video folder. Analysis and status update automatically.|El archivo se guarda en la primera carpeta de vídeos activa. El análisis y el estado se actualizan automáticamente.
+Die News wird jetzt auf dem Presenter angezeigt.|Die News wird jetzt auf dem Presenter angezeigt.|The news is now shown on the presenter.|La noticia se muestra ahora en el presentador.
+Die News wurde gelöscht.|Die News wurde gelöscht.|The news was deleted.|Se eliminó la noticia.
+Die News wurde gespeichert und wird jetzt auf dem Presenter angezeigt.|Die News wurde gespeichert und wird jetzt auf dem Presenter angezeigt.|The news was saved and is now shown on the presenter.|La noticia se guardó y ahora se muestra en el presentador.
+Die News wurde gespeichert. Mit „Jetzt anzeigen“ kann sie auf den Presenter gesendet werden.|Die News wurde gespeichert. Mit „Jetzt anzeigen“ kann sie auf den Presenter gesendet werden.|The news was saved. Use “Show now” to send it to the presenter.|La noticia se guardó. Usa «Mostrar ahora» para enviarla al presentador.
+Die News-Aktion ist fehlgeschlagen.|Die News-Aktion ist fehlgeschlagen.|The news action failed.|Falló la acción de noticias.
+Die Queue wird aufgefüllt, sobald analysierte Videos verfügbar sind.|Die Queue wird aufgefüllt, sobald analysierte Videos verfügbar sind.|The queue will fill when analyzed videos become available.|La cola se llenará cuando haya vídeos analizados disponibles.
+Die Queue-Aktion ist fehlgeschlagen.|Die Queue-Aktion ist fehlgeschlagen.|The queue action failed.|Falló la acción de la cola.
+Die Videoaktion ist fehlgeschlagen.|Die Videoaktion ist fehlgeschlagen.|The video action failed.|Falló la acción del vídeo.
+Die Videoeinstellung wurde aktualisiert.|Die Videoeinstellung wurde aktualisiert.|The video setting was updated.|Se actualizó la configuración del vídeo.
+Die Wiedergabe konnte nicht vorgemerkt werden.|Die Wiedergabe konnte nicht vorgemerkt werden.|Playback could not be scheduled.|No se pudo programar la reproducción.
+Die Wiedergabe-Queue wurde aktualisiert.|Die Wiedergabe-Queue wurde aktualisiert.|The playback queue was updated.|Se actualizó la cola de reproducción.
+Die Wiedergabehistorie wurde zurückgesetzt.|Die Wiedergabehistorie wurde zurückgesetzt.|Playback history was cleared.|Se borró el historial de reproducción.
+Die angegebene URL ist kein unterstützter YouTube-Link.|Die angegebene URL ist kein unterstützter YouTube-Link.|The URL is not a supported YouTube link.|La URL no es un enlace de YouTube compatible.
+Die letzten tatsächlich gestarteten lokalen und YouTube-Segmente|Die letzten tatsächlich gestarteten lokalen und YouTube-Segmente|The most recently played local and YouTube segments|Los últimos segmentos locales y de YouTube reproducidos
+Diese Seite existiert nicht.|Diese Seite existiert nicht.|This page does not exist.|Esta página no existe.
+Download fehlgeschlagen.|Download fehlgeschlagen.|Download failed.|Falló la descarga.
+Download wird vorbereitet …|Download wird vorbereitet …|Preparing download …|Preparando descarga …
+Downloadstatus konnte nicht geladen werden.|Downloadstatus konnte nicht geladen werden.|Download status could not be loaded.|No se pudo cargar el estado de la descarga.
+Echtzeitverbindung wird hergestellt …|Echtzeitverbindung wird hergestellt …|Connecting in real time …|Estableciendo conexión en tiempo real …
+Eigene Dauer|Eigene Dauer|Custom duration|Duración personalizada
+Eigener Start|Eigener Start|Custom start|Inicio personalizado
+Eigenes Segment|Eigenes Segment|Custom segment|Segmento personalizado
+Einblendungen verwalten|Einblendungen verwalten|Manage news overlays|Gestionar superposiciones de noticias
+Entfernen|Entfernen|Remove|Quitar
+Error|Error|Error|Error
+Es wurde keine Videodatei ausgewählt.|Es wurde keine Videodatei ausgewählt.|No video file was selected.|No se seleccionó ningún archivo de vídeo.
+Externe Quelle|Externe Quelle|External source|Fuente externa
+FFPROBE|FFPROBE|FFPROBE|FFPROBE
+FOR LAN-PARTIES|FOR LAN-PARTIES|FOR LAN PARTIES|PARA FIESTAS LAN
+Fehler|Fehler|Error|Error
+Fehlerhaft|Fehlerhaft|Invalid|No válido
+Fehlt|Fehlt|Missing|Falta
+Format|Format|Format|Formato
+Fullscreen|Fullscreen|Fullscreen|Pantalla completa
+Geschützter Zugriff|Geschützter Zugriff|Protected access|Acceso protegido
+Getrennt|Getrennt|Disconnected|Desconectado
+Größe|Größe|Size|Tamaño
+Gültig ab|Gültig ab|Valid from|Válido desde
+Gültig bis|Gültig bis|Valid until|Válido hasta
+Herkunft|Herkunft|Origin|Origen
+Hidden|Ausgeblendet|Hidden|Oculto
+Hide|Hide|Hide|Ocultar
+Historie zurücksetzen|Historie zurücksetzen|Clear history|Borrar historial
+Hochladen|Hochladen|Upload|Subir
+In Analyse|In Analyse|Analyzing|En análisis
+Inkompatibel|Inkompatibel|Incompatible|Incompatible
+Interrupted|Interrupted|Interrupted|Interrumpido
+Jeder gültige YouTube-Link wird lokal geladen. „Sofort“ und „Als Nächstes“ warten auf die Medienanalyse.|Jeder gültige YouTube-Link wird lokal geladen. „Sofort“ und „Als Nächstes“ warten auf die Medienanalyse.|Every valid YouTube link is downloaded locally. “Play now” and “Play next” wait for media analysis.|Todos los enlaces válidos de YouTube se descargan localmente. «Reproducir ahora» y «Reproducir después» esperan al análisis.
+Jetzt anzeigen|Jetzt anzeigen|Show now|Mostrar ahora
+Kürzlich geladen|Kürzlich geladen|Recently added|Añadido recientemente
+LAN PARTY CONTROL DECK|LAN PARTY CONTROL DECK|LAN PARTY CONTROL DECK|PANEL DE CONTROL LAN
+Laufzeit|Laufzeit|Runtime|Tiempo de reproducción
+Lege zuerst in der Desktop-App ein Web-Passwort fest.|Lege zuerst in der Desktop-App ein Web-Passwort fest.|First set a web password in the desktop app.|Primero establece una contraseña web en la aplicación de escritorio.
+Letzte Wiedergabe|Letzte Wiedergabe|Last played|Última reproducción
+Local|Local|Local|Local
+Lokale Videos verwalten|Lokale Videos verwalten|Manage local videos|Gestionar vídeos locales
+Lokale und externe Inhalte einreihen, priorisieren und nachvollziehen.|Lokale und externe Inhalte einreihen, priorisieren und nachvollziehen.|Queue, prioritize and track local and external content.|Añade, prioriza y sigue contenido local y externo.
+Lokaler Download wird vorbereitet …|Lokaler Download wird vorbereitet …|Preparing local download …|Preparando descarga local …
+Läuft|Läuft|Running|En ejecución
+Löschen|Löschen|Delete|Eliminar
+MEDIA SCANNER|MEDIA SCANNER|MEDIA SCANNER|ANALIZADOR DE MEDIOS
+MEDIATHEK|MEDIATHEK|MEDIA LIBRARY|BIBLIOTECA MULTIMEDIA
+MP4, MKV, WebM, MOV oder AVI|MP4, MKV, WebM, MOV oder AVI|MP4, MKV, WebM, MOV or AVI|MP4, MKV, WebM, MOV o AVI
+Manuell|Manuell|Manual|Manual
+Manuell: Als Nächstes|Manuell: Als Nächstes|Manual: Play next|Manual: Reproducir después
+Manuell: Sofort|Manuell: Sofort|Manual: Play now|Manual: Reproducir ahora
+Maximale Laufzeit|Maximale Laufzeit|Maximum duration|Duración máxima
+Mediathek|Mediathek|Media library|Biblioteca multimedia
+Melde dich an, um den Presenter und die Videobibliothek zu steuern.|Melde dich an, um den Presenter und die Videobibliothek zu steuern.|Log in to control the presenter and video library.|Inicia sesión para controlar el presentador y la biblioteca de vídeos.
+Metadaten laden|Metadaten laden|Load metadata|Cargar metadatos
+Modus|Modus|Mode|Modo
+NEWS|NEWS|NEWS|NOTICIAS
+NOW|NOW|NOW|AHORA
+Nach oben|Nach oben|Move up|Subir
+Nach unten|Nach unten|Move down|Bajar
+Neu analysieren|Neu analysieren|Analyze again|Analizar de nuevo
+News|News|News|Noticias
+News & Einblendungen|News & Einblendungen|News & overlays|Noticias y superposiciones
+News nicht gefunden|News nicht gefunden|News not found|Noticia no encontrada
+Nicht verfügbar|Nicht verfügbar|Unavailable|No disponible
+Noch keine News gespeichert.|Noch keine News gespeichert.|No news saved yet.|Aún no hay noticias guardadas.
+Noch keine Wiedergaben gespeichert.|Noch keine Wiedergaben gespeichert.|No playback history yet.|Aún no hay reproducciones guardadas.
+Noch nicht geprüft|Noch nicht geprüft|Not checked yet|Aún no comprobado
+Nur speichern|Nur speichern|Save only|Solo guardar
+OK|OK|OK|Correcto
+PRESENTER|PRESENTER|PRESENTER|PRESENTADOR
+Passwort|Passwort|Password|Contraseña
+Pause|Pause|Pause|Pausar
+Paused|Pausiert|Paused|En pausa
+Permanent|Permanent|Permanent|Permanente
+Permanent anzeigen|Permanent anzeigen|Show permanently|Mostrar permanentemente
+Position|Position|Position|Posición
+Presenter steuern|Presenter steuern|Control presenter|Controlar presentador
+Presenter steuern und den aktuellen Systemzustand im Blick behalten.|Presenter steuern und den aktuellen Systemzustand im Blick behalten.|Control the presenter and keep track of the current system status.|Controla el presentador y consulta el estado actual del sistema.
+Priorität|Priorität|Priority|Prioridad
+Prüfen|Prüfen|Review|Revisar
+Quelle|Quelle|Source|Fuente
+Queue neu generieren|Queue neu generieren|Regenerate queue|Regenerar cola
+Queue, Quellen und Verlauf|Queue, Quellen und Verlauf|Queue, sources and history|Cola, fuentes e historial
+Resume|Resume|Resume|Reanudar
+Segment|Segment|Segment|Segmento
+Segment wählen|Segment wählen|Choose segment|Elegir segmento
+Segmente|Segmente|Segments|Segmentos
+Sofort|Sofort|Play now|Reproducir ahora
+Sofort abspielen|Sofort abspielen|Play now|Reproducir ahora
+Speichern & jetzt anzeigen|Speichern & jetzt anzeigen|Save & show now|Guardar y mostrar ahora
+Split-Screen|Split-Screen|Split screen|Pantalla dividida
+Split-Screen 50:50|Split-Screen 50:50|Split screen 50:50|Pantalla dividida 50:50
+Start|Start|Start|Inicio
+Status|Status|Status|Estado
+Stop|Stop|Stop|Detener
+Stopped|Gestoppt|Stopped|Detenido
+Suchen|Suchen|Search|Buscar
+Text|Text|Text|Texto
+Ticker|Ticker|Ticker|Teletipo
+Ticker beenden|Ticker beenden|Stop ticker|Detener teletipo
+Ticker unabhängig von Video, 50:50-Split-Screen und Fullscreen-Meldung|Ticker unabhängig von Video, 50:50-Split-Screen und Fullscreen-Meldung|Ticker independent of video, 50:50 split screen and fullscreen news|Teletipo independiente del vídeo, pantalla dividida 50:50 y noticia a pantalla completa
+Ticker, Split-Screen und Fullscreen-Meldungen erstellen, planen und senden.|Ticker, Split-Screen und Fullscreen-Meldungen erstellen, planen und senden.|Create, schedule and send ticker, split-screen and fullscreen news.|Crea, programa y envía noticias en teletipo, pantalla dividida y pantalla completa.
+Titel|Titel|Title|Título
+Ungültige Videoaktion|Ungültige Videoaktion|Invalid video action|Acción de vídeo no válida
+Ungültiger Queue-Eintrag|Ungültiger Queue-Eintrag|Invalid queue entry|Entrada de cola no válida
+Ungültiges Video|Ungültiges Video|Invalid video|Vídeo no válido
+Unbekannt|Unbekannt|Unknown|Desconocido
+VERWALTUNG|VERWALTUNG|MANAGEMENT|ADMINISTRACIÓN
+Verbindung getrennt. Neuer Versuch …|Verbindung getrennt. Neuer Versuch …|Disconnected. Retrying …|Conexión perdida. Reintentando …
+Verbindung nicht verfügbar. Neuer Versuch …|Verbindung nicht verfügbar. Neuer Versuch …|Connection unavailable. Retrying …|Conexión no disponible. Reintentando …
+Verbunden|Verbunden|Connected|Conectado
+Verbunden. Bereit für die nächste Wiedergabe.|Verbunden. Bereit für die nächste Wiedergabe.|Connected. Ready for the next playback.|Conectado. Listo para la siguiente reproducción.
+Verwaltungsmenü|Verwaltungsmenü|Management menu|Menú de administración
+Video|Video|Video|Vídeo
+Video hinzufügen|Video hinzufügen|Add video|Añadir vídeo
+Video ist in der Mediathek bereit.|Video ist in der Mediathek bereit.|The video is ready in the media library.|El vídeo está listo en la biblioteca multimedia.
+Video wird analysiert …|Video wird analysiert …|Analyzing video …|Analizando vídeo …
+Video wird lokal geladen …|Video wird lokal geladen …|Downloading video locally …|Descargando vídeo localmente …
+Videobibliothek|Videobibliothek|Video library|Biblioteca de vídeos
+Videobibliothek durchsuchen|Videobibliothek durchsuchen|Search video library|Buscar en la biblioteca de vídeos
+Videobibliothek nach Status filtern|Videobibliothek nach Status filtern|Filter video library by status|Filtrar biblioteca de vídeos por estado
+Videos gesamt|Videos gesamt|Total videos|Total de vídeos
+Videos hochladen, durchsuchen, analysieren und für die Wiedergabe freigeben.|Videos hochladen, durchsuchen, analysieren und für die Wiedergabe freigeben.|Upload, search, analyze and enable videos for playback.|Sube, busca y analiza vídeos y habilítalos para la reproducción.
+Vollständig|Vollständig|Full video|Vídeo completo
+Vorschau für {0}|Vorschau für {0}|Preview for {0}|Vista previa de {0}
+WIEDERGABE|WIEDERGABE|PLAYBACK|REPRODUCCIÓN
+Warte auf das nächste Video|Warte auf das nächste Video|Waiting for the next video|Esperando al siguiente vídeo
+Wiedergabe|Wiedergabe|Playback|Reproducción
+Wiedergabe-Queue|Wiedergabe-Queue|Playback queue|Cola de reproducción
+Wiedergabehistorie|Wiedergabehistorie|Playback history|Historial de reproducción
+YouTube Player API timeout|YouTube Player API timeout|YouTube Player API timeout|Se agotó el tiempo de espera de la API de YouTube
+YouTube Player API unavailable|YouTube Player API unavailable|YouTube Player API unavailable|La API de YouTube no está disponible
+YouTube Player Fehler {0}|YouTube Player Fehler {0}|YouTube Player error {0}|Error del reproductor de YouTube {0}
+YouTube Player wird geladen …|YouTube Player wird geladen …|Loading YouTube player …|Cargando reproductor de YouTube …
+YouTube URL|YouTube URL|YouTube URL|URL de YouTube
+YouTube einreihen|YouTube einreihen|Queue YouTube video|Añadir vídeo de YouTube a la cola
+YouTube ist nicht verfügbar.|YouTube ist nicht verfügbar.|YouTube is unavailable.|YouTube no está disponible.
+YouTube-Link nicht erkannt.|YouTube-Link nicht erkannt.|YouTube link not recognized.|No se reconoció el enlace de YouTube.
+YouTube-Link wird geprüft …|YouTube-Link wird geprüft …|Checking YouTube link …|Comprobando enlace de YouTube …
+YouTube-Wiedergabe|YouTube-Wiedergabe|YouTube playback|Reproducción de YouTube
+Zeit|Zeit|Time|Hora
+yt-dlp wird eingerichtet …|yt-dlp wird eingerichtet …|Setting up yt-dlp …|Configurando yt-dlp …
+{0} Segment|{0} Segment|{0} segment|{0} segmento
+{0} Segmente|{0} Segmente|{0} segments|{0} segmentos
+Bitte zuerst einen verfügbaren Videoordner in der Desktop-App festlegen.|Bitte zuerst einen verfügbaren Videoordner in der Desktop-App festlegen.|First select an available video folder in the desktop app.|Selecciona primero una carpeta de vídeos disponible en la aplicación de escritorio.
+Der Videoordner ist eine Umleitung und kann nicht gescannt werden.|Der Videoordner ist eine Umleitung und kann nicht gescannt werden.|The video folder is a link and cannot be scanned.|La carpeta de vídeos es un enlace y no se puede analizar.
+Der Downloader lieferte einen ungültigen Dateipfad.|Der Downloader lieferte einen ungültigen Dateipfad.|The downloader returned an invalid file path.|El descargador devolvió una ruta de archivo no válida.
+Die Videodatei ist leer oder größer als 5 GB.|Die Videodatei ist leer oder größer als 5 GB.|The video file is empty or larger than 5 GB.|El archivo de vídeo está vacío o supera los 5 GB.
+Das heruntergeladene Video ist im Presenter nicht abspielbar.|Das heruntergeladene Video ist im Presenter nicht abspielbar.|The downloaded video cannot be played by the presenter.|El presentador no puede reproducir el vídeo descargado.
+Die Medienanalyse hat das Video abgelehnt.|Die Medienanalyse hat das Video abgelehnt.|Media analysis rejected the video.|El análisis de medios rechazó el vídeo.
+Das heruntergeladene Video wurde nicht gefunden.|Das heruntergeladene Video wurde nicht gefunden.|The downloaded video was not found.|No se encontró el vídeo descargado.
+Die Videodauer ist nicht bekannt.|Die Videodauer ist nicht bekannt.|The video duration is unknown.|Se desconoce la duración del vídeo.
+Das gewählte Wiedergabesegment ist ungültig.|Das gewählte Wiedergabesegment ist ungültig.|The selected playback segment is invalid.|El segmento de reproducción seleccionado no es válido.
+Die Wiedergabeaktion ist ungültig.|Die Wiedergabeaktion ist ungültig.|The playback action is invalid.|La acción de reproducción no es válida.
+Ein eigener Start benötigt eine positive Dauer.|Ein eigener Start benötigt eine positive Dauer.|A custom start requires a positive duration.|Un inicio personalizado requiere una duración positiva.
+Eine positive maximale Laufzeit ist erforderlich.|Eine positive maximale Laufzeit ist erforderlich.|A positive maximum duration is required.|Se requiere una duración máxima positiva.
+Der Queue-Eintrag wurde nicht gefunden oder läuft bereits.|Der Queue-Eintrag wurde nicht gefunden oder läuft bereits.|The queue entry was not found or is already playing.|No se encontró la entrada de la cola o ya se está reproduciendo.
+Nur noch nicht gestartete Queue-Einträge können entfernt werden.|Nur noch nicht gestartete Queue-Einträge können entfernt werden.|Only queue entries that have not started can be removed.|Solo se pueden quitar entradas de la cola que aún no hayan comenzado.
+Nur ein wartender Queue-Eintrag kann sofort gestartet werden.|Nur ein wartender Queue-Eintrag kann sofort gestartet werden.|Only a pending queue entry can be played now.|Solo se puede reproducir ahora una entrada de cola pendiente.
+Das ausgewählte Video wurde nicht gefunden.|Das ausgewählte Video wurde nicht gefunden.|The selected video was not found.|No se encontró el vídeo seleccionado.
+Das ausgewählte Video ist nicht abspielbar.|Das ausgewählte Video ist nicht abspielbar.|The selected video cannot be played.|No se puede reproducir el vídeo seleccionado.
+Start und Dauer müssen innerhalb des Videos liegen.|Start und Dauer müssen innerhalb des Videos liegen.|Start and duration must be within the video.|El inicio y la duración deben estar dentro del vídeo.
+Für das ausgewählte Video ist kein freies Segment mehr verfügbar.|Für das ausgewählte Video ist kein freies Segment mehr verfügbar.|No unused segment remains for the selected video.|No queda ningún segmento libre del vídeo seleccionado.
+Für YouTube ist eine positive Dauer oder maximale Wiedergabezeit erforderlich.|Für YouTube ist eine positive Dauer oder maximale Wiedergabezeit erforderlich.|YouTube requires a positive duration or maximum playback time.|YouTube requiere una duración o un tiempo máximo de reproducción positivos.
+Ein eigener YouTube-Start benötigt eine positive Dauer.|Ein eigener YouTube-Start benötigt eine positive Dauer.|A custom YouTube start requires a positive duration.|Un inicio personalizado de YouTube requiere una duración positiva.
+Der Queue-Eintrag besitzt keine gültige Wiedergabequelle.|Der Queue-Eintrag besitzt keine gültige Wiedergabequelle.|The queue entry has no valid playback source.|La entrada de la cola no tiene una fuente de reproducción válida.
+Der News-Titel muss zwischen 1 und 200 Zeichen lang sein.|Der News-Titel muss zwischen 1 und 200 Zeichen lang sein.|The news title must be between 1 and 200 characters.|El título de la noticia debe tener entre 1 y 200 caracteres.
+Der News-Text muss zwischen 1 und 4000 Zeichen lang sein.|Der News-Text muss zwischen 1 und 4000 Zeichen lang sein.|The news text must be between 1 and 4000 characters.|El texto de la noticia debe tener entre 1 y 4000 caracteres.
+Zeitlich begrenzte News benötigen eine positive Dauer.|Zeitlich begrenzte News benötigen eine positive Dauer.|Timed news requires a positive duration.|Las noticias temporales requieren una duración positiva.
+Das Gültigkeitsende muss nach dem Beginn liegen.|Das Gültigkeitsende muss nach dem Beginn liegen.|The end of the validity period must be after its start.|El fin del periodo de validez debe ser posterior al inicio.
+Die News wurde nicht gefunden.|Die News wurde nicht gefunden.|The news was not found.|No se encontró la noticia.
+Dieses Videoformat wird nicht unterstützt.|Dieses Videoformat wird nicht unterstützt.|This video format is not supported.|Este formato de vídeo no es compatible.
+Bitte zuerst einen Videoordner in der Desktop-App festlegen.|Bitte zuerst einen Videoordner in der Desktop-App festlegen.|First select a video folder in the desktop app.|Selecciona primero una carpeta de vídeos en la aplicación de escritorio.
+Das Video wurde nicht gefunden.|Das Video wurde nicht gefunden.|The video was not found.|No se encontró el vídeo.
+Die Videodatei ist nicht verfügbar.|Die Videodatei ist nicht verfügbar.|The video file is unavailable.|El archivo de vídeo no está disponible.
+Der Wiedergabemodus ist ungültig.|Der Wiedergabemodus ist ungültig.|The playback mode is invalid.|El modo de reproducción no es válido.
+Der News-Modus ist ungültig.|Der News-Modus ist ungültig.|The news mode is invalid.|El modo de noticias no es válido.
+Start und Dauer müssen als HH:MM:SS angegeben werden.|Start und Dauer müssen als HH:MM:SS angegeben werden.|Enter start and duration as HH:MM:SS.|Introduce el inicio y la duración como HH:MM:SS.
+Das News-Gültigkeitsfenster ist ungültig.|Das News-Gültigkeitsfenster ist ungültig.|The news validity period is invalid.|El periodo de validez de la noticia no es válido.
+Die Medienanalyse hat das Zeitlimit überschritten.|Die Medienanalyse hat das Zeitlimit überschritten.|Media analysis timed out.|El análisis de medios agotó el tiempo de espera.
+Der Download wurde beim Beenden der App abgebrochen.|Der Download wurde beim Beenden der App abgebrochen.|The download was canceled when the app closed.|La descarga se canceló al cerrar la aplicación.
+Die YouTube-Video-ID ist ungültig.|Die YouTube-Video-ID ist ungültig.|The YouTube video ID is invalid.|El ID del vídeo de YouTube no es válido.
+Das Video überschreitet die Downloadgrenze von 5 GB.|Das Video überschreitet die Downloadgrenze von 5 GB.|The video exceeds the 5 GB download limit.|El vídeo supera el límite de descarga de 5 GB.
+Die heruntergeladene Datei ist leer oder größer als 5 GB.|Die heruntergeladene Datei ist leer oder größer als 5 GB.|The downloaded file is empty or larger than 5 GB.|El archivo descargado está vacío o supera los 5 GB.
+WinGet ist nicht verfügbar. yt-dlp konnte nicht installiert werden.|WinGet ist nicht verfügbar. yt-dlp konnte nicht installiert werden.|WinGet is unavailable. yt-dlp could not be installed.|WinGet no está disponible. No se pudo instalar yt-dlp.
+yt-dlp wurde installiert, ist aber nicht ausführbar.|yt-dlp wurde installiert, ist aber nicht ausführbar.|yt-dlp was installed but cannot be run.|yt-dlp se instaló, pero no se puede ejecutar.
+yt-dlp konnte nicht gestartet werden.|yt-dlp konnte nicht gestartet werden.|yt-dlp could not be started.|No se pudo iniciar yt-dlp.
+Die heruntergeladene Videodatei ist nicht verfügbar.|Die heruntergeladene Videodatei ist nicht verfügbar.|The downloaded video file is unavailable.|El archivo de vídeo descargado no está disponible.

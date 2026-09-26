@@ -19,17 +19,17 @@
         <MudPaper Elevation="0" Class="hero-panel pa-7 pa-sm-9">
             <MudGrid Class="hero-grid">
                 <MudItem xs="12" md="8">
-                    <MudText Typo="Typo.overline" Class="hero-kicker">LAN PARTY CONTROL DECK</MudText>
-                    <MudText Typo="Typo.h3" Class="hero-title">Bereit für den nächsten Clip.</MudText>
-                    <MudText Typo="Typo.body1" Class="hero-copy">Presenter steuern und den aktuellen Systemzustand im Blick behalten.</MudText>
+                    <MudText Typo="Typo.overline" Class="hero-kicker">@WebText.Get("LAN PARTY CONTROL DECK")</MudText>
+                    <MudText Typo="Typo.h3" Class="hero-title">@WebText.Get("Bereit für den nächsten Clip.")</MudText>
+                    <MudText Typo="Typo.body1" Class="hero-copy">@WebText.Get("Presenter steuern und den aktuellen Systemzustand im Blick behalten.")</MudText>
                 </MudItem>
                 <MudItem xs="12" md="4">
                     <div class="presenter-state-card">
                         <MudIcon Icon="@PresenterIcon" Size="Size.Large" />
                         <div>
-                            <MudText Typo="Typo.caption" Class="state-label">PRESENTER</MudText>
-                            <MudText Typo="Typo.h5" id="dashboard-presenter-state">@(_status?.PresenterState ?? Playback.State.ToString())</MudText>
-                            <MudText Typo="Typo.caption" id="dashboard-browser-state">Browser: @(_status?.BrowserConnected == true ? "Verbunden" : "Getrennt")</MudText>
+                            <MudText Typo="Typo.caption" Class="state-label">@WebText.Get("PRESENTER")</MudText>
+                            <MudText Typo="Typo.h5" id="dashboard-presenter-state">@WebText.Get(_status?.PresenterState ?? Playback.State.ToString())</MudText>
+                            <MudText Typo="Typo.caption" id="dashboard-browser-state">@WebText.Format("Browser: {0}", WebText.Get(_status?.BrowserConnected == true ? "Verbunden" : "Getrennt"))</MudText>
                         </div>
                     </div>
                 </MudItem>
@@ -39,24 +39,24 @@
         <MudPaper Elevation="0" Class="content-panel pa-6 live-status-panel">
             <MudGrid Spacing="3" Class="live-status-grid">
                 <MudItem xs="12" md="5">
-                    <MudText Typo="Typo.overline" Class="live-status-label">AKTUELLE WIEDERGABE</MudText>
+                    <MudText Typo="Typo.overline" Class="live-status-label">@WebText.Get("AKTUELLE WIEDERGABE")</MudText>
                     <MudText Typo="Typo.h5" id="dashboard-current-title">@(_status?.CurrentTitle ?? "–")</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary" id="dashboard-position">@FormatPlaybackPosition(_status?.Position, _status?.Duration)</MudText>
                 </MudItem>
                 <MudItem xs="6" md="2">
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">FFPROBE</MudText>
-                    <div class="health-value" id="dashboard-ffprobe">@(_status?.FfprobeAvailable == true ? "OK" : "Nicht verfügbar")</div>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@WebText.Get("FFPROBE")</MudText>
+                    <div class="health-value" id="dashboard-ffprobe">@WebText.Get(_status?.FfprobeAvailable == true ? "OK" : "Nicht verfügbar")</div>
                 </MudItem>
                 <MudItem xs="6" md="2">
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">MEDIA SCANNER</MudText>
-                    <div class="health-value" id="dashboard-scanner">@(_status?.MediaScannerRunning == true ? "Läuft" : "Bereit")</div>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@WebText.Get("MEDIA SCANNER")</MudText>
+                    <div class="health-value" id="dashboard-scanner">@WebText.Get(_status?.MediaScannerRunning == true ? "Läuft" : "Bereit")</div>
                 </MudItem>
                 <MudItem xs="12" md="3">
-                    <div class="presenter-controls" aria-label="Presenter steuern">
-                        <form method="post" action="/api/presenter/pause"><button type="submit">Pause</button></form>
-                        <form method="post" action="/api/presenter/activate"><button type="submit" class="primary">Resume</button></form>
-                        <form method="post" action="/api/presenter/hide"><button type="submit">Hide</button></form>
-                        <form method="post" action="/api/presenter/stop"><button type="submit" class="danger">Stop</button></form>
+                    <div class="presenter-controls" aria-label="@WebText.Get("Presenter steuern")">
+                        <form method="post" action="/api/presenter/pause"><button type="submit">@WebText.Get("Pause")</button></form>
+                        <form method="post" action="/api/presenter/activate"><button type="submit" class="primary">@WebText.Get("Resume")</button></form>
+                        <form method="post" action="/api/presenter/hide"><button type="submit">@WebText.Get("Hide")</button></form>
+                        <form method="post" action="/api/presenter/stop"><button type="submit" class="danger">@WebText.Get("Stop")</button></form>
                     </div>
                 </MudItem>
             </MudGrid>
@@ -64,7 +64,7 @@
 
         @if (PresenterResult == "error")
         {
-            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@(!string.IsNullOrWhiteSpace(PresenterMessage) ? PresenterMessage : "Der Presenter-Befehl ist fehlgeschlagen.")</MudAlert>
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@WebText.ForError(PresenterMessage, "Der Presenter-Befehl ist fehlgeschlagen.")</MudAlert>
         }
 
         <MudGrid Spacing="3">
@@ -72,28 +72,28 @@
                 <MudPaper Elevation="0" Class="metric-card">
                     <MudIcon Icon="@Icons.Material.Filled.VideoLibrary" Color="Color.Primary" />
                     <MudText Typo="Typo.h4">@_videos.Count</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">Videos gesamt</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@WebText.Get("Videos gesamt")</MudText>
                 </MudPaper>
             </MudItem>
             <MudItem xs="6" md="3">
                 <MudPaper Elevation="0" Class="metric-card">
                     <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
                     <MudText Typo="Typo.h4">@ReadyCount</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">Abspielbereit</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@WebText.Get("Abspielbereit")</MudText>
                 </MudPaper>
             </MudItem>
             <MudItem xs="6" md="3">
                 <MudPaper Elevation="0" Class="metric-card">
                     <MudIcon Icon="@Icons.Material.Filled.HourglassTop" Color="Color.Info" />
                     <MudText Typo="Typo.h4">@PendingCount</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">In Analyse</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@WebText.Get("In Analyse")</MudText>
                 </MudPaper>
             </MudItem>
             <MudItem xs="6" md="3">
                 <MudPaper Elevation="0" Class="metric-card">
                     <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" />
                     <MudText Typo="Typo.h4">@ProblemCount</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">Prüfen</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@WebText.Get("Prüfen")</MudText>
                 </MudPaper>
             </MudItem>
         </MudGrid>
@@ -101,67 +101,67 @@
     else if (IsPlayback)
     {
         <div class="management-page-heading">
-            <MudText Typo="Typo.overline" Class="hero-kicker">WIEDERGABE</MudText>
-            <MudText Typo="Typo.h4">Queue, Quellen und Verlauf</MudText>
-            <MudText Typo="Typo.body1" Color="Color.Secondary">Lokale und externe Inhalte einreihen, priorisieren und nachvollziehen.</MudText>
+            <MudText Typo="Typo.overline" Class="hero-kicker">@WebText.Get("WIEDERGABE")</MudText>
+            <MudText Typo="Typo.h4">@WebText.Get("Queue, Quellen und Verlauf")</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary">@WebText.Get("Lokale und externe Inhalte einreihen, priorisieren und nachvollziehen.")</MudText>
         </div>
         @if (QueueResult == "success")
         {
-            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Die Wiedergabe-Queue wurde aktualisiert.</MudAlert>
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@WebText.Get("Die Wiedergabe-Queue wurde aktualisiert.")</MudAlert>
         }
         else if (QueueResult == "error")
         {
-            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@(!string.IsNullOrWhiteSpace(QueueMessage) ? QueueMessage : "Die Queue-Aktion ist fehlgeschlagen.")</MudAlert>
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@WebText.ForError(QueueMessage, "Die Queue-Aktion ist fehlgeschlagen.")</MudAlert>
         }
         @if (HistoryResult == "cleared")
         {
-            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Die Wiedergabehistorie wurde zurückgesetzt.</MudAlert>
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@WebText.Get("Die Wiedergabehistorie wurde zurückgesetzt.")</MudAlert>
         }
         @if (YouTubeResult == "success")
         {
-            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Das lokal gespeicherte Video wurde in die Queue aufgenommen.</MudAlert>
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@WebText.Get("Das lokal gespeicherte Video wurde in die Queue aufgenommen.")</MudAlert>
         }
         else if (YouTubeResult == "downloading")
         {
-            <MudAlert Severity="Severity.Info" Variant="Variant.Filled">Das Video wird lokal geladen und danach automatisch eingereiht.</MudAlert>
+            <MudAlert Severity="Severity.Info" Variant="Variant.Filled">@WebText.Get("Das Video wird lokal geladen und danach automatisch eingereiht.")</MudAlert>
         }
         else if (YouTubeResult == "error")
         {
-            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@(!string.IsNullOrWhiteSpace(YouTubeMessage) ? YouTubeMessage : "Der YouTube-Link konnte nicht eingereiht werden.")</MudAlert>
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@WebText.ForError(YouTubeMessage, "Der YouTube-Link konnte nicht eingereiht werden.")</MudAlert>
         }
 
         <MudPaper Elevation="0" Class="content-panel pa-6 youtube-panel">
         <MudGrid Spacing="3">
             <MudItem xs="12" md="4">
                 <div class="panel-icon youtube-icon"><MudIcon Icon="@Icons.Custom.Brands.YouTube" Size="Size.Large" /></div>
-                <MudText Typo="Typo.h5" Class="mt-3">YouTube einreihen</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">Jeder gültige YouTube-Link wird lokal geladen. „Sofort“ und „Als Nächstes“ warten auf die Medienanalyse.</MudText>
+                <MudText Typo="Typo.h5" Class="mt-3">@WebText.Get("YouTube einreihen")</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">@WebText.Get("Jeder gültige YouTube-Link wird lokal geladen. „Sofort“ und „Als Nächstes“ warten auf die Medienanalyse.")</MudText>
             </MudItem>
             <MudItem xs="12" md="8">
                 <form method="post" class="youtube-form" id="youtube-management-form">
                     <div class="youtube-url-row">
-                        <label class="youtube-url-field">YouTube URL<input id="youtube-url" name="url" type="url" placeholder="https://youtu.be/…" required /></label>
-                        <button type="button" id="youtube-load-metadata">Metadaten laden</button>
+                        <label class="youtube-url-field">@WebText.Get("YouTube URL")<input id="youtube-url" name="url" type="url" placeholder="https://youtu.be/…" required /></label>
+                        <button type="button" id="youtube-load-metadata">@WebText.Get("Metadaten laden")</button>
                     </div>
                     <div class="youtube-metadata" aria-live="polite">
-                        <span id="youtube-metadata-status">Noch nicht geprüft</span>
-                        <strong id="youtube-duration">Dauer: –</strong>
+                        <span id="youtube-metadata-status">@WebText.Get("Noch nicht geprüft")</span>
+                        <strong id="youtube-duration">@WebText.Get("Dauer: –")</strong>
                     </div>
                     <div id="youtube-preview" class="youtube-preview" hidden></div>
                     <fieldset class="youtube-playback-mode">
-                        <legend>Wiedergabe</legend>
-                        <label><input type="radio" name="playbackMode" value="automatic" checked /> Automatisch bis zur maximalen Laufzeit</label>
-                        <label><input id="youtube-mode-full" type="radio" name="playbackMode" value="full" disabled /> Vollständig</label>
-                        <label><input type="radio" name="playbackMode" value="custom" /> Eigenes Segment</label>
+                        <legend>@WebText.Get("Wiedergabe")</legend>
+                        <label><input type="radio" name="playbackMode" value="automatic" checked /> @WebText.Get("Automatisch bis zur maximalen Laufzeit")</label>
+                        <label><input id="youtube-mode-full" type="radio" name="playbackMode" value="full" disabled /> @WebText.Get("Vollständig")</label>
+                        <label><input type="radio" name="playbackMode" value="custom" /> @WebText.Get("Eigenes Segment")</label>
                     </fieldset>
                     <div class="youtube-time-grid">
-                        <label id="youtube-custom-start" hidden>Eigener Start<input id="youtube-start" name="start" type="text" placeholder="01:20:00" /></label>
-                        <label id="youtube-custom-duration" hidden>Eigene Dauer<input id="youtube-custom-duration-input" name="duration" type="text" placeholder="00:08:00" /></label>
-                        <label id="youtube-maximum-duration">Maximale Laufzeit<input id="youtube-maximum-duration-input" name="maximumDuration" type="text" value="00:10:00" required /></label>
+                        <label id="youtube-custom-start" hidden>@WebText.Get("Eigener Start")<input id="youtube-start" name="start" type="text" placeholder="01:20:00" /></label>
+                        <label id="youtube-custom-duration" hidden>@WebText.Get("Eigene Dauer")<input id="youtube-custom-duration-input" name="duration" type="text" placeholder="00:08:00" /></label>
+                        <label id="youtube-maximum-duration">@WebText.Get("Maximale Laufzeit")<input id="youtube-maximum-duration-input" name="maximumDuration" type="text" value="00:10:00" required /></label>
                     </div>
                     <div class="youtube-actions">
-                        <button type="submit" formaction="/api/youtube/next">Als Nächstes</button>
-                        <button type="submit" formaction="/api/youtube/now" class="primary">Sofort</button>
+                        <button type="submit" formaction="/api/youtube/next">@WebText.Get("Als Nächstes")</button>
+                        <button type="submit" formaction="/api/youtube/now" class="primary">@WebText.Get("Sofort")</button>
                     </div>
                 </form>
             </MudItem>
@@ -171,46 +171,46 @@
     <MudPaper Elevation="0" Class="content-panel pa-6">
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-4">
             <div>
-                <MudText Typo="Typo.h5">Wiedergabe-Queue</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">Aktueller Clip und die nächsten @_queue.Count(entry => entry.Status == QueueEntryStatus.Pending) Einträge</MudText>
+                <MudText Typo="Typo.h5">@WebText.Get("Wiedergabe-Queue")</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@WebText.Format("Aktueller Clip und die nächsten {0} Einträge", _queue.Count(entry => entry.Status == QueueEntryStatus.Pending))</MudText>
             </div>
             <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary" Icon="@Icons.Material.Filled.QueueMusic">@_queue.Count Einträge</MudChip>
             <form method="post" action="/api/queue/regenerate">
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh">Queue neu generieren</MudButton>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh">@WebText.Get("Queue neu generieren")</MudButton>
             </form>
         </MudStack>
         @if (_queue.Count == 0)
         {
-            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">Die Queue wird aufgefüllt, sobald analysierte Videos verfügbar sind.</MudAlert>
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@WebText.Get("Die Queue wird aufgefüllt, sobald analysierte Videos verfügbar sind.")</MudAlert>
         }
         else
         {
             <MudTable T="QueueEntry" Items="@GetQueueDisplay()" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="queue-table">
                 <HeaderContent>
-                    <MudTh>Position</MudTh>
-                    <MudTh>Video</MudTh>
-                    <MudTh>Segment</MudTh>
-                    <MudTh>Herkunft</MudTh>
-                    <MudTh>Aktionen</MudTh>
+                    <MudTh>@WebText.Get("Position")</MudTh>
+                    <MudTh>@WebText.Get("Video")</MudTh>
+                    <MudTh>@WebText.Get("Segment")</MudTh>
+                    <MudTh>@WebText.Get("Herkunft")</MudTh>
+                    <MudTh>@WebText.Get("Aktionen")</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Position">
+                    <MudTd DataLabel="@WebText.Get("Position")">
                         <MudChip T="string" Size="Size.Small" Color="@(context.Status == QueueEntryStatus.Playing ? Color.Success : Color.Default)" Variant="Variant.Outlined">
-                            @(context.Status == QueueEntryStatus.Playing ? "NOW" : context.SortOrder.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                            @(context.Status == QueueEntryStatus.Playing ? WebText.Get("NOW") : context.SortOrder.ToString(System.Globalization.CultureInfo.CurrentCulture))
                         </MudChip>
                     </MudTd>
-                    <MudTd DataLabel="Video">@GetQueueVideoName(context)</MudTd>
-                    <MudTd DataLabel="Segment">@FormatSegment(context.StartPosition, context.EndPosition)</MudTd>
-                    <MudTd DataLabel="Herkunft">@FormatOrigin(context.Origin)</MudTd>
-                    <MudTd DataLabel="Aktionen">
+                    <MudTd DataLabel="@WebText.Get("Video")">@GetQueueVideoName(context)</MudTd>
+                    <MudTd DataLabel="@WebText.Get("Segment")">@FormatSegment(context.StartPosition, context.EndPosition)</MudTd>
+                    <MudTd DataLabel="@WebText.Get("Herkunft")">@FormatOrigin(context.Origin)</MudTd>
+                    <MudTd DataLabel="@WebText.Get("Aktionen")">
                         @if (context.Status == QueueEntryStatus.Pending)
                         {
                             <div class="queue-row-actions">
-                                <form method="post" action="/api/queue/play-next"><input type="hidden" name="id" value="@context.Id" /><button type="submit" title="Als Nächstes einplanen">Als Nächstes</button></form>
-                                <form method="post" action="/api/queue/play-now"><input type="hidden" name="id" value="@context.Id" /><button type="submit" class="primary" title="Sofort abspielen">Sofort</button></form>
-                                <form method="post" action="/api/queue/move-up"><input type="hidden" name="id" value="@context.Id" /><button type="submit" title="Nach oben">↑</button></form>
-                                <form method="post" action="/api/queue/move-down"><input type="hidden" name="id" value="@context.Id" /><button type="submit" title="Nach unten">↓</button></form>
-                                <form method="post" action="/api/queue/remove"><input type="hidden" name="id" value="@context.Id" /><button type="submit" class="danger">Entfernen</button></form>
+                                <form method="post" action="/api/queue/play-next"><input type="hidden" name="id" value="@context.Id" /><button type="submit" title="@WebText.Get("Als Nächstes einplanen")">@WebText.Get("Als Nächstes")</button></form>
+                                <form method="post" action="/api/queue/play-now"><input type="hidden" name="id" value="@context.Id" /><button type="submit" class="primary" title="@WebText.Get("Sofort abspielen")">@WebText.Get("Sofort")</button></form>
+                                <form method="post" action="/api/queue/move-up"><input type="hidden" name="id" value="@context.Id" /><button type="submit" title="@WebText.Get("Nach oben")">↑</button></form>
+                                <form method="post" action="/api/queue/move-down"><input type="hidden" name="id" value="@context.Id" /><button type="submit" title="@WebText.Get("Nach unten")">↓</button></form>
+                                <form method="post" action="/api/queue/remove"><input type="hidden" name="id" value="@context.Id" /><button type="submit" class="danger">@WebText.Get("Entfernen")</button></form>
                             </div>
                         }
                     </MudTd>
@@ -222,33 +222,33 @@
     <MudPaper Elevation="0" Class="content-panel pa-6">
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-4">
             <div>
-                <MudText Typo="Typo.h5">Wiedergabehistorie</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">Die letzten tatsächlich gestarteten lokalen und YouTube-Segmente</MudText>
+                <MudText Typo="Typo.h5">@WebText.Get("Wiedergabehistorie")</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@WebText.Get("Die letzten tatsächlich gestarteten lokalen und YouTube-Segmente")</MudText>
             </div>
             <form method="post" action="/api/history/clear">
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.DeleteSweep">Historie zurücksetzen</MudButton>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.DeleteSweep">@WebText.Get("Historie zurücksetzen")</MudButton>
             </form>
         </MudStack>
         @if (_history.Count == 0)
         {
-            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">Noch keine Wiedergaben gespeichert.</MudAlert>
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@WebText.Get("Noch keine Wiedergaben gespeichert.")</MudAlert>
         }
         else
         {
             <MudTable T="PlaybackHistory" Items="@_history" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="history-table">
                 <HeaderContent>
-                    <MudTh>Zeit</MudTh>
-                    <MudTh>Quelle</MudTh>
-                    <MudTh>Video</MudTh>
-                    <MudTh>Segment</MudTh>
-                    <MudTh>Status</MudTh>
+                    <MudTh>@WebText.Get("Zeit")</MudTh>
+                    <MudTh>@WebText.Get("Quelle")</MudTh>
+                    <MudTh>@WebText.Get("Video")</MudTh>
+                    <MudTh>@WebText.Get("Segment")</MudTh>
+                    <MudTh>@WebText.Get("Status")</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Zeit">@context.StartedUtc.ToLocalTime().ToString("g")</MudTd>
-                    <MudTd DataLabel="Quelle">@(context.SourceType == MediaSourceType.Local ? "Local" : "YouTube")</MudTd>
-                    <MudTd DataLabel="Video">@GetHistoryVideoName(context)</MudTd>
-                    <MudTd DataLabel="Segment">@FormatSegment(context.ActualStart ?? context.PlannedStart, context.ActualEnd ?? context.PlannedEnd)</MudTd>
-                    <MudTd DataLabel="Status">@FormatHistoryStatus(context)</MudTd>
+                    <MudTd DataLabel="@WebText.Get("Zeit")">@context.StartedUtc.ToLocalTime().ToString("g")</MudTd>
+                    <MudTd DataLabel="@WebText.Get("Quelle")">@WebText.Get(context.SourceType == MediaSourceType.Local ? "Local" : "YouTube")</MudTd>
+                    <MudTd DataLabel="@WebText.Get("Video")">@GetHistoryVideoName(context)</MudTd>
+                    <MudTd DataLabel="@WebText.Get("Segment")">@FormatSegment(context.ActualStart ?? context.PlannedStart, context.ActualEnd ?? context.PlannedEnd)</MudTd>
+                    <MudTd DataLabel="@WebText.Get("Status")">@FormatHistoryStatus(context)</MudTd>
                 </RowTemplate>
             </MudTable>
         }
@@ -257,106 +257,106 @@
     else if (IsNews)
     {
         <div class="management-page-heading">
-            <MudText Typo="Typo.overline" Class="hero-kicker">NEWS</MudText>
-            <MudText Typo="Typo.h4">Einblendungen verwalten</MudText>
-            <MudText Typo="Typo.body1" Color="Color.Secondary">Ticker, Split-Screen und Fullscreen-Meldungen erstellen, planen und senden.</MudText>
+            <MudText Typo="Typo.overline" Class="hero-kicker">@WebText.Get("NEWS")</MudText>
+            <MudText Typo="Typo.h4">@WebText.Get("Einblendungen verwalten")</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary">@WebText.Get("Ticker, Split-Screen und Fullscreen-Meldungen erstellen, planen und senden.")</MudText>
         </div>
         @if (NewsResult == "created-shown")
         {
-            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Die News wurde gespeichert und wird jetzt auf dem Presenter angezeigt.</MudAlert>
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@WebText.Get("Die News wurde gespeichert und wird jetzt auf dem Presenter angezeigt.")</MudAlert>
         }
         else if (NewsResult == "created")
         {
-            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Die News wurde gespeichert. Mit „Jetzt anzeigen“ kann sie auf den Presenter gesendet werden.</MudAlert>
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@WebText.Get("Die News wurde gespeichert. Mit „Jetzt anzeigen“ kann sie auf den Presenter gesendet werden.")</MudAlert>
         }
         else if (NewsResult == "shown")
         {
-            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Die News wird jetzt auf dem Presenter angezeigt.</MudAlert>
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@WebText.Get("Die News wird jetzt auf dem Presenter angezeigt.")</MudAlert>
         }
         else if (NewsResult == "stopped")
         {
-            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Die 50:50- oder Fullscreen-News wurde beendet.</MudAlert>
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@WebText.Get("Die 50:50- oder Fullscreen-News wurde beendet.")</MudAlert>
         }
         else if (NewsResult == "ticker-stopped")
         {
-            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Der Ticker wurde beendet.</MudAlert>
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@WebText.Get("Der Ticker wurde beendet.")</MudAlert>
         }
         else if (NewsResult == "deleted")
         {
-            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Die News wurde gelöscht.</MudAlert>
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@WebText.Get("Die News wurde gelöscht.")</MudAlert>
         }
         else if (NewsResult == "error")
         {
-            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@(!string.IsNullOrWhiteSpace(NewsMessage) ? NewsMessage : "Die News-Aktion ist fehlgeschlagen.")</MudAlert>
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@WebText.ForError(NewsMessage, "Die News-Aktion ist fehlgeschlagen.")</MudAlert>
         }
 
         <MudPaper Elevation="0" Class="content-panel pa-6 news-panel">
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-4">
             <div>
-                <MudText Typo="Typo.h5">News &amp; Einblendungen</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">Ticker unabhängig von Video, 50:50-Split-Screen und Fullscreen-Meldung</MudText>
+                <MudText Typo="Typo.h5">@WebText.Get("News & Einblendungen")</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@WebText.Get("Ticker unabhängig von Video, 50:50-Split-Screen und Fullscreen-Meldung")</MudText>
             </div>
             <MudStack Row="true" Spacing="2">
                 <form method="post" action="/api/news/stop-ticker">
-                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.StopCircle">Ticker beenden</MudButton>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.StopCircle">@WebText.Get("Ticker beenden")</MudButton>
                 </form>
                 <form method="post" action="/api/news/stop">
-                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.StopCircle">50:50-/Fullscreen-News beenden</MudButton>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.StopCircle">@WebText.Get("50:50-/Fullscreen-News beenden")</MudButton>
                 </form>
             </MudStack>
         </MudStack>
         <MudGrid Spacing="4">
             <MudItem xs="12" lg="5">
                 <form method="post" action="/api/news/create" class="news-form">
-                    <label>Titel<input name="title" maxlength="200" required /></label>
-                    <label>Text<textarea name="text" rows="4" maxlength="4000" required></textarea></label>
+                    <label>@WebText.Get("Titel")<input name="title" maxlength="200" required /></label>
+                    <label>@WebText.Get("Text")<textarea name="text" rows="4" maxlength="4000" required></textarea></label>
                     <div class="news-form-grid">
-                        <label>Modus
+                        <label>@WebText.Get("Modus")
                             <select name="mode">
-                                <option value="Ticker">Ticker</option>
-                                <option value="SplitScreen">Split-Screen 50:50</option>
-                                <option value="Fullscreen">Fullscreen</option>
+                                <option value="Ticker">@WebText.Get("Ticker")</option>
+                                <option value="SplitScreen">@WebText.Get("Split-Screen 50:50")</option>
+                                <option value="Fullscreen">@WebText.Get("Fullscreen")</option>
                             </select>
                         </label>
-                        <label>Dauer<input name="duration" type="text" value="00:05:00" /></label>
-                        <label>Priorität<input name="priority" type="number" value="0" min="-1000" max="1000" /></label>
+                        <label>@WebText.Get("Dauer")<input name="duration" type="text" value="00:05:00" /></label>
+                        <label>@WebText.Get("Priorität")<input name="priority" type="number" value="0" min="-1000" max="1000" /></label>
                     </div>
-                    <label class="news-checkbox"><input name="permanent" type="checkbox" value="true" /> Permanent anzeigen</label>
+                    <label class="news-checkbox"><input name="permanent" type="checkbox" value="true" /> @WebText.Get("Permanent anzeigen")</label>
                     <div class="news-form-grid news-schedule-grid">
-                        <label>Gültig ab <span>(optional)</span><input name="validFrom" type="datetime-local" /></label>
-                        <label>Gültig bis <span>(optional)</span><input name="validUntil" type="datetime-local" /></label>
+                        <label>@WebText.Get("Gültig ab") <span>@WebText.Get("(optional)")</span><input name="validFrom" type="datetime-local" /></label>
+                        <label>@WebText.Get("Gültig bis") <span>@WebText.Get("(optional)")</span><input name="validUntil" type="datetime-local" /></label>
                     </div>
                     <div class="news-form-actions">
-                        <button type="submit" name="showNow" value="true" class="news-create-button">Speichern &amp; jetzt anzeigen</button>
-                        <button type="submit" class="news-save-button">Nur speichern</button>
+                        <button type="submit" name="showNow" value="true" class="news-create-button">@WebText.Get("Speichern & jetzt anzeigen")</button>
+                        <button type="submit" class="news-save-button">@WebText.Get("Nur speichern")</button>
                     </div>
                 </form>
             </MudItem>
             <MudItem xs="12" lg="7">
                 @if (_news.Count == 0)
                 {
-                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">Noch keine News gespeichert.</MudAlert>
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@WebText.Get("Noch keine News gespeichert.")</MudAlert>
                 }
                 else
                 {
                     <MudTable T="NewsItem" Items="@_news" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="news-table">
                         <HeaderContent>
-                            <MudTh>News</MudTh>
-                            <MudTh>Modus</MudTh>
-                            <MudTh>Laufzeit</MudTh>
-                            <MudTh>Aktion</MudTh>
+                            <MudTh>@WebText.Get("News")</MudTh>
+                            <MudTh>@WebText.Get("Modus")</MudTh>
+                            <MudTh>@WebText.Get("Laufzeit")</MudTh>
+                            <MudTh>@WebText.Get("Aktion")</MudTh>
                         </HeaderContent>
                         <RowTemplate>
-                            <MudTd DataLabel="News">
+                            <MudTd DataLabel="@WebText.Get("News")">
                                 <MudText Typo="Typo.body2">@context.Title</MudText>
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Text</MudText>
                             </MudTd>
-                            <MudTd DataLabel="Modus"><MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@FormatNewsMode(context.Mode)</MudChip></MudTd>
-                            <MudTd DataLabel="Laufzeit">@(context.Permanent ? "Permanent" : FormatDuration(context.Duration))</MudTd>
-                            <MudTd DataLabel="Aktion">
+                            <MudTd DataLabel="@WebText.Get("Modus")"><MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@FormatNewsMode(context.Mode)</MudChip></MudTd>
+                            <MudTd DataLabel="@WebText.Get("Laufzeit")">@(context.Permanent ? WebText.Get("Permanent") : FormatDuration(context.Duration))</MudTd>
+                            <MudTd DataLabel="@WebText.Get("Aktion")">
                                 <div class="news-row-actions">
-                                    <form method="post" action="/api/news/show"><input type="hidden" name="id" value="@context.Id" /><button type="submit">Jetzt anzeigen</button></form>
-                                    <form method="post" action="/api/news/delete"><input type="hidden" name="id" value="@context.Id" /><button type="submit" class="danger">Löschen</button></form>
+                                    <form method="post" action="/api/news/show"><input type="hidden" name="id" value="@context.Id" /><button type="submit">@WebText.Get("Jetzt anzeigen")</button></form>
+                                    <form method="post" action="/api/news/delete"><input type="hidden" name="id" value="@context.Id" /><button type="submit" class="danger">@WebText.Get("Löschen")</button></form>
                                 </div>
                             </MudTd>
                         </RowTemplate>
@@ -369,42 +369,42 @@
     else if (IsMedia)
     {
         <div class="management-page-heading">
-            <MudText Typo="Typo.overline" Class="hero-kicker">MEDIATHEK</MudText>
-            <MudText Typo="Typo.h4">Lokale Videos verwalten</MudText>
-            <MudText Typo="Typo.body1" Color="Color.Secondary">Videos hochladen, durchsuchen, analysieren und für die Wiedergabe freigeben.</MudText>
+            <MudText Typo="Typo.overline" Class="hero-kicker">@WebText.Get("MEDIATHEK")</MudText>
+            <MudText Typo="Typo.h4">@WebText.Get("Lokale Videos verwalten")</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary">@WebText.Get("Videos hochladen, durchsuchen, analysieren und für die Wiedergabe freigeben.")</MudText>
         </div>
         @if (UploadResult == "success")
         {
-            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Das Video wurde gespeichert und für die Medienanalyse eingereiht.</MudAlert>
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@WebText.Get("Das Video wurde gespeichert und für die Medienanalyse eingereiht.")</MudAlert>
         }
         else if (UploadResult == "error")
         {
-            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@(!string.IsNullOrWhiteSpace(UploadMessage) ? UploadMessage : "Das Video konnte nicht hochgeladen werden.")</MudAlert>
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@WebText.ForError(UploadMessage, "Das Video konnte nicht hochgeladen werden.")</MudAlert>
         }
         @if (MediaResult is "enabled" or "disabled" or "reanalyzing")
         {
-            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Die Videoeinstellung wurde aktualisiert.</MudAlert>
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@WebText.Get("Die Videoeinstellung wurde aktualisiert.")</MudAlert>
         }
         else if (MediaResult == "error")
         {
-            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@(!string.IsNullOrWhiteSpace(MediaMessage) ? MediaMessage : "Die Videoaktion ist fehlgeschlagen.")</MudAlert>
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@WebText.ForError(MediaMessage, "Die Videoaktion ist fehlgeschlagen.")</MudAlert>
         }
 
         <MudGrid Spacing="4">
         <MudItem xs="12" lg="4">
             <MudPaper Elevation="0" Class="content-panel pa-6 full-height">
                 <div class="panel-icon"><MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" /></div>
-                <MudText Typo="Typo.h5" Class="mt-4">Video hinzufügen</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2 mb-5">Die Datei landet im ersten aktiven Videoordner. Analyse und Status aktualisieren sich automatisch.</MudText>
+                <MudText Typo="Typo.h5" Class="mt-4">@WebText.Get("Video hinzufügen")</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2 mb-5">@WebText.Get("Die Datei landet im ersten aktiven Videoordner. Analyse und Status aktualisieren sich automatisch.")</MudText>
                 <form method="post" enctype="multipart/form-data" action="/api/videos/upload">
                     <input type="hidden" name="returnUrl" value="/media" />
                     <label class="upload-dropzone" for="video-upload">
                         <MudIcon Icon="@Icons.Material.Filled.AddToDrive" Size="Size.Large" />
-                        <span>Datei auswählen</span>
-                        <small>MP4, MKV, WebM, MOV oder AVI</small>
+                        <span>@WebText.Get("Datei auswählen")</span>
+                        <small>@WebText.Get("MP4, MKV, WebM, MOV oder AVI")</small>
                     </label>
                     <input class="visually-hidden-file" id="video-upload" type="file" name="video" accept="video/mp4,video/x-matroska,video/webm,video/quicktime,video/x-msvideo" required />
-                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large" StartIcon="@Icons.Material.Filled.Upload" Class="mt-4">Hochladen</MudButton>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large" StartIcon="@Icons.Material.Filled.Upload" Class="mt-4">@WebText.Get("Hochladen")</MudButton>
                 </form>
             </MudPaper>
         </MudItem>
@@ -413,26 +413,26 @@
             <MudPaper Elevation="0" Class="content-panel pa-6 full-height">
                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-4">
                     <div>
-                        <MudText Typo="Typo.h5">Videobibliothek</MudText>
+                        <MudText Typo="Typo.h5">@WebText.Get("Videobibliothek")</MudText>
                         <MudText Typo="Typo.body2" Color="Color.Secondary">@GetFilteredVideos().Count von @_videos.Count Einträgen</MudText>
                     </div>
                     <form method="get" action="/media" class="library-search-form">
                         <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
-                        <input name="q" value="@Search" type="search" class="library-search" placeholder="Datei, Codec oder Container" aria-label="Videobibliothek durchsuchen" />
-                        <select name="mediaStatus" aria-label="Videobibliothek nach Status filtern">
-                            <option value="" selected="@(string.IsNullOrWhiteSpace(MediaStatusFilter))">Alle Status</option>
-                            <option value="ready" selected="@(MediaStatusFilter == "ready")">Bereit</option>
-                            <option value="analysis" selected="@(MediaStatusFilter == "analysis")">In Analyse</option>
-                            <option value="problems" selected="@(MediaStatusFilter == "problems")">Prüfen</option>
-                            <option value="disabled" selected="@(MediaStatusFilter == "disabled")">Deaktiviert</option>
+                        <input name="q" value="@Search" type="search" class="library-search" placeholder="@WebText.Get("Datei, Codec oder Container")" aria-label="@WebText.Get("Videobibliothek durchsuchen")" />
+                        <select name="mediaStatus" aria-label="@WebText.Get("Videobibliothek nach Status filtern")">
+                            <option value="" selected="@(string.IsNullOrWhiteSpace(MediaStatusFilter))">@WebText.Get("Alle Status")</option>
+                            <option value="ready" selected="@(MediaStatusFilter == "ready")">@WebText.Get("Bereit")</option>
+                            <option value="analysis" selected="@(MediaStatusFilter == "analysis")">@WebText.Get("In Analyse")</option>
+                            <option value="problems" selected="@(MediaStatusFilter == "problems")">@WebText.Get("Prüfen")</option>
+                            <option value="disabled" selected="@(MediaStatusFilter == "disabled")">@WebText.Get("Deaktiviert")</option>
                         </select>
-                        <button type="submit">Suchen</button>
+                        <button type="submit">@WebText.Get("Suchen")</button>
                     </form>
                 </MudStack>
 
                 @if (GetFilteredVideos().Count == 0)
                 {
-                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@(string.IsNullOrWhiteSpace(Search) ? "Noch keine Videos erfasst." : "Keine Videos passen zu dieser Suche.")</MudAlert>
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@WebText.Get(string.IsNullOrWhiteSpace(Search) ? "Noch keine Videos erfasst." : "Keine Videos passen zu dieser Suche.")</MudAlert>
                 }
                 else
                 {
@@ -440,7 +440,7 @@
                         @foreach (var video in GetFilteredVideos())
                         {
                             <article class="media-card">
-                                <div class="media-preview" data-preview-url="@($"/api/videos/{video.Id}/preview")" data-preview-count="@PreviewFrameCount(video)" role="img" aria-label="Vorschau für @video.FileName">
+                                <div class="media-preview" data-preview-url="@($"/api/videos/{video.Id}/preview")" data-preview-count="@PreviewFrameCount(video)" role="img" aria-label="@WebText.Format("Vorschau für {0}", video.FileName)">
                                     <MudIcon Icon="@Icons.Material.Filled.Movie" Size="Size.Large" />
                                 </div>
                                 <div class="media-card-content">
@@ -450,42 +450,42 @@
                                             <div class="media-card-subtitle">
                                                 @if (IsRecentlyLoaded(video))
                                                 {
-                                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">Kürzlich geladen</MudChip>
+                                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">@WebText.Get("Kürzlich geladen")</MudChip>
                                                 }
-                                                <span>@(video.IsAvailable ? FormatResolution(video) : "Datei nicht verfügbar")</span>
+                                                <span>@(video.IsAvailable ? FormatResolution(video) : WebText.Get("Datei nicht verfügbar"))</span>
                                             </div>
                                         </div>
                                         <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@GetStatusColor(video)" Icon="@GetStatusIcon(video)">@GetStatusText(video)</MudChip>
                                     </div>
                                     <dl class="media-card-details">
-                                        <div><dt>Format</dt><dd><span class="codec-label">@FormatCodec(video)</span></dd></div>
-                                        <div><dt>Dauer</dt><dd>@FormatDuration(video.Duration)</dd></div>
-                                        <div><dt>Letzte Wiedergabe</dt><dd>@FormatLastPlayed(video.Id)</dd></div>
-                                        <div><dt>Segmente</dt><dd>@FormatUsedSegments(video.Id)</dd></div>
-                                        <div><dt>Größe</dt><dd>@FormatSize(video.FileSize)</dd></div>
+                                        <div><dt>@WebText.Get("Format")</dt><dd><span class="codec-label">@FormatCodec(video)</span></dd></div>
+                                        <div><dt>@WebText.Get("Dauer")</dt><dd>@FormatDuration(video.Duration)</dd></div>
+                                        <div><dt>@WebText.Get("Letzte Wiedergabe")</dt><dd>@FormatLastPlayed(video.Id)</dd></div>
+                                        <div><dt>@WebText.Get("Segmente")</dt><dd>@FormatUsedSegments(video.Id)</dd></div>
+                                        <div><dt>@WebText.Get("Größe")</dt><dd>@FormatSize(video.FileSize)</dd></div>
                                     </dl>
                                     <div class="media-actions">
                                         @if (IsPlayable(video))
                                         {
                                             <form method="post" action="/api/queue/next">
                                                 <input type="hidden" name="mediaId" value="@video.Id" />
-                                                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.SkipNext">Als Nächstes</MudButton>
+                                                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.SkipNext">@WebText.Get("Als Nächstes")</MudButton>
                                             </form>
                                             <form method="post" action="/api/queue/now">
                                                 <input type="hidden" name="mediaId" value="@video.Id" />
-                                                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.PlayArrow">Sofort</MudButton>
+                                                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.PlayArrow">@WebText.Get("Sofort")</MudButton>
                                             </form>
                                             @if (video.Duration > TimeSpan.FromMinutes(10))
                                             {
                                                 <details class="segment-picker">
-                                                    <summary>Segment wählen</summary>
+                                                    <summary>@WebText.Get("Segment wählen")</summary>
                                                     <form method="post" class="segment-form">
                                                         <input type="hidden" name="mediaId" value="@video.Id" />
-                                                        <label>Start<input name="start" type="text" placeholder="01:20:00" required /></label>
-                                                        <label>Dauer<input name="duration" type="text" placeholder="00:08:00" required /></label>
+                                                        <label>@WebText.Get("Start")<input name="start" type="text" placeholder="01:20:00" required /></label>
+                                                        <label>@WebText.Get("Dauer")<input name="duration" type="text" placeholder="00:08:00" required /></label>
                                                         <div>
-                                                            <button type="submit" formaction="/api/queue/next">Als Nächstes</button>
-                                                            <button type="submit" formaction="/api/queue/now">Sofort</button>
+                                                            <button type="submit" formaction="/api/queue/next">@WebText.Get("Als Nächstes")</button>
+                                                            <button type="submit" formaction="/api/queue/now">@WebText.Get("Sofort")</button>
                                                         </div>
                                                     </form>
                                                 </details>
@@ -494,13 +494,13 @@
                                         <form method="post" action="/api/videos/set-enabled">
                                             <input type="hidden" name="id" value="@video.Id" />
                                             <input type="hidden" name="enabled" value="@(!video.Enabled)" />
-                                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text" Color="@(video.Enabled ? Color.Warning : Color.Success)" Size="Size.Small" StartIcon="@(video.Enabled ? Icons.Material.Filled.Block : Icons.Material.Filled.CheckCircle)">@(video.Enabled ? "Deaktivieren" : "Aktivieren")</MudButton>
+                                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text" Color="@(video.Enabled ? Color.Warning : Color.Success)" Size="Size.Small" StartIcon="@(video.Enabled ? Icons.Material.Filled.Block : Icons.Material.Filled.CheckCircle)">@WebText.Get(video.Enabled ? "Deaktivieren" : "Aktivieren")</MudButton>
                                         </form>
                                         @if (video.IsAvailable)
                                         {
                                             <form method="post" action="/api/videos/reanalyze">
                                                 <input type="hidden" name="id" value="@video.Id" />
-                                                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh">Neu analysieren</MudButton>
+                                                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh">@WebText.Get("Neu analysieren")</MudButton>
                                             </form>
                                         }
                                     </div>
@@ -693,17 +693,17 @@ else if (IsMedia)
 
     private static string GetStatusText(VideoAsset video) => video switch
     {
-        { Enabled: false } => "Deaktiviert",
-        { IsAvailable: false } => "Fehlt",
-        { ProbeStatus: MediaProbeStatus.Invalid } => "Fehlerhaft",
-        { PlaybackStatus: MediaPlaybackStatus.Unsupported } => "Inkompatibel",
-        { ProbeStatus: MediaProbeStatus.Valid, PlaybackStatus: MediaPlaybackStatus.Supported } => "Bereit",
-        _ => "Analyse"
+        { Enabled: false } => WebText.Get("Deaktiviert"),
+        { IsAvailable: false } => WebText.Get("Fehlt"),
+        { ProbeStatus: MediaProbeStatus.Invalid } => WebText.Get("Fehlerhaft"),
+        { PlaybackStatus: MediaPlaybackStatus.Unsupported } => WebText.Get("Inkompatibel"),
+        { ProbeStatus: MediaProbeStatus.Valid, PlaybackStatus: MediaPlaybackStatus.Supported } => WebText.Get("Bereit"),
+        _ => WebText.Get("Analyse")
     };
 
     private static string FormatResolution(VideoAsset video) => video.VideoWidth is > 0 && video.VideoHeight is > 0
         ? $"{video.VideoWidth} × {video.VideoHeight}"
-        : "Auflösung wird ermittelt";
+        : WebText.Get("Auflösung wird ermittelt");
 
     private static string FormatCodec(VideoAsset video)
     {
@@ -735,7 +735,7 @@ else if (IsMedia)
     {
         var count = _allHistory.Count(entry => entry.MediaId == mediaId &&
             entry.ActualStart.HasValue && entry.ActualEnd.HasValue && entry.ActualEnd.Value > entry.ActualStart.Value);
-        return count == 1 ? "1 Segment" : $"{count} Segmente";
+        return WebText.Format(count == 1 ? "{0} Segment" : "{0} Segmente", count);
     }
 
     private static string FormatPlaybackPosition(TimeSpan? position, TimeSpan? duration) =>
@@ -756,7 +756,7 @@ else if (IsMedia)
             _videos.FirstOrDefault(video => video.Id == mediaId)?.FileName ?? $"Video #{mediaId}",
         MediaSourceType.YouTube when entry.ExternalSourceKey?.StartsWith("youtube:", StringComparison.Ordinal) == true =>
             $"YouTube: {entry.ExternalSourceKey[8..]}",
-        _ => entry.ExternalSourceKey ?? "Externe Quelle"
+        _ => entry.ExternalSourceKey ?? WebText.Get("Externe Quelle")
     };
 
     private string GetHistoryVideoName(PlaybackHistory entry) => entry.SourceType switch
@@ -765,14 +765,14 @@ else if (IsMedia)
             _videos.FirstOrDefault(video => video.Id == mediaId)?.FileName ?? $"Video #{mediaId}",
         MediaSourceType.YouTube when entry.ExternalSourceKey?.StartsWith("youtube:", StringComparison.Ordinal) == true =>
             entry.ExternalSourceKey[8..],
-        _ => entry.ExternalSourceKey ?? "Unbekannt"
+        _ => entry.ExternalSourceKey ?? WebText.Get("Unbekannt")
     };
 
     private static string FormatHistoryStatus(PlaybackHistory entry) => entry switch
     {
-        { Completed: true } => "Completed",
-        { Interrupted: true } => "Interrupted",
-        _ => "Error"
+        { Completed: true } => WebText.Get("Completed"),
+        { Interrupted: true } => WebText.Get("Interrupted"),
+        _ => WebText.Get("Error")
     };
 
     private static string FormatSegment(TimeSpan start, TimeSpan end) =>
@@ -780,16 +780,16 @@ else if (IsMedia)
 
     private static string FormatOrigin(QueueEntryOrigin origin) => origin switch
     {
-        QueueEntryOrigin.ManualNext => "Manuell: Als Nächstes",
-        QueueEntryOrigin.ManualNow => "Manuell: Sofort",
-        QueueEntryOrigin.Manual => "Manuell",
-        _ => "Automatisch"
+        QueueEntryOrigin.ManualNext => WebText.Get("Manuell: Als Nächstes"),
+        QueueEntryOrigin.ManualNow => WebText.Get("Manuell: Sofort"),
+        QueueEntryOrigin.Manual => WebText.Get("Manuell"),
+        _ => WebText.Get("Automatisch")
     };
 
     private static string FormatNewsMode(NewsMode mode) => mode switch
     {
-        NewsMode.SplitScreen => "Split-Screen",
-        NewsMode.Fullscreen => "Fullscreen",
-        _ => "Ticker"
+        NewsMode.SplitScreen => WebText.Get("Split-Screen"),
+        NewsMode.Fullscreen => WebText.Get("Fullscreen"),
+        _ => WebText.Get("Ticker")
     };
 }

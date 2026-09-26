@@ -19,12 +19,15 @@ public sealed class PresenterDatabaseMigrationTests
         {
             Assert.Equal(PresenterSettings.DefaultWebPort, PresenterDatabase.GetConfiguredWebPort(dataDirectory));
             Assert.False(PresenterDatabase.GetConfiguredHostSettings(dataDirectory).AllowLanAccess);
+            Assert.Null(PresenterDatabase.GetConfiguredHostSettings(dataDirectory).LanguagePreference);
 
             await using var connection = new SqliteConnection(PresenterDatabase.CreateConnectionString(dataDirectory));
             await connection.OpenAsync();
-            Assert.EndsWith("_AddYouTubeDownloadSource", await ReadAppliedMigrationAsync(connection), StringComparison.Ordinal);
+            Assert.EndsWith("_AddLanguagePreference", await ReadAppliedMigrationAsync(connection), StringComparison.Ordinal);
             Assert.Equal("YouTubeSourceKey", await ReadScalarAsync(connection,
                 "SELECT name FROM pragma_table_info('Videos') WHERE name = 'YouTubeSourceKey';"));
+            Assert.Equal("LanguagePreference", await ReadScalarAsync(connection,
+                "SELECT name FROM pragma_table_info('Settings') WHERE name = 'LanguagePreference';"));
             Assert.Equal("wal", await ReadScalarAsync(connection, "PRAGMA journal_mode;"));
             Assert.Equal("1", await ReadScalarAsync(connection, "PRAGMA foreign_keys;"));
         }
@@ -59,10 +62,11 @@ public sealed class PresenterDatabaseMigrationTests
 
             Assert.Equal(9123, PresenterDatabase.GetConfiguredWebPort(dataDirectory));
             Assert.True(PresenterDatabase.GetConfiguredHostSettings(dataDirectory).AllowLanAccess);
+            Assert.Null(PresenterDatabase.GetConfiguredHostSettings(dataDirectory).LanguagePreference);
 
             await using var connection = new SqliteConnection(PresenterDatabase.CreateConnectionString(dataDirectory));
             await connection.OpenAsync();
-            Assert.EndsWith("_AddYouTubeDownloadSource", await ReadAppliedMigrationAsync(connection), StringComparison.Ordinal);
+            Assert.EndsWith("_AddLanguagePreference", await ReadAppliedMigrationAsync(connection), StringComparison.Ordinal);
             Assert.Equal("YouTubeSourceKey", await ReadScalarAsync(connection,
                 "SELECT name FROM pragma_table_info('Videos') WHERE name = 'YouTubeSourceKey';"));
             Assert.Equal("D:\\LAN\\Videos", await ReadScalarAsync(connection, "SELECT MediaFolder FROM Settings WHERE Id = 1;"));
@@ -71,6 +75,7 @@ public sealed class PresenterDatabaseMigrationTests
             Assert.Equal("1", await ReadScalarAsync(connection, "SELECT PreventDisplaySleep FROM Settings WHERE Id = 1;"));
             Assert.Equal("1", await ReadScalarAsync(connection, "SELECT PreventSystemSleep FROM Settings WHERE Id = 1;"));
             Assert.Equal("1", await ReadScalarAsync(connection, "SELECT Enabled FROM Videos WHERE Id = 1;"));
+            Assert.Equal(string.Empty, await ReadScalarAsync(connection, "SELECT LanguagePreference FROM Settings WHERE Id = 1;"));
             Assert.Single(Directory.GetFiles(Path.Combine(Directory.GetParent(dataDirectory)!.FullName, "Backup"), "presenter-before-migration-*.db"));
         }
         finally
@@ -94,6 +99,7 @@ public sealed class PresenterDatabaseMigrationTests
             var settings = await settingsService.GetAsync();
             settings.ChromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
             settings.AllowLanAccess = true;
+            settings.LanguagePreference = "es";
             settings.MonitorDeviceName = "\\\\.\\DISPLAY2";
             settings.AlwaysOnTop = false;
             settings.AggressiveTopmost = true;
@@ -111,6 +117,8 @@ public sealed class PresenterDatabaseMigrationTests
 
             Assert.Equal(settings.ChromePath, persisted.ChromePath);
             Assert.True(persisted.AllowLanAccess);
+            Assert.Equal("es", persisted.LanguagePreference);
+            Assert.Equal("es", PresenterDatabase.GetConfiguredHostSettings(dataDirectory).LanguagePreference);
             Assert.Equal(settings.MonitorDeviceName, persisted.MonitorDeviceName);
             Assert.False(persisted.AlwaysOnTop);
             Assert.True(persisted.AggressiveTopmost);

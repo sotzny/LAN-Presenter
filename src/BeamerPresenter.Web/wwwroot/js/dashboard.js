@@ -1,4 +1,5 @@
 (() => {
+    const t = key => window.presenterText?.(key) || key;
     const elements = {
         presenter: document.getElementById("dashboard-presenter-state"),
         browser: document.getElementById("dashboard-browser-state"),
@@ -25,16 +26,16 @@
             });
             if (!response.ok) return;
             const status = await response.json();
-            elements.presenter.textContent = status.presenterState;
-            elements.browser.textContent = `Browser: ${status.browserConnected ? "Verbunden" : "Getrennt"}`;
+            elements.presenter.textContent = t(status.presenterState);
+            elements.browser.textContent = t("Browser: {0}").replace("{0}", t(status.browserConnected ? "Verbunden" : "Getrennt"));
             elements.title.textContent = status.currentTitle || "–";
             elements.position.textContent = `${formatClock(status.position)} / ${formatClock(status.duration)}`;
-            elements.ffprobe.textContent = status.ffprobeAvailable ? "OK" : "Nicht verfügbar";
-            if (status.mediaScannerRunning) elements.scanner.textContent = "Läuft";
-            else if (status.mediaScannerError) elements.scanner.textContent = "Fehler";
-            else elements.scanner.textContent = "Bereit";
+            elements.ffprobe.textContent = t(status.ffprobeAvailable ? "OK" : "Nicht verfügbar");
+            if (status.mediaScannerRunning) elements.scanner.textContent = t("Läuft");
+            else if (status.mediaScannerError) elements.scanner.textContent = t("Fehler");
+            else elements.scanner.textContent = t("Bereit");
         } catch {
-            elements.browser.textContent = "Browser: Status nicht erreichbar";
+            elements.browser.textContent = t("Browser: Status nicht erreichbar");
         }
     };
 

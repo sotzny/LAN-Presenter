@@ -76,6 +76,7 @@ public sealed class PresenterSettings
     public int Id { get; set; } = 1;
     public int WebPort { get; set; } = DefaultWebPort;
     public bool AllowLanAccess { get; set; }
+    public string? LanguagePreference { get; set; }
     public string MediaFolder { get; set; } = string.Empty;
     public string? FfprobePath { get; set; }
     public string? ChromePath { get; set; }

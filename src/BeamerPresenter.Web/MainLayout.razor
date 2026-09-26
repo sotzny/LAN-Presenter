@@ -7,23 +7,23 @@
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
             <div class="brand-mark"><MudIcon Icon="@Icons.Material.Filled.Videocam" /></div>
             <div>
-                <MudText Typo="Typo.h6" Class="brand-title">Beamer Presenter</MudText>
-                <MudText Typo="Typo.caption" Class="brand-subtitle">FOR LAN-PARTIES</MudText>
+                <MudText Typo="Typo.h6" Class="brand-title">@WebText.Get("Beamer Presenter")</MudText>
+                <MudText Typo="Typo.caption" Class="brand-subtitle">@WebText.Get("FOR LAN-PARTIES")</MudText>
             </div>
         </MudStack>
         <MudSpacer />
         <form method="post" action="/account/logout" class="app-bar-logout">
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Logout">Abmelden</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Logout">@WebText.Get("Abmelden")</MudButton>
         </form>
     </MudAppBar>
     <div class="management-shell">
-        <aside class="management-sidebar" aria-label="Verwaltungsmenü">
-            <MudText Typo="Typo.overline" Class="management-nav-caption">VERWALTUNG</MudText>
+        <aside class="management-sidebar" aria-label="@WebText.Get("Verwaltungsmenü")">
+            <MudText Typo="Typo.overline" Class="management-nav-caption">@WebText.Get("VERWALTUNG")</MudText>
             <MudNavMenu Class="management-nav">
-                <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
-                <MudNavLink Href="/playback" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PlaylistPlay">Wiedergabe</MudNavLink>
-                <MudNavLink Href="/media" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.VideoLibrary">Mediathek</MudNavLink>
-                <MudNavLink Href="/news" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Campaign">News</MudNavLink>
+                <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">@WebText.Get("Dashboard")</MudNavLink>
+                <MudNavLink Href="/playback" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PlaylistPlay">@WebText.Get("Wiedergabe")</MudNavLink>
+                <MudNavLink Href="/media" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.VideoLibrary">@WebText.Get("Mediathek")</MudNavLink>
+                <MudNavLink Href="/news" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Campaign">@WebText.Get("News")</MudNavLink>
             </MudNavMenu>
         </aside>
         <MudMainContent Class="main-content management-content">

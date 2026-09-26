@@ -1,5 +1,6 @@
 (() => {
     "use strict";
+    const t = key => window.presenterText?.(key) || key;
 
     const recordSeparator = "\u001e";
     const youtubeApiTimeoutMs = 5000;
@@ -76,7 +77,7 @@
         if (youtubeApiPromise) return youtubeApiPromise;
         youtubeApiPromise = new Promise((resolve, reject) => {
             const previousCallback = window.onYouTubeIframeAPIReady;
-            const timeout = window.setTimeout(() => reject(new Error("YouTube Player API timeout")), youtubeApiTimeoutMs);
+            const timeout = window.setTimeout(() => reject(new Error(t("YouTube Player API timeout"))), youtubeApiTimeoutMs);
             window.onYouTubeIframeAPIReady = () => {
                 window.clearTimeout(timeout);
                 if (typeof previousCallback === "function") previousCallback();
@@ -92,7 +93,7 @@
             }
             script.addEventListener("error", () => {
                 window.clearTimeout(timeout);
-                reject(new Error("YouTube Player API unavailable"));
+                reject(new Error(t("YouTube Player API unavailable")));
             }, { once: true });
         }).catch(error => {
             youtubeApiPromise = null;
@@ -114,7 +115,7 @@
             report("Ready");
             if (autoPlay) {
                 try { await video.play(); }
-                catch (error) { reportTerminal("Error", error instanceof Error ? error.message : "Autoplay wurde abgelehnt."); }
+                catch (error) { reportTerminal("Error", t("Autoplay wurde abgelehnt.")); }
             }
         };
     };
@@ -124,7 +125,7 @@
         destroyYouTubePlayer();
         segmentEndSeconds = Number.isFinite(endSeconds) ? endSeconds : null;
         showPlayback("youtube");
-        setStatus("YouTube Player wird geladen …");
+        setStatus(t("YouTube Player wird geladen …"));
         try {
             const yt = await ensureYouTubeApi();
             const playerElement = document.createElement("div");
@@ -147,7 +148,7 @@
                         else if (event.data === yt.PlayerState.BUFFERING) report("Buffering");
                         else if (event.data === yt.PlayerState.ENDED) reportTerminal("Ended");
                     },
-                    onError: event => reportTerminal("Error", `YouTube Player Fehler ${event.data}`)
+                    onError: event => reportTerminal("Error", t("YouTube Player Fehler {0}").replace("{0}", event.data))
                 }
             });
             youtubeSegmentTimer = window.setInterval(() => {
@@ -157,7 +158,7 @@
                 }
             }, 250);
         } catch (error) {
-            reportTerminal("Error", error instanceof Error ? error.message : "YouTube ist nicht verfügbar.");
+            reportTerminal("Error", t("YouTube ist nicht verfügbar."));
         }
     };
 
@@ -168,7 +169,7 @@
         segmentEndSeconds = null;
         terminalReported = false;
         idle.classList.remove("presenter-idle-hidden");
-        setStatus("Bereit für die nächste Wiedergabe.");
+        setStatus(t("Bereit für die nächste Wiedergabe."));
         report("Stopped");
     };
     const showNews = (id, title, text, mode) => {
@@ -241,7 +242,7 @@
     const connect = async () => {
         clearTimeout(reconnectTimer);
         try {
-            setStatus("Echtzeitverbindung wird hergestellt …");
+            setStatus(t("Echtzeitverbindung wird hergestellt …"));
             const negotiation = await fetch("/hubs/presenter/negotiate?negotiateVersion=1", { method: "POST" });
             if (!negotiation.ok) throw new Error(`SignalR negotiation failed (${negotiation.status}).`);
             const details = await negotiation.json();
@@ -251,17 +252,17 @@
             socket.addEventListener("message", async event => {
                 await handleMessages(String(event.data));
                 if (String(event.data).startsWith("{}")) {
-                    setStatus("Verbunden. Bereit für die nächste Wiedergabe.");
+                    setStatus(t("Verbunden. Bereit für die nächste Wiedergabe."));
                     report("Connected");
                 }
             });
             socket.addEventListener("close", () => {
-                setStatus("Verbindung getrennt. Neuer Versuch …");
+                setStatus(t("Verbindung getrennt. Neuer Versuch …"));
                 reconnectTimer = setTimeout(connect, 2000);
             });
             socket.addEventListener("error", () => socket?.close());
         } catch {
-            setStatus("Verbindung nicht verfügbar. Neuer Versuch …");
+            setStatus(t("Verbindung nicht verfügbar. Neuer Versuch …"));
             reconnectTimer = setTimeout(connect, 2000);
         }
     };
@@ -270,7 +271,7 @@
     video.addEventListener("pause", () => activeSource === "local" && video.currentSrc && report("Paused"));
     video.addEventListener("waiting", () => activeSource === "local" && report("Buffering"));
     video.addEventListener("ended", () => activeSource === "local" && reportTerminal("Ended"));
-    video.addEventListener("error", () => activeSource === "local" && reportTerminal("Error", video.error?.message || "Das Video konnte nicht wiedergegeben werden."));
+    video.addEventListener("error", () => activeSource === "local" && reportTerminal("Error", t("Das Video konnte nicht wiedergegeben werden.")));
     video.addEventListener("timeupdate", () => {
         if (activeSource === "local" && segmentEndSeconds !== null && video.currentTime >= segmentEndSeconds) {
             video.pause();

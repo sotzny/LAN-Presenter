@@ -23,6 +23,7 @@ Die Wiedergabe lässt sich jederzeit pausieren, ausblenden, fortsetzen oder been
 - **Beamer-Steuerung:** Chrome startet im Kioskmodus auf dem gewählten Monitor. Aktivieren, Pause, Ausblenden und Stop lassen sich zentral steuern.
 - **Übersicht und Wiederherstellung:** Dashboard mit Live-Status, Medienanalyse und Scannerzustand; automatische Erholung bei Browser- oder Wiedergabeproblemen.
 - **Lokale Datenhaltung:** Einstellungen, Bibliothek, Queue, Verlauf, Logs und Backups liegen im Benutzerprofil unter `%LOCALAPPDATA%\BeamerPresenter\Presenter`.
+- **Drei Sprachen:** Desktop-App, Webverwaltung und Beamer-Anzeige stehen auf Deutsch, Englisch und Spanisch zur Verfügung.
 
 Unterstützte lokale Videoformate: `.mp4`, `.m4v`, `.mkv`, `.webm`, `.avi` und `.mov`.
 
@@ -50,6 +51,8 @@ Beim ersten Start:
 4. Die Weboberfläche auf dem lokalen Rechner unter [http://localhost:8765](http://localhost:8765) öffnen und anmelden.
 
 Aktiviere „Web UI im LAN freigeben“ in der Desktop-Anwendung, wenn du von einem anderen Gerät im Netzwerk steuern möchtest. Die Änderung wird nach einem Neustart wirksam; gegebenenfalls muss der Web-Port in der Windows-Firewall freigegeben werden.
+
+Unter „Sprache“ kannst du „Systemstandard“, Deutsch, Englisch oder Spanisch auswählen. Beim Systemstandard verwendet die App beim Start die Windows-Sprache; ist sie nicht verfügbar, erscheint Englisch. Die Auswahl gilt auch für die Weboberfläche auf anderen Geräten und für die Beamer-Anzeige. Sprachänderungen werden nach einem Neustart wirksam.
 
 ## Sicherheit und Netzwerk
 

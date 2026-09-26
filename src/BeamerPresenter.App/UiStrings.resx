@@ -1,0 +1,248 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <data name=" (Primär)" xml:space="preserve">
+    <value> (Primär)</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
+  <data name="Aggressive Topmost" xml:space="preserve">
+    <value>Im Vordergrund halten (aggressiv)</value>
+  </data>
+  <data name="Aktiv" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
+  <data name="Always On Top" xml:space="preserve">
+    <value>Immer im Vordergrund</value>
+  </data>
+  <data name="Auswählen" xml:space="preserve">
+    <value>Auswählen</value>
+  </data>
+  <data name="Autostart:" xml:space="preserve">
+    <value>Autostart:</value>
+  </data>
+  <data name="Beenden" xml:space="preserve">
+    <value>Beenden</value>
+  </data>
+  <data name="Bildschirmabschaltung verhindern" xml:space="preserve">
+    <value>Bildschirmabschaltung verhindern</value>
+  </data>
+  <data name="Bitte einen Port zwischen 1024 und 65535 angeben." xml:space="preserve">
+    <value>Bitte einen Port zwischen 1024 und 65535 angeben.</value>
+  </data>
+  <data name="Bitte einen verfügbaren Monitor auswählen." xml:space="preserve">
+    <value>Bitte einen verfügbaren Monitor auswählen.</value>
+  </data>
+  <data name="Build:" xml:space="preserve">
+    <value>Build:</value>
+  </data>
+  <data name="Chrome auswählen" xml:space="preserve">
+    <value>Chrome auswählen</value>
+  </data>
+  <data name="Chrome-Pfad:" xml:space="preserve">
+    <value>Chrome-Pfad:</value>
+  </data>
+  <data name="Chrome-Status:" xml:space="preserve">
+    <value>Chrome-Status:</value>
+  </data>
+  <data name="Commit:" xml:space="preserve">
+    <value>Commit:</value>
+  </data>
+  <data name="Der Presenter-Befehl ist fehlgeschlagen." xml:space="preserve">
+    <value>Der Presenter-Befehl ist fehlgeschlagen.</value>
+  </data>
+  <data name="Der Windows-Autostart konnte nicht geändert werden." xml:space="preserve">
+    <value>Der Windows-Autostart konnte nicht geändert werden.</value>
+  </data>
+  <data name="Der konfigurierte Monitor ist nicht verfügbar. Bitte einen Fallback-Monitor auswählen und die Einstellungen speichern." xml:space="preserve">
+    <value>Der konfigurierte Monitor ist nicht verfügbar. Bitte einen Fallback-Monitor auswählen und die Einstellungen speichern.</value>
+  </data>
+  <data name="Deutsch" xml:space="preserve">
+    <value>Deutsch</value>
+  </data>
+  <data name="Die Passwörter stimmen nicht überein." xml:space="preserve">
+    <value>Die Passwörter stimmen nicht überein.</value>
+  </data>
+  <data name="Einstellungen" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="Einstellungen gespeichert." xml:space="preserve">
+    <value>Einstellungen gespeichert.</value>
+  </data>
+  <data name="Einstellungen speichern" xml:space="preserve">
+    <value>Einstellungen speichern</value>
+  </data>
+  <data name="Englisch" xml:space="preserve">
+    <value>Englisch</value>
+  </data>
+  <data name="Entfernen" xml:space="preserve">
+    <value>Entfernen</value>
+  </data>
+  <data name="Erneut prüfen" xml:space="preserve">
+    <value>Erneut prüfen</value>
+  </data>
+  <data name="FFmpeg installieren" xml:space="preserve">
+    <value>FFmpeg installieren</value>
+  </data>
+  <data name="FFprobe auswählen" xml:space="preserve">
+    <value>FFprobe auswählen</value>
+  </data>
+  <data name="FFprobe-Pfad:" xml:space="preserve">
+    <value>FFprobe-Pfad:</value>
+  </data>
+  <data name="FFprobe-Status:" xml:space="preserve">
+    <value>FFprobe-Status:</value>
+  </data>
+  <data name="Fallback ausgewählt – bitte speichern" xml:space="preserve">
+    <value>Fallback ausgewählt – bitte speichern</value>
+  </data>
+  <data name="Gestoppt" xml:space="preserve">
+    <value>Gestoppt</value>
+  </data>
+  <data name="Hidden" xml:space="preserve">
+    <value>Ausgeblendet</value>
+  </data>
+  <data name="Hinzufügen" xml:space="preserve">
+    <value>Hinzufügen</value>
+  </data>
+  <data name="Installation läuft …" xml:space="preserve">
+    <value>Installation läuft …</value>
+  </data>
+  <data name="Keine Anzeige erkannt" xml:space="preserve">
+    <value>Keine Anzeige erkannt</value>
+  </data>
+  <data name="Läuft" xml:space="preserve">
+    <value>Läuft</value>
+  </data>
+  <data name="Mit Windows starten" xml:space="preserve">
+    <value>Mit Windows starten</value>
+  </data>
+  <data name="Monitor:" xml:space="preserve">
+    <value>Monitor:</value>
+  </data>
+  <data name="Monitorstatus:" xml:space="preserve">
+    <value>Monitorstatus:</value>
+  </data>
+  <data name="Netzwerk:" xml:space="preserve">
+    <value>Netzwerk:</value>
+  </data>
+  <data name="Nicht verfügbar" xml:space="preserve">
+    <value>Nicht verfügbar</value>
+  </data>
+  <data name="Nicht verfügbar: {0}" xml:space="preserve">
+    <value>Nicht verfügbar: {0}</value>
+  </data>
+  <data name="Noch nicht eingerichtet" xml:space="preserve">
+    <value>Noch nicht eingerichtet</value>
+  </data>
+  <data name="Passwort wiederholen:" xml:space="preserve">
+    <value>Passwort wiederholen:</value>
+  </data>
+  <data name="Paused" xml:space="preserve">
+    <value>Pausiert</value>
+  </data>
+  <data name="Port-, Netzwerk- und Sprachänderungen gelten nach einem Neustart." xml:space="preserve">
+    <value>Port-, Netzwerk- und Sprachänderungen gelten nach einem Neustart.</value>
+  </data>
+  <data name="Presenter aktivieren" xml:space="preserve">
+    <value>Presenter aktivieren</value>
+  </data>
+  <data name="Presenter ausblenden" xml:space="preserve">
+    <value>Presenter ausblenden</value>
+  </data>
+  <data name="Presenter pausieren" xml:space="preserve">
+    <value>Presenter pausieren</value>
+  </data>
+  <data name="Presenter stoppen" xml:space="preserve">
+    <value>Presenter stoppen</value>
+  </data>
+  <data name="Presenter-Optionen:" xml:space="preserve">
+    <value>Presenter-Optionen:</value>
+  </data>
+  <data name="Presenter:" xml:space="preserve">
+    <value>Presenter:</value>
+  </data>
+  <data name="Runtime:" xml:space="preserve">
+    <value>Laufzeit:</value>
+  </data>
+  <data name="Schutzstatus:" xml:space="preserve">
+    <value>Schutzstatus:</value>
+  </data>
+  <data name="Spanisch" xml:space="preserve">
+    <value>Spanisch</value>
+  </data>
+  <data name="Sprache:" xml:space="preserve">
+    <value>Sprache:</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Status nicht verfügbar" xml:space="preserve">
+    <value>Status nicht verfügbar</value>
+  </data>
+  <data name="Stopped" xml:space="preserve">
+    <value>Gestoppt</value>
+  </data>
+  <data name="Systemstandard" xml:space="preserve">
+    <value>Systemstandard</value>
+  </data>
+  <data name="Unterverzeichnisse durchsuchen" xml:space="preserve">
+    <value>Unterverzeichnisse durchsuchen</value>
+  </data>
+  <data name="Verfügbar" xml:space="preserve">
+    <value>Verfügbar</value>
+  </data>
+  <data name="Version:" xml:space="preserve">
+    <value>Version:</value>
+  </data>
+  <data name="Videoordner auswählen" xml:space="preserve">
+    <value>Videoordner auswählen</value>
+  </data>
+  <data name="Videoordner:" xml:space="preserve">
+    <value>Videoordner:</value>
+  </data>
+  <data name="Web UI Port:" xml:space="preserve">
+    <value>Port der Weboberfläche:</value>
+  </data>
+  <data name="Web UI im LAN freigeben" xml:space="preserve">
+    <value>Weboberfläche im LAN freigeben</value>
+  </data>
+  <data name="Web UI öffnen" xml:space="preserve">
+    <value>Weboberfläche öffnen</value>
+  </data>
+  <data name="Web UI:" xml:space="preserve">
+    <value>Weboberfläche:</value>
+  </data>
+  <data name="Web-Passwort:" xml:space="preserve">
+    <value>Web-Passwort:</value>
+  </data>
+  <data name="Windows-Standby verhindern" xml:space="preserve">
+    <value>Windows-Standby verhindern</value>
+  </data>
+  <data name="Wird geprüft …" xml:space="preserve">
+    <value>Wird geprüft …</value>
+  </data>
+  <data name="{0} (inkl. Unterordner)" xml:space="preserve">
+    <value>{0} (inkl. Unterordner)</value>
+  </data>
+  <data name="● Presenter {0}" xml:space="preserve">
+    <value>● Presenter {0}</value>
+  </data>
+  <data name="✗ FFprobe ist nicht verfügbar. Details stehen im Log." xml:space="preserve">
+    <value>✗ FFprobe ist nicht verfügbar. Details stehen im Log.</value>
+  </data>
+  <data name="Programme" xml:space="preserve"><value>Programme</value></data>
+  <data name="Der Presenter wurde unerwartet beendet." xml:space="preserve"><value>Der Presenter wurde unerwartet beendet.</value></data>
+</root>

@@ -89,11 +89,14 @@ public static class PresenterDatabase
         context.Database.ExecuteSqlRaw("PRAGMA journal_mode = WAL;");
         var configured = context.Settings.AsNoTracking()
             .Where(settings => settings.Id == 1)
-            .Select(settings => new { settings.WebPort, settings.AllowLanAccess })
+            .Select(settings => new { settings.WebPort, settings.AllowLanAccess, settings.LanguagePreference })
             .SingleOrDefault();
         var configuredPort = configured?.WebPort;
         var webPort = configuredPort is >= 1024 and <= 65535 ? configuredPort.Value : PresenterSettings.DefaultWebPort;
-        return new PresenterHostSettings(webPort, configured?.AllowLanAccess ?? false);
+        return new PresenterHostSettings(webPort, configured?.AllowLanAccess ?? false)
+        {
+            LanguagePreference = configured?.LanguagePreference
+        };
     }
 
     public static string CreateDailyBackup(string dataDirectory) =>
@@ -229,7 +232,10 @@ public static class PresenterDatabase
     }
 }
 
-public sealed record PresenterHostSettings(int WebPort, bool AllowLanAccess);
+public sealed record PresenterHostSettings(int WebPort, bool AllowLanAccess)
+{
+    public string? LanguagePreference { get; init; }
+}
 
 internal sealed class PresenterBackupWorker(
     string dataDirectory,
@@ -302,6 +308,7 @@ internal sealed class SqlitePresenterSettingsService(IDbContextFactory<Presenter
             {
                 existing.WebPort = settings.WebPort;
                 existing.AllowLanAccess = settings.AllowLanAccess;
+                existing.LanguagePreference = settings.LanguagePreference;
                 existing.MediaFolder = settings.MediaFolder;
                 existing.FfprobePath = settings.FfprobePath;
                 existing.ChromePath = settings.ChromePath;

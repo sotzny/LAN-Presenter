@@ -15,6 +15,7 @@ public sealed class PresenterDbContext(DbContextOptions<PresenterDbContext> opti
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<PresenterSettings>().HasKey(x => x.Id);
+        modelBuilder.Entity<PresenterSettings>().Property(x => x.LanguagePreference).HasMaxLength(2);
         modelBuilder.Entity<PresenterSettings>().Property(x => x.MediaFolder).HasMaxLength(1024);
         modelBuilder.Entity<PresenterSettings>().Property(x => x.FfprobePath).HasMaxLength(4096);
         modelBuilder.Entity<PresenterSettings>().Property(x => x.ChromePath).HasMaxLength(4096);

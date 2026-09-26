@@ -1,5 +1,7 @@
 (() => {
     "use strict";
+    const t = key => window.presenterText?.(key) || key;
+    const userError = message => Object.assign(new Error(message), { presenterUserMessage: true });
 
     const form = document.getElementById("youtube-management-form");
     const urlInput = document.getElementById("youtube-url");
@@ -57,33 +59,33 @@
         if (selectedMode() === "full") {
             form.querySelector('input[name="playbackMode"][value="automatic"]').checked = true;
         }
-        status.textContent = "Noch nicht geprüft";
+        status.textContent = t("Noch nicht geprüft");
         status.className = "";
-        durationLabel.textContent = "Dauer: –";
+        durationLabel.textContent = t("Dauer: –");
         updateMode();
     };
 
     const phaseText = {
-        installing: "yt-dlp wird eingerichtet …",
-        downloading: "Video wird lokal geladen …",
-        analyzing: "Video wird analysiert …",
-        ready: "Video ist in der Mediathek bereit.",
-        failed: "Download fehlgeschlagen."
+        installing: t("yt-dlp wird eingerichtet …"),
+        downloading: t("Video wird lokal geladen …"),
+        analyzing: t("Video wird analysiert …"),
+        ready: t("Video ist in der Mediathek bereit."),
+        failed: t("Download fehlgeschlagen.")
     };
 
     const pendingDownloadNote = phase => {
         if (!pendingAction) return "";
         if (phase === "ready") {
-            return pendingAction === "Sofort"
-                ? " Lokale Wiedergabe wurde gestartet."
-                : " Lokale Wiedergabe wurde als Nächstes eingereiht.";
+            return pendingAction === "now"
+                ? t(" Lokale Wiedergabe wurde gestartet.")
+                : t(" Lokale Wiedergabe wurde als Nächstes eingereiht.");
         }
-        return phase === "failed" ? "" : ` ${pendingAction} ist vorgemerkt.`;
+        return phase === "failed" ? "" : t(" {0} ist vorgemerkt.").replace("{0}", t(pendingAction === "now" ? "Sofort" : "Als Nächstes"));
     };
 
     const showDownloadStatus = (snapshot, phase) => {
         const note = pendingDownloadNote(phase);
-        status.textContent = snapshot.error || `${phaseText[phase] || "Download wird vorbereitet …"}${note}`;
+        status.textContent = snapshot.error || `${phaseText[phase] || t("Download wird vorbereitet …")}${note}`;
         if (phase === "failed" || snapshot.error) status.className = "error";
         else if (phase === "ready") status.className = "success";
         else status.className = "loading";
@@ -93,7 +95,7 @@
     const showDownloadPreview = snapshot => {
         fullMode.disabled = false;
         durationLabel.textContent = Number.isFinite(snapshot.durationSeconds) && snapshot.durationSeconds > 0
-            ? `Dauer: ${formatDuration(snapshot.durationSeconds)}` : "Dauer: lokal analysiert";
+            ? t("Dauer: {0}").replace("{0}", formatDuration(snapshot.durationSeconds)) : t("Dauer: lokal analysiert");
         if (snapshot.mediaId && !preview.querySelector(`video[data-media-id="${snapshot.mediaId}"]`)) {
             const video = document.createElement("video");
             video.controls = true;
@@ -116,7 +118,8 @@
     };
 
     const showError = error => {
-        status.textContent = error instanceof Error ? error.message : "Das Video konnte nicht geladen werden.";
+        status.textContent = error instanceof Error && error.presenterUserMessage
+            ? error.message : t("Das Video konnte nicht geladen werden.");
         status.className = "error";
     };
 
@@ -125,7 +128,7 @@
             credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" }
         });
         const result = await response.json().catch(() => null);
-        if (!response.ok) throw new Error(result?.error || "YouTube-Link nicht erkannt.");
+        if (!response.ok) throw userError(result?.error || t("YouTube-Link nicht erkannt."));
         return result;
     };
 
@@ -135,7 +138,7 @@
             const response = await fetch(`/api/youtube/download/${encodeURIComponent(videoId)}`, {
                 credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" }
             });
-            if (!response.ok) throw new Error("Downloadstatus konnte nicht geladen werden.");
+            if (!response.ok) throw userError(t("Downloadstatus konnte nicht geladen werden."));
             const snapshot = await response.json();
             if (requestGeneration === generation) showDownload(snapshot);
         } catch (error) {
@@ -146,7 +149,7 @@
     const startDownload = async (reference, requestGeneration) => {
         if (requestGeneration !== generation) return false;
         downloadVideoId = reference.videoId;
-        status.textContent = "Lokaler Download wird vorbereitet …";
+        status.textContent = t("Lokaler Download wird vorbereitet …");
         status.className = "loading";
         try {
             const response = await fetch("/api/youtube/download", {
@@ -155,7 +158,7 @@
                 body: new URLSearchParams({ url: reference.canonicalUrl })
             });
             const snapshot = await response.json();
-            if (!response.ok) throw new Error(snapshot.error || "Der Download konnte nicht gestartet werden.");
+            if (!response.ok) throw userError(snapshot.error || t("Der Download konnte nicht gestartet werden."));
             if (requestGeneration !== generation) return false;
             showDownload(snapshot);
             if (snapshot.phase === "failed") return false;
@@ -179,7 +182,7 @@
         reset();
         const requestGeneration = generation;
         loadButton.disabled = true;
-        status.textContent = "YouTube-Link wird geprüft …";
+        status.textContent = t("YouTube-Link wird geprüft …");
         status.className = "loading";
         try {
             const reference = await normalizeUrl();
@@ -198,7 +201,6 @@
         event.preventDefault();
         const requestGeneration = generation;
         const action = event.submitter?.formAction?.endsWith("/now") ? "now" : "next";
-        const actionLabel = action === "now" ? "Sofort" : "Als Nächstes";
         const mode = selectedMode();
         const data = new URLSearchParams({
             action, mode,
@@ -218,9 +220,9 @@
                     headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" }, body: data
                 });
                 const snapshot = await response.json();
-                if (!response.ok) throw new Error(snapshot.error || "Die Wiedergabe konnte nicht vorgemerkt werden.");
+                if (!response.ok) throw userError(snapshot.error || t("Die Wiedergabe konnte nicht vorgemerkt werden."));
                 if (requestGeneration !== generation) return;
-                pendingAction = actionLabel;
+                pendingAction = action;
                 showDownload(snapshot);
             } catch (error) {
                 if (requestGeneration === generation) showError(error);

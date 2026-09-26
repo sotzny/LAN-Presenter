@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Text.Json;
 using BeamerPresenter.Application;
 using BeamerPresenter.Domain;
@@ -51,6 +52,16 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
             await database.Database.MigrateAsync();
         }
 
+        _application.Use(async (context, next) =>
+        {
+            if (context.Request.Headers.TryGetValue("X-Test-Culture", out var cultureName))
+            {
+                var culture = CultureInfo.GetCultureInfo(cultureName.ToString());
+                CultureInfo.CurrentCulture = culture;
+                CultureInfo.CurrentUICulture = culture;
+            }
+            await next();
+        });
         _application.UseStaticFiles();
         _application.UsePresenterLoopbackProtection();
         _application.UseAuthentication();
@@ -113,6 +124,31 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
             Url = $"{_baseAddress}/_content/BeamerPresenter.Web/js/dashboard.js"
         });
         await WaitForTextAsync(page, "#dashboard-presenter-state", "coverage-state");
+    }
+
+    [Fact]
+    public async Task Spanish_ui_uses_app_language_even_with_german_browser_locale()
+    {
+        await using var context = await _browser!.NewContextAsync(new BrowserNewContextOptions
+        {
+            Locale = "de-DE",
+            ExtraHTTPHeaders = new Dictionary<string, string> { ["X-Test-Culture"] = "es-ES" }
+        });
+        var page = await context.NewPageAsync();
+        await page.GotoAsync($"{_baseAddress}/login");
+        Assert.Equal("de-DE", await page.EvaluateAsync<string>("navigator.language"));
+        Assert.Equal("es", await page.Locator("html").GetAttributeAsync("lang"));
+        Assert.True(await page.GetByText("Acceso protegido", new() { Exact = true }).IsVisibleAsync());
+
+        await page.FillAsync("#password", TestPassword);
+        await page.Locator("form[action='/account/login'] button[type='submit']").ClickAsync();
+        await page.WaitForURLAsync($"{_baseAddress}/");
+        Assert.True(await page.GetByText("REPRODUCCIÓN ACTUAL", new() { Exact = true }).IsVisibleAsync());
+        Assert.Equal("Navegador: estado no disponible", await page.EvaluateAsync<string>("window.presenterText('Browser: Status nicht erreichbar')"));
+
+        await page.GotoAsync($"{_baseAddress}/presenter");
+        Assert.True(await page.GetByRole(AriaRole.Heading, new() { Name = "Esperando al siguiente vídeo" }).IsVisibleAsync());
+        await WaitForTextAsync(page, "#presenter-status", "Conectado. Listo para la siguiente reproducción.");
     }
 
     [Fact]
@@ -320,7 +356,7 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
         Assert.True(_playbackCommands.AdvanceCalls.TryPeek(out var failed));
         Assert.False(failed.Successful);
         Assert.Equal("Error", _application.Services.GetRequiredService<PresenterConnectionState>().LatestReport.Status);
-        Assert.Contains("YouTube Player API unavailable", _application.Services.GetRequiredService<PresenterConnectionState>().LatestReport.Message);
+        Assert.Contains("YouTube ist nicht verfügbar.", _application.Services.GetRequiredService<PresenterConnectionState>().LatestReport.Message);
     }
 
     [Fact]

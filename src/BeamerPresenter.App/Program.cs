@@ -1,3 +1,4 @@
+using System.Globalization;
 using BeamerPresenter.Application;
 using BeamerPresenter.Infrastructure;
 using BeamerPresenter.Web;
@@ -31,8 +32,10 @@ internal static class Program
         {
             var build = BuildInformation.Current;
             Log.Information("Starting presenter {Version} ({GitCommitSha})", build.Version, build.ShortGitCommitSha);
+            var hostSettings = PresenterDatabase.GetConfiguredHostSettings(paths.DataDirectory);
+            PresenterLanguage.Apply(hostSettings.LanguagePreference, CultureInfo.CurrentUICulture);
             ApplicationConfiguration.Initialize();
-            using var presenterHost = BuildPresenterHost(paths);
+            using var presenterHost = BuildPresenterHost(paths, hostSettings);
             presenterHost.StartAsync().GetAwaiter().GetResult();
             using var presenterForm = new PresenterForm(presenterHost, startMinimized);
             singleInstance.StartListening(() =>
@@ -49,7 +52,7 @@ internal static class Program
         catch (Exception exception)
         {
             Log.Fatal(exception, "Presenter terminated unexpectedly");
-            throw new InvalidOperationException("Der Presenter wurde unerwartet beendet.", exception);
+            throw new InvalidOperationException(AppText.Get("Der Presenter wurde unerwartet beendet."), exception);
         }
         finally
         {
@@ -57,9 +60,8 @@ internal static class Program
         }
     }
 
-    private static WebApplication BuildPresenterHost(PresenterPaths paths)
+    private static WebApplication BuildPresenterHost(PresenterPaths paths, PresenterHostSettings hostSettings)
     {
-        var hostSettings = PresenterDatabase.GetConfiguredHostSettings(paths.DataDirectory);
         var webPort = hostSettings.WebPort;
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {

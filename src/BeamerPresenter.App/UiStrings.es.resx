@@ -1,0 +1,248 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <data name=" (Primär)" xml:space="preserve">
+    <value> (Principal)</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>Activo</value>
+  </data>
+  <data name="Aggressive Topmost" xml:space="preserve">
+    <value>Siempre visible agresivo</value>
+  </data>
+  <data name="Aktiv" xml:space="preserve">
+    <value>Activo</value>
+  </data>
+  <data name="Always On Top" xml:space="preserve">
+    <value>Siempre visible</value>
+  </data>
+  <data name="Auswählen" xml:space="preserve">
+    <value>Seleccionar</value>
+  </data>
+  <data name="Autostart:" xml:space="preserve">
+    <value>Inicio automático:</value>
+  </data>
+  <data name="Beenden" xml:space="preserve">
+    <value>Salir</value>
+  </data>
+  <data name="Bildschirmabschaltung verhindern" xml:space="preserve">
+    <value>Impedir que se apague la pantalla</value>
+  </data>
+  <data name="Bitte einen Port zwischen 1024 und 65535 angeben." xml:space="preserve">
+    <value>Introduce un puerto entre 1024 y 65535.</value>
+  </data>
+  <data name="Bitte einen verfügbaren Monitor auswählen." xml:space="preserve">
+    <value>Selecciona un monitor disponible.</value>
+  </data>
+  <data name="Build:" xml:space="preserve">
+    <value>Compilación:</value>
+  </data>
+  <data name="Chrome auswählen" xml:space="preserve">
+    <value>Seleccionar Chrome</value>
+  </data>
+  <data name="Chrome-Pfad:" xml:space="preserve">
+    <value>Ruta de Chrome:</value>
+  </data>
+  <data name="Chrome-Status:" xml:space="preserve">
+    <value>Estado de Chrome:</value>
+  </data>
+  <data name="Commit:" xml:space="preserve">
+    <value>Commit:</value>
+  </data>
+  <data name="Der Presenter-Befehl ist fehlgeschlagen." xml:space="preserve">
+    <value>Falló el comando del presentador.</value>
+  </data>
+  <data name="Der Windows-Autostart konnte nicht geändert werden." xml:space="preserve">
+    <value>No se pudo cambiar el inicio automático de Windows.</value>
+  </data>
+  <data name="Der konfigurierte Monitor ist nicht verfügbar. Bitte einen Fallback-Monitor auswählen und die Einstellungen speichern." xml:space="preserve">
+    <value>El monitor configurado no está disponible. Selecciona otro monitor y guarda la configuración.</value>
+  </data>
+  <data name="Deutsch" xml:space="preserve">
+    <value>Alemán</value>
+  </data>
+  <data name="Die Passwörter stimmen nicht überein." xml:space="preserve">
+    <value>Las contraseñas no coinciden.</value>
+  </data>
+  <data name="Einstellungen" xml:space="preserve">
+    <value>Configuración</value>
+  </data>
+  <data name="Einstellungen gespeichert." xml:space="preserve">
+    <value>Configuración guardada.</value>
+  </data>
+  <data name="Einstellungen speichern" xml:space="preserve">
+    <value>Guardar configuración</value>
+  </data>
+  <data name="Englisch" xml:space="preserve">
+    <value>Inglés</value>
+  </data>
+  <data name="Entfernen" xml:space="preserve">
+    <value>Quitar</value>
+  </data>
+  <data name="Erneut prüfen" xml:space="preserve">
+    <value>Comprobar de nuevo</value>
+  </data>
+  <data name="FFmpeg installieren" xml:space="preserve">
+    <value>Instalar FFmpeg</value>
+  </data>
+  <data name="FFprobe auswählen" xml:space="preserve">
+    <value>Seleccionar FFprobe</value>
+  </data>
+  <data name="FFprobe-Pfad:" xml:space="preserve">
+    <value>Ruta de FFprobe:</value>
+  </data>
+  <data name="FFprobe-Status:" xml:space="preserve">
+    <value>Estado de FFprobe:</value>
+  </data>
+  <data name="Fallback ausgewählt – bitte speichern" xml:space="preserve">
+    <value>Alternativa seleccionada: guarda la configuración</value>
+  </data>
+  <data name="Gestoppt" xml:space="preserve">
+    <value>Detenido</value>
+  </data>
+  <data name="Hidden" xml:space="preserve">
+    <value>Oculto</value>
+  </data>
+  <data name="Hinzufügen" xml:space="preserve">
+    <value>Añadir</value>
+  </data>
+  <data name="Installation läuft …" xml:space="preserve">
+    <value>Instalando …</value>
+  </data>
+  <data name="Keine Anzeige erkannt" xml:space="preserve">
+    <value>No se detectó ninguna pantalla</value>
+  </data>
+  <data name="Läuft" xml:space="preserve">
+    <value>En ejecución</value>
+  </data>
+  <data name="Mit Windows starten" xml:space="preserve">
+    <value>Iniciar con Windows</value>
+  </data>
+  <data name="Monitor:" xml:space="preserve">
+    <value>Monitor:</value>
+  </data>
+  <data name="Monitorstatus:" xml:space="preserve">
+    <value>Estado del monitor:</value>
+  </data>
+  <data name="Netzwerk:" xml:space="preserve">
+    <value>Red:</value>
+  </data>
+  <data name="Nicht verfügbar" xml:space="preserve">
+    <value>No disponible</value>
+  </data>
+  <data name="Nicht verfügbar: {0}" xml:space="preserve">
+    <value>No disponible: {0}</value>
+  </data>
+  <data name="Noch nicht eingerichtet" xml:space="preserve">
+    <value>Aún no configurado</value>
+  </data>
+  <data name="Passwort wiederholen:" xml:space="preserve">
+    <value>Repetir contraseña:</value>
+  </data>
+  <data name="Paused" xml:space="preserve">
+    <value>En pausa</value>
+  </data>
+  <data name="Port-, Netzwerk- und Sprachänderungen gelten nach einem Neustart." xml:space="preserve">
+    <value>Los cambios de puerto, red e idioma se aplican después de reiniciar.</value>
+  </data>
+  <data name="Presenter aktivieren" xml:space="preserve">
+    <value>Activar presentador</value>
+  </data>
+  <data name="Presenter ausblenden" xml:space="preserve">
+    <value>Ocultar presentador</value>
+  </data>
+  <data name="Presenter pausieren" xml:space="preserve">
+    <value>Pausar presentador</value>
+  </data>
+  <data name="Presenter stoppen" xml:space="preserve">
+    <value>Detener presentador</value>
+  </data>
+  <data name="Presenter-Optionen:" xml:space="preserve">
+    <value>Opciones del presentador:</value>
+  </data>
+  <data name="Presenter:" xml:space="preserve">
+    <value>Presentador:</value>
+  </data>
+  <data name="Runtime:" xml:space="preserve">
+    <value>Entorno de ejecución:</value>
+  </data>
+  <data name="Schutzstatus:" xml:space="preserve">
+    <value>Estado de protección:</value>
+  </data>
+  <data name="Spanisch" xml:space="preserve">
+    <value>Español</value>
+  </data>
+  <data name="Sprache:" xml:space="preserve">
+    <value>Idioma:</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Estado</value>
+  </data>
+  <data name="Status nicht verfügbar" xml:space="preserve">
+    <value>Estado no disponible</value>
+  </data>
+  <data name="Stopped" xml:space="preserve">
+    <value>Detenido</value>
+  </data>
+  <data name="Systemstandard" xml:space="preserve">
+    <value>Idioma del sistema</value>
+  </data>
+  <data name="Unterverzeichnisse durchsuchen" xml:space="preserve">
+    <value>Incluir subcarpetas</value>
+  </data>
+  <data name="Verfügbar" xml:space="preserve">
+    <value>Disponible</value>
+  </data>
+  <data name="Version:" xml:space="preserve">
+    <value>Versión:</value>
+  </data>
+  <data name="Videoordner auswählen" xml:space="preserve">
+    <value>Seleccionar carpeta de vídeos</value>
+  </data>
+  <data name="Videoordner:" xml:space="preserve">
+    <value>Carpetas de vídeos:</value>
+  </data>
+  <data name="Web UI Port:" xml:space="preserve">
+    <value>Puerto de la interfaz web:</value>
+  </data>
+  <data name="Web UI im LAN freigeben" xml:space="preserve">
+    <value>Permitir la interfaz web en la LAN</value>
+  </data>
+  <data name="Web UI öffnen" xml:space="preserve">
+    <value>Abrir interfaz web</value>
+  </data>
+  <data name="Web UI:" xml:space="preserve">
+    <value>Interfaz web:</value>
+  </data>
+  <data name="Web-Passwort:" xml:space="preserve">
+    <value>Contraseña web:</value>
+  </data>
+  <data name="Windows-Standby verhindern" xml:space="preserve">
+    <value>Impedir la suspensión de Windows</value>
+  </data>
+  <data name="Wird geprüft …" xml:space="preserve">
+    <value>Comprobando …</value>
+  </data>
+  <data name="{0} (inkl. Unterordner)" xml:space="preserve">
+    <value>{0} (incluidas subcarpetas)</value>
+  </data>
+  <data name="● Presenter {0}" xml:space="preserve">
+    <value>● Presentador {0}</value>
+  </data>
+  <data name="✗ FFprobe ist nicht verfügbar. Details stehen im Log." xml:space="preserve">
+    <value>✗ FFprobe no está disponible. Consulta el registro para más detalles.</value>
+  </data>
+  <data name="Programme" xml:space="preserve"><value>Programas</value></data>
+  <data name="Der Presenter wurde unerwartet beendet." xml:space="preserve"><value>El presentador se detuvo inesperadamente.</value></data>
+</root>

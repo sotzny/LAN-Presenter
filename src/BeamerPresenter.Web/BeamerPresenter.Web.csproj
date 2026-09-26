@@ -20,5 +20,6 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <EmbeddedResource Include="UiStrings.tsv" />
   </ItemGroup>
 </Project>

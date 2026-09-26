@@ -23,15 +23,16 @@ internal sealed class PresenterForm : Form
     private readonly ComboBox _monitor = new() { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly Label _monitorStatus = new() { AutoSize = true };
     private readonly TextBox _chromePath = new() { Dock = DockStyle.Fill };
-    private readonly CheckBox _alwaysOnTop = new() { AutoSize = true, Checked = true, Text = "Always On Top" };
-    private readonly CheckBox _aggressiveTopmost = new() { AutoSize = true, Text = "Aggressive Topmost" };
-    private readonly CheckBox _preventDisplaySleep = new() { AutoSize = true, Checked = true, Text = "Bildschirmabschaltung verhindern" };
-    private readonly CheckBox _preventSystemSleep = new() { AutoSize = true, Checked = true, Text = "Windows-Standby verhindern" };
-    private readonly CheckBox _startWithWindows = new() { AutoSize = true, Text = "Mit Windows starten" };
+    private readonly CheckBox _alwaysOnTop = new() { AutoSize = true, Checked = true, Text = AppText.Get("Always On Top") };
+    private readonly CheckBox _aggressiveTopmost = new() { AutoSize = true, Text = AppText.Get("Aggressive Topmost") };
+    private readonly CheckBox _preventDisplaySleep = new() { AutoSize = true, Checked = true, Text = AppText.Get("Bildschirmabschaltung verhindern") };
+    private readonly CheckBox _preventSystemSleep = new() { AutoSize = true, Checked = true, Text = AppText.Get("Windows-Standby verhindern") };
+    private readonly CheckBox _startWithWindows = new() { AutoSize = true, Text = AppText.Get("Mit Windows starten") };
     private readonly ListBox _mediaFolders = new() { Dock = DockStyle.Fill, Height = 90 };
-    private readonly CheckBox _includeSubdirectories = new() { AutoSize = true, Checked = true, Text = "Unterverzeichnisse durchsuchen" };
+    private readonly CheckBox _includeSubdirectories = new() { AutoSize = true, Checked = true, Text = AppText.Get("Unterverzeichnisse durchsuchen") };
     private readonly TextBox _webPort = new() { Dock = DockStyle.Fill };
-    private readonly CheckBox _allowLanAccess = new() { AutoSize = true, Text = "Web UI im LAN freigeben" };
+    private readonly ComboBox _language = new() { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
+    private readonly CheckBox _allowLanAccess = new() { AutoSize = true, Text = AppText.Get("Web UI im LAN freigeben") };
     private readonly TextBox _ffprobePath = new() { Dock = DockStyle.Fill };
     private readonly Label _ffprobeStatus = new() { AutoSize = true };
     private readonly TextBox _password = new() { Dock = DockStyle.Fill, UseSystemPasswordChar = true };
@@ -39,10 +40,10 @@ internal sealed class PresenterForm : Form
     private readonly Label _webUrl = new() { AutoSize = true };
     private readonly Label _passwordStatus = new() { AutoSize = true };
     private readonly ToolStripMenuItem _trayStatus = new() { Enabled = false };
-    private readonly ToolStripMenuItem _activatePresenter = new() { Text = "Presenter aktivieren" };
-    private readonly ToolStripMenuItem _pausePresenter = new() { Text = "Presenter pausieren" };
-    private readonly ToolStripMenuItem _hidePresenter = new() { Text = "Presenter ausblenden" };
-    private readonly ToolStripMenuItem _stopPresenter = new() { Text = "Presenter stoppen" };
+    private readonly ToolStripMenuItem _activatePresenter = new() { Text = AppText.Get("Presenter aktivieren") };
+    private readonly ToolStripMenuItem _pausePresenter = new() { Text = AppText.Get("Presenter pausieren") };
+    private readonly ToolStripMenuItem _hidePresenter = new() { Text = AppText.Get("Presenter ausblenden") };
+    private readonly ToolStripMenuItem _stopPresenter = new() { Text = AppText.Get("Presenter stoppen") };
     private readonly NotifyIcon _notifyIcon;
     private readonly System.Windows.Forms.Timer _statusTimer = new() { Interval = 2000 };
     private bool _allowExit;
@@ -62,10 +63,10 @@ internal sealed class PresenterForm : Form
         _browser = host.Services.GetRequiredService<IBrowserController>();
         var buildInformation = BuildInformation.Current;
         _version.Text = buildInformation.Version;
-        _build.Text = buildInformation.BuildTimestampUtc?.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", System.Globalization.CultureInfo.InvariantCulture) ?? "Nicht verfügbar";
+        _build.Text = buildInformation.BuildTimestampUtc?.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", System.Globalization.CultureInfo.InvariantCulture) ?? AppText.Get("Nicht verfügbar");
         _commit.Text = buildInformation.ShortGitCommitSha;
         _runtime.Text = buildInformation.RuntimeVersion;
-        Text = "Beamer Presenter for LAN-Parties"; MinimumSize = new Size(740, 760); StartPosition = FormStartPosition.CenterScreen;
+        Text = "Beamer Presenter for LAN-Parties"; MinimumSize = new Size(740, 800); StartPosition = FormStartPosition.CenterScreen;
         Controls.Add(CreateContent()); FormClosing += OnFormClosing; Shown += async (_, _) =>
         {
             await LoadSettingsAsync();
@@ -90,20 +91,27 @@ internal sealed class PresenterForm : Form
     protected override void Dispose(bool disposing) { if (disposing) { _statusTimer.Dispose(); _notifyIcon.Dispose(); } base.Dispose(disposing); }
     private TableLayoutPanel CreateContent()
     {
-        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(18), ColumnCount = 2, RowCount = 22, AutoScroll = true };
+        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(18), ColumnCount = 2, RowCount = 23, AutoScroll = true };
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 32)); root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 68));
-        AddRow(root, 0, "Version:", _version); AddRow(root, 1, "Build:", _build); AddRow(root, 2, "Commit:", _commit); AddRow(root, 3, "Runtime:", _runtime); AddRow(root, 4, "Presenter:", _presenterStatus);
-        AddRow(root, 5, "Chrome-Status:", _chromeStatus); AddRow(root, 6, "Monitor:", _monitor); AddRow(root, 7, "Monitorstatus:", _monitorStatus); AddRow(root, 8, "Chrome-Pfad:", CreateChromePathControl()); AddRow(root, 9, "Presenter-Optionen:", CreatePresenterOptionsControl());
-        AddRow(root, 10, "Autostart:", _startWithWindows); AddRow(root, 11, "Web UI:", _webUrl); AddRow(root, 12, "Web UI Port:", _webPort); AddRow(root, 13, "Netzwerk:", _allowLanAccess); AddRow(root, 14, "Videoordner:", CreateMediaFolderControl()); AddRow(root, 15, "FFprobe-Pfad:", CreateFfprobePathControl()); AddRow(root, 16, "FFprobe-Status:", CreateFfprobeStatusControl()); AddRow(root, 17, "Web-Passwort:", _password); AddRow(root, 18, "Passwort wiederholen:", _passwordRepeat); AddRow(root, 19, "Schutzstatus:", _passwordStatus);
-        var save = new Button { Text = "Einstellungen speichern", AutoSize = true, Anchor = AnchorStyles.Left }; save.Click += async (_, _) => await SaveSettingsAsync(); root.Controls.Add(save, 1, 20);
-        root.Controls.Add(new Label { AutoSize = true, Text = "Port- und Netzwerkänderungen gelten nach einem Neustart." }, 1, 21); return root;
+        AddRow(root, 0, AppText.Get("Version:"), _version); AddRow(root, 1, AppText.Get("Build:"), _build); AddRow(root, 2, AppText.Get("Commit:"), _commit); AddRow(root, 3, AppText.Get("Runtime:"), _runtime); AddRow(root, 4, AppText.Get("Presenter:"), _presenterStatus);
+        AddRow(root, 5, AppText.Get("Chrome-Status:"), _chromeStatus); AddRow(root, 6, AppText.Get("Monitor:"), _monitor); AddRow(root, 7, AppText.Get("Monitorstatus:"), _monitorStatus); AddRow(root, 8, AppText.Get("Chrome-Pfad:"), CreateChromePathControl()); AddRow(root, 9, AppText.Get("Presenter-Optionen:"), CreatePresenterOptionsControl());
+        AddRow(root, 10, AppText.Get("Autostart:"), _startWithWindows); AddRow(root, 11, AppText.Get("Web UI:"), _webUrl); AddRow(root, 12, AppText.Get("Web UI Port:"), _webPort); AddRow(root, 13, AppText.Get("Netzwerk:"), _allowLanAccess); AddRow(root, 14, AppText.Get("Videoordner:"), CreateMediaFolderControl()); AddRow(root, 15, AppText.Get("FFprobe-Pfad:"), CreateFfprobePathControl()); AddRow(root, 16, AppText.Get("FFprobe-Status:"), CreateFfprobeStatusControl()); AddRow(root, 17, AppText.Get("Web-Passwort:"), _password); AddRow(root, 18, AppText.Get("Passwort wiederholen:"), _passwordRepeat); AddRow(root, 19, AppText.Get("Schutzstatus:"), _passwordStatus);
+        AddRow(root, 20, AppText.Get("Sprache:"), _language);
+        _language.Items.AddRange([
+            new LanguageListItem(null, AppText.Get("Systemstandard")),
+            new LanguageListItem("de", AppText.Get("Deutsch")),
+            new LanguageListItem("en", AppText.Get("Englisch")),
+            new LanguageListItem("es", AppText.Get("Spanisch"))
+        ]);
+        var save = new Button { Text = AppText.Get("Einstellungen speichern"), AutoSize = true, Anchor = AnchorStyles.Left }; save.Click += async (_, _) => await SaveSettingsAsync(); root.Controls.Add(save, 1, 21);
+        root.Controls.Add(new Label { AutoSize = true, Text = AppText.Get("Port-, Netzwerk- und Sprachänderungen gelten nach einem Neustart.") }, 1, 22); return root;
     }
     private static void AddRow(TableLayoutPanel panel, int row, string label, Control input) { panel.Controls.Add(new Label { Text = label, AutoSize = true, Anchor = AnchorStyles.Left }, 0, row); panel.Controls.Add(input, 1, row); }
     private TableLayoutPanel CreateMediaFolderControl()
     {
-        var add = new Button { Text = "Hinzufügen", AutoSize = true };
+        var add = new Button { Text = AppText.Get("Hinzufügen"), AutoSize = true };
         add.Click += async (_, _) => await AddMediaFolderAsync();
-        var remove = new Button { Text = "Entfernen", AutoSize = true };
+        var remove = new Button { Text = AppText.Get("Entfernen"), AutoSize = true };
         remove.Click += async (_, _) => await RemoveMediaFolderAsync();
         var actions = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true };
         actions.Controls.Add(add);
@@ -116,7 +124,7 @@ internal sealed class PresenterForm : Form
     }
     private TableLayoutPanel CreateFfprobePathControl()
     {
-        var select = new Button { Text = "Auswählen", AutoSize = true };
+        var select = new Button { Text = AppText.Get("Auswählen"), AutoSize = true };
         select.Click += (_, _) => SelectFfprobePath();
         var panel = new TableLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, ColumnCount = 2, RowCount = 1 };
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -127,7 +135,7 @@ internal sealed class PresenterForm : Form
     }
     private TableLayoutPanel CreateChromePathControl()
     {
-        var select = new Button { Text = "Auswählen", AutoSize = true };
+        var select = new Button { Text = AppText.Get("Auswählen"), AutoSize = true };
         select.Click += (_, _) => SelectChromePath();
         var panel = new TableLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, ColumnCount = 2, RowCount = 1 };
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -147,9 +155,9 @@ internal sealed class PresenterForm : Form
     }
     private FlowLayoutPanel CreateFfprobeStatusControl()
     {
-        var check = new Button { Text = "Erneut prüfen", AutoSize = true };
+        var check = new Button { Text = AppText.Get("Erneut prüfen"), AutoSize = true };
         check.Click += async (_, _) => await RefreshFfprobeStatusAsync();
-        var install = new Button { Text = "FFmpeg installieren", AutoSize = true };
+        var install = new Button { Text = AppText.Get("FFmpeg installieren"), AutoSize = true };
         install.Click += async (_, _) => await InstallFfprobeAsync();
         var panel = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true };
         panel.Controls.Add(_ffprobeStatus);
@@ -167,18 +175,18 @@ internal sealed class PresenterForm : Form
         menu.Items.Add(_hidePresenter);
         menu.Items.Add(_stopPresenter);
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Web UI öffnen", null, (_, _) => OpenWebUi());
-        menu.Items.Add("Einstellungen", null, (_, _) => ShowFromTray());
-        menu.Items.Add("Status", null, (_, _) => ShowFromTray());
+        menu.Items.Add(AppText.Get("Web UI öffnen"), null, (_, _) => OpenWebUi());
+        menu.Items.Add(AppText.Get("Einstellungen"), null, (_, _) => ShowFromTray());
+        menu.Items.Add(AppText.Get("Status"), null, (_, _) => ShowFromTray());
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Beenden", null, (_, _) => ExitApplication());
+        menu.Items.Add(AppText.Get("Beenden"), null, (_, _) => ExitApplication());
         return menu;
     }
     private async Task ChangePresenterStateAsync(Func<CancellationToken, Task> command, bool requiresMonitor = false)
     {
         if (requiresMonitor && (_configuredMonitorMissing || _monitor.SelectedItem is null))
         {
-            MessageBox.Show(this, "Der konfigurierte Monitor ist nicht verfügbar. Bitte einen Fallback-Monitor auswählen und die Einstellungen speichern.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, AppText.Get("Der konfigurierte Monitor ist nicht verfügbar. Bitte einen Fallback-Monitor auswählen und die Einstellungen speichern."), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
@@ -190,13 +198,14 @@ internal sealed class PresenterForm : Form
         }
         catch (Exception exception)
         {
-            MessageBox.Show(this, exception.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Serilog.Log.Error(exception, "Presenter state change failed");
+            MessageBox.Show(this, AppText.Get("Der Presenter-Befehl ist fehlgeschlagen."), Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
     private void UpdatePresenterStatus()
     {
-        _presenterStatus.Text = _playback.State.ToString().ToUpperInvariant();
-        _trayStatus.Text = $"● Presenter {_playback.State.ToString().ToLowerInvariant()}";
+        _presenterStatus.Text = AppText.Get(_playback.State.ToString());
+        _trayStatus.Text = AppText.Format("● Presenter {0}", AppText.Get(_playback.State.ToString()));
         _activatePresenter.Enabled = _playback.State != BeamerPresenter.Domain.PresenterState.Active;
         _pausePresenter.Enabled = _playback.State == BeamerPresenter.Domain.PresenterState.Active;
         _hidePresenter.Enabled = _playback.State is BeamerPresenter.Domain.PresenterState.Active or BeamerPresenter.Domain.PresenterState.Paused;
@@ -208,6 +217,8 @@ internal sealed class PresenterForm : Form
         _startWithWindows.Checked = _startupRegistration.IsEnabled();
         _webPort.Text = settings.WebPort.ToString(System.Globalization.CultureInfo.InvariantCulture);
         _allowLanAccess.Checked = settings.AllowLanAccess;
+        _language.SelectedItem = _language.Items.Cast<LanguageListItem>()
+            .FirstOrDefault(item => item.Code == settings.LanguagePreference) ?? _language.Items[0];
         _ffprobePath.Text = settings.FfprobePath ?? string.Empty;
         _chromePath.Text = settings.ChromePath ?? string.Empty;
         _alwaysOnTop.Checked = settings.AlwaysOnTop;
@@ -216,7 +227,7 @@ internal sealed class PresenterForm : Form
         _preventSystemSleep.Checked = settings.PreventSystemSleep;
         _localWebUrl = $"http://localhost:{settings.WebPort}";
         _webUrl.Text = PresenterNetworkAddresses.FormatWebUrls(settings.WebPort, settings.AllowLanAccess, PresenterNetworkAddresses.GetLanIpv4Addresses());
-        _passwordStatus.Text = string.IsNullOrWhiteSpace(settings.PasswordHash) ? "Noch nicht eingerichtet" : "Aktiv";
+        _passwordStatus.Text = string.IsNullOrWhiteSpace(settings.PasswordHash) ? AppText.Get("Noch nicht eingerichtet") : AppText.Get("Aktiv");
         LoadMonitors(settings.MonitorDeviceName);
         await LoadMediaFoldersAsync();
         await RefreshFfprobeStatusAsync();
@@ -230,7 +241,7 @@ internal sealed class PresenterForm : Form
     }
     private async Task AddMediaFolderAsync()
     {
-        using var dialog = new FolderBrowserDialog { Description = "Videoordner auswählen", UseDescriptionForTitle = true, ShowNewFolderButton = true };
+        using var dialog = new FolderBrowserDialog { Description = AppText.Get("Videoordner auswählen"), UseDescriptionForTitle = true, ShowNewFolderButton = true };
         if (dialog.ShowDialog(this) != DialogResult.OK)
         {
             return;
@@ -251,7 +262,7 @@ internal sealed class PresenterForm : Form
     }
     private void SelectFfprobePath()
     {
-        using var dialog = new OpenFileDialog { Filter = "FFprobe|ffprobe.exe|Programme|*.exe", CheckFileExists = true, Multiselect = false, Title = "FFprobe auswählen" };
+        using var dialog = new OpenFileDialog { Filter = $"FFprobe|ffprobe.exe|{AppText.Get("Programme")}|*.exe", CheckFileExists = true, Multiselect = false, Title = AppText.Get("FFprobe auswählen") };
         if (dialog.ShowDialog(this) == DialogResult.OK)
         {
             _ffprobePath.Text = dialog.FileName;
@@ -259,7 +270,7 @@ internal sealed class PresenterForm : Form
     }
     private void SelectChromePath()
     {
-        using var dialog = new OpenFileDialog { Filter = "Google Chrome|chrome.exe|Programme|*.exe", CheckFileExists = true, Multiselect = false, Title = "Chrome auswählen" };
+        using var dialog = new OpenFileDialog { Filter = $"Google Chrome|chrome.exe|{AppText.Get("Programme")}|*.exe", CheckFileExists = true, Multiselect = false, Title = AppText.Get("Chrome auswählen") };
         if (dialog.ShowDialog(this) == DialogResult.OK)
         {
             _chromePath.Text = dialog.FileName;
@@ -283,52 +294,60 @@ internal sealed class PresenterForm : Form
 
         if (_configuredMonitorMissing)
         {
-            _monitorStatus.Text = $"Nicht verfügbar: {configuredDeviceName}";
+            _monitorStatus.Text = AppText.Format("Nicht verfügbar: {0}", configuredDeviceName);
         }
         else if (monitors.Length == 0)
         {
-            _monitorStatus.Text = "Keine Anzeige erkannt";
+            _monitorStatus.Text = AppText.Get("Keine Anzeige erkannt");
         }
         else
         {
-            _monitorStatus.Text = "Verfügbar";
+            _monitorStatus.Text = AppText.Get("Verfügbar");
         }
     }
     private void UpdateSelectedMonitorStatus()
     {
         if (_configuredMonitorMissing && _monitor.SelectedItem is DisplayMonitorListItem)
         {
-            _monitorStatus.Text = "Fallback ausgewählt – bitte speichern";
+            _monitorStatus.Text = AppText.Get("Fallback ausgewählt – bitte speichern");
         }
         else if (_monitor.SelectedItem is DisplayMonitorListItem)
         {
-            _monitorStatus.Text = "Verfügbar";
+            _monitorStatus.Text = AppText.Get("Verfügbar");
         }
     }
     private async Task RefreshFfprobeStatusAsync()
     {
-        _ffprobeStatus.Text = "Wird geprüft …";
+        _ffprobeStatus.Text = AppText.Get("Wird geprüft …");
         var availability = await _ffprobeService.CheckAvailabilityAsync();
+        if (!availability.IsAvailable)
+        {
+            Serilog.Log.Warning("FFprobe unavailable: {Error}", availability.Error);
+        }
         _ffprobeStatus.Text = availability.IsAvailable
             ? $"✓ {availability.Version}"
-            : $"✗ {availability.Error}";
+            : AppText.Get("✗ FFprobe ist nicht verfügbar. Details stehen im Log.");
     }
     private async Task InstallFfprobeAsync()
     {
-        _ffprobeStatus.Text = "Installation läuft …";
+        _ffprobeStatus.Text = AppText.Get("Installation läuft …");
         var availability = await _ffprobeService.InstallWithWinGetAsync();
+        if (!availability.IsAvailable)
+        {
+            Serilog.Log.Warning("FFprobe installation failed: {Error}", availability.Error);
+        }
         _ffprobeStatus.Text = availability.IsAvailable
             ? $"✓ {availability.Version}"
-            : $"✗ {availability.Error}";
+            : AppText.Get("✗ FFprobe ist nicht verfügbar. Details stehen im Log.");
     }
     private async Task SaveSettingsAsync()
     {
-        if (!int.TryParse(_webPort.Text, out var webPort) || webPort is < 1024 or > 65535) { MessageBox.Show(this, "Bitte einen Port zwischen 1024 und 65535 angeben.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-        if (!string.IsNullOrWhiteSpace(_password.Text) && _password.Text != _passwordRepeat.Text) { MessageBox.Show(this, "Die Passwörter stimmen nicht überein.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-        try { _startupRegistration.SetEnabled(_startWithWindows.Checked); } catch (UnauthorizedAccessException) { MessageBox.Show(this, "Der Windows-Autostart konnte nicht geändert werden.", Text, MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
-        if (_monitor.SelectedItem is not DisplayMonitorListItem selectedMonitor) { MessageBox.Show(this, "Bitte einen verfügbaren Monitor auswählen.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-        var settings = await _settingsService.GetAsync(); settings.WebPort = webPort; settings.AllowLanAccess = _allowLanAccess.Checked; settings.FfprobePath = string.IsNullOrWhiteSpace(_ffprobePath.Text) ? null : Path.GetFullPath(_ffprobePath.Text.Trim()); settings.ChromePath = string.IsNullOrWhiteSpace(_chromePath.Text) ? null : Path.GetFullPath(_chromePath.Text.Trim()); settings.MonitorDeviceName = selectedMonitor.DeviceName; settings.AlwaysOnTop = _alwaysOnTop.Checked; settings.AggressiveTopmost = _aggressiveTopmost.Checked; settings.PreventDisplaySleep = _preventDisplaySleep.Checked; settings.PreventSystemSleep = _preventSystemSleep.Checked; await _settingsService.SaveAsync(settings); if (!string.IsNullOrWhiteSpace(_password.Text)) await _settingsService.SetWebPasswordAsync(_password.Text);
-        _password.Clear(); _passwordRepeat.Clear(); await LoadSettingsAsync(); MessageBox.Show(this, "Einstellungen gespeichert.", Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        if (!int.TryParse(_webPort.Text, out var webPort) || webPort is < 1024 or > 65535) { MessageBox.Show(this, AppText.Get("Bitte einen Port zwischen 1024 und 65535 angeben."), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+        if (!string.IsNullOrWhiteSpace(_password.Text) && _password.Text != _passwordRepeat.Text) { MessageBox.Show(this, AppText.Get("Die Passwörter stimmen nicht überein."), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+        try { _startupRegistration.SetEnabled(_startWithWindows.Checked); } catch (UnauthorizedAccessException) { MessageBox.Show(this, AppText.Get("Der Windows-Autostart konnte nicht geändert werden."), Text, MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
+        if (_monitor.SelectedItem is not DisplayMonitorListItem selectedMonitor) { MessageBox.Show(this, AppText.Get("Bitte einen verfügbaren Monitor auswählen."), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+        var settings = await _settingsService.GetAsync(); settings.WebPort = webPort; settings.AllowLanAccess = _allowLanAccess.Checked; settings.LanguagePreference = (_language.SelectedItem as LanguageListItem)?.Code; settings.FfprobePath = string.IsNullOrWhiteSpace(_ffprobePath.Text) ? null : Path.GetFullPath(_ffprobePath.Text.Trim()); settings.ChromePath = string.IsNullOrWhiteSpace(_chromePath.Text) ? null : Path.GetFullPath(_chromePath.Text.Trim()); settings.MonitorDeviceName = selectedMonitor.DeviceName; settings.AlwaysOnTop = _alwaysOnTop.Checked; settings.AggressiveTopmost = _aggressiveTopmost.Checked; settings.PreventDisplaySleep = _preventDisplaySleep.Checked; settings.PreventSystemSleep = _preventSystemSleep.Checked; await _settingsService.SaveAsync(settings); if (!string.IsNullOrWhiteSpace(_password.Text)) await _settingsService.SetWebPasswordAsync(_password.Text);
+        _password.Clear(); _passwordRepeat.Clear(); await LoadSettingsAsync(); MessageBox.Show(this, AppText.Get("Einstellungen gespeichert."), Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
     private async Task RefreshRuntimeStatusAsync()
     {
@@ -340,12 +359,12 @@ internal sealed class PresenterForm : Form
         _statusRefreshInProgress = true;
         try
         {
-            _chromeStatus.Text = await _browser.IsRunningAsync() ? "Läuft" : "Gestoppt";
+            _chromeStatus.Text = await _browser.IsRunningAsync() ? AppText.Get("Läuft") : AppText.Get("Gestoppt");
             UpdatePresenterStatus();
         }
         catch (Exception)
         {
-            _chromeStatus.Text = "Status nicht verfügbar";
+            _chromeStatus.Text = AppText.Get("Status nicht verfügbar");
         }
         finally
         {
@@ -360,7 +379,12 @@ internal sealed class PresenterForm : Form
 
     private sealed record MediaFolderListItem(int Id, string Path, bool IncludeSubdirectories)
     {
-        public override string ToString() => IncludeSubdirectories ? $"{Path} (inkl. Unterordner)" : Path;
+        public override string ToString() => IncludeSubdirectories ? AppText.Format("{0} (inkl. Unterordner)", Path) : Path;
+    }
+
+    private sealed record LanguageListItem(string? Code, string Label)
+    {
+        public override string ToString() => Label;
     }
 
     private sealed record DisplayMonitorListItem(string DeviceName, string FriendlyName, int X, int Y, int Width, int Height, bool IsPrimary)
@@ -368,6 +392,6 @@ internal sealed class PresenterForm : Form
         public static DisplayMonitorListItem From(DisplayMonitor monitor) =>
             new(monitor.DeviceName, monitor.FriendlyName, monitor.X, monitor.Y, monitor.Width, monitor.Height, monitor.IsPrimary);
 
-        public override string ToString() => $"{FriendlyName} / {DeviceName} — {Width} × {Height} @ {X}, {Y}{(IsPrimary ? " (Primär)" : string.Empty)}";
+        public override string ToString() => $"{FriendlyName} / {DeviceName} — {Width} × {Height} @ {X}, {Y}{(IsPrimary ? AppText.Get(" (Primär)") : string.Empty)}";
     }
 }
