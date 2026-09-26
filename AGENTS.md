@@ -1,5 +1,7 @@
 # Hinweise für Mitwirkende
 
+**Sprache:** Deutsch · [English](AGENTS.en.md)
+
 ## Architektur und Grenzen
 
 - `src/BeamerPresenter.Domain` darf keine Projektabhängigkeiten besitzen.

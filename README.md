@@ -1,5 +1,7 @@
 # Beamer Presenter for LAN-Parties
 
+**Sprache:** Deutsch · [English](README.en.md)
+
 [![CI](https://github.com/sotzny/LAN-Presenter/actions/workflows/ci.yml/badge.svg)](https://github.com/sotzny/LAN-Presenter/actions/workflows/ci.yml)
 [![Windows](https://img.shields.io/badge/platform-Windows%20x64-0078D4)](https://github.com/sotzny/LAN-Presenter)
 
