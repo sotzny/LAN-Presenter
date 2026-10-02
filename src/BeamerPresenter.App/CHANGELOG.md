@@ -1,4 +1,11 @@
 Beamerpresenter.App Changelog
+<a name="1.1.1"></a>
+## [1.1.1](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.1.1) (2026-10-02)
+
+### Bug Fixes
+
+* allow authenticated media library access from LAN ([d2d4071](https://www.github.com/sotzny/LAN-Presenter/commit/d2d4071c846cee2b8c9a3214ade72665aa66d65c))
+
 <a name="1.1.0"></a>
 ## [1.1.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.1.0) (2026-10-02)
 
