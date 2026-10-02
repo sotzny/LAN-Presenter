@@ -1,4 +1,5 @@
 using BeamerPresenter.Application;
+using BeamerPresenter.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,6 +15,8 @@ internal sealed class PresenterForm : Form
     private readonly PlaybackController _playback;
     private readonly PlaybackOrchestrator _playbackOrchestrator;
     private readonly IBrowserController _browser;
+    private readonly IWindowsFirewallService _firewall;
+    private readonly PresenterHostSettings _runningSettings;
     private readonly Label _version = new() { AutoSize = true };
     private readonly Label _build = new() { AutoSize = true };
     private readonly Label _commit = new() { AutoSize = true };
@@ -33,6 +36,11 @@ internal sealed class PresenterForm : Form
     private readonly TextBox _webPort = new() { Dock = DockStyle.Fill };
     private readonly ComboBox _language = new() { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly CheckBox _allowLanAccess = new() { AutoSize = true, Text = AppText.Get("Web UI im LAN freigeben") };
+    private readonly Label _firewallStatus = new() { AutoSize = true, MaximumSize = new Size(440, 0) };
+    private readonly Label _firewallHint = new() { AutoSize = true, MaximumSize = new Size(440, 0) };
+    private readonly Button _checkFirewall = new() { AutoSize = true, Enabled = false, Text = AppText.Get("Erneut prüfen") };
+    private readonly Button _allowFirewall = new() { AutoSize = true, Enabled = false, Text = AppText.Get("In Firewall freigeben") };
+    private readonly Button _saveSettings = new() { AutoSize = true, Text = AppText.Get("Einstellungen speichern"), Anchor = AnchorStyles.Left };
     private readonly TextBox _ffprobePath = new() { Dock = DockStyle.Fill };
     private readonly Label _ffprobeStatus = new() { AutoSize = true };
     private readonly TextBox _password = new() { Dock = DockStyle.Fill, UseSystemPasswordChar = true };
@@ -46,6 +54,14 @@ internal sealed class PresenterForm : Form
     private readonly ToolStripMenuItem _stopPresenter = new() { Text = AppText.Get("Presenter stoppen") };
     private readonly NotifyIcon _notifyIcon;
     private readonly System.Windows.Forms.Timer _statusTimer = new() { Interval = 2000 };
+    private readonly System.Windows.Forms.Timer _firewallTimer = new() { Interval = 500 };
+    private CancellationTokenSource? _firewallCancellation;
+    private FirewallCheckResult? _firewallResult;
+    private int _firewallRevision;
+    private int _savedWebPort;
+    private bool _savedAllowLanAccess;
+    private bool _loadingSettings;
+    private bool _firewallActionInProgress;
     private bool _allowExit;
     private bool _configuredMonitorMissing;
     private bool _statusRefreshInProgress;
@@ -61,6 +77,8 @@ internal sealed class PresenterForm : Form
         _playback = host.Services.GetRequiredService<PlaybackController>();
         _playbackOrchestrator = host.Services.GetRequiredService<PlaybackOrchestrator>();
         _browser = host.Services.GetRequiredService<IBrowserController>();
+        _firewall = host.Services.GetRequiredService<IWindowsFirewallService>();
+        _runningSettings = host.Services.GetRequiredService<PresenterHostSettings>();
         var buildInformation = BuildInformation.Current;
         _version.Text = buildInformation.Version;
         _build.Text = buildInformation.BuildTimestampUtc?.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", System.Globalization.CultureInfo.InvariantCulture) ?? AppText.Get("Nicht verfügbar");
@@ -82,29 +100,59 @@ internal sealed class PresenterForm : Form
         _stopPresenter.Click += async (_, _) => await ChangePresenterStateAsync(_playbackOrchestrator.StopAsync);
         _monitor.SelectedIndexChanged += (_, _) => UpdateSelectedMonitorStatus();
         _statusTimer.Tick += async (_, _) => await RefreshRuntimeStatusAsync();
+        _webPort.TextChanged += (_, _) => ScheduleFirewallCheck();
+        _allowLanAccess.CheckedChanged += (_, _) => ScheduleFirewallCheck();
+        _firewallTimer.Tick += async (_, _) => { _firewallTimer.Stop(); await RefreshFirewallAsync(); };
+        _checkFirewall.Click += async (_, _) => await RefreshFirewallAsync();
+        _allowFirewall.Click += async (_, _) => await AllowFirewallAsync();
         var menu = CreateTrayMenu();
         _notifyIcon = new NotifyIcon { Icon = SystemIcons.Application, Text = "Beamer Presenter for LAN-Parties", Visible = true, ContextMenuStrip = menu };
         _notifyIcon.DoubleClick += (_, _) => ShowFromTray();
         UpdatePresenterStatus();
     }
 
-    protected override void Dispose(bool disposing) { if (disposing) { _statusTimer.Dispose(); _notifyIcon.Dispose(); } base.Dispose(disposing); }
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _firewallRevision++;
+            _firewallCancellation?.Cancel();
+            _firewallCancellation?.Dispose();
+            _firewallTimer.Dispose();
+            _statusTimer.Dispose();
+            _notifyIcon.Dispose();
+        }
+        base.Dispose(disposing);
+    }
     private TableLayoutPanel CreateContent()
     {
-        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(18), ColumnCount = 2, RowCount = 23, AutoScroll = true };
+        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(18), ColumnCount = 2, RowCount = 24, AutoScroll = true };
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 32)); root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 68));
         AddRow(root, 0, AppText.Get("Version:"), _version); AddRow(root, 1, AppText.Get("Build:"), _build); AddRow(root, 2, AppText.Get("Commit:"), _commit); AddRow(root, 3, AppText.Get("Runtime:"), _runtime); AddRow(root, 4, AppText.Get("Presenter:"), _presenterStatus);
         AddRow(root, 5, AppText.Get("Chrome-Status:"), _chromeStatus); AddRow(root, 6, AppText.Get("Monitor:"), _monitor); AddRow(root, 7, AppText.Get("Monitorstatus:"), _monitorStatus); AddRow(root, 8, AppText.Get("Chrome-Pfad:"), CreateChromePathControl()); AddRow(root, 9, AppText.Get("Presenter-Optionen:"), CreatePresenterOptionsControl());
-        AddRow(root, 10, AppText.Get("Autostart:"), _startWithWindows); AddRow(root, 11, AppText.Get("Web UI:"), _webUrl); AddRow(root, 12, AppText.Get("Web UI Port:"), _webPort); AddRow(root, 13, AppText.Get("Netzwerk:"), _allowLanAccess); AddRow(root, 14, AppText.Get("Videoordner:"), CreateMediaFolderControl()); AddRow(root, 15, AppText.Get("FFprobe-Pfad:"), CreateFfprobePathControl()); AddRow(root, 16, AppText.Get("FFprobe-Status:"), CreateFfprobeStatusControl()); AddRow(root, 17, AppText.Get("Web-Passwort:"), _password); AddRow(root, 18, AppText.Get("Passwort wiederholen:"), _passwordRepeat); AddRow(root, 19, AppText.Get("Schutzstatus:"), _passwordStatus);
-        AddRow(root, 20, AppText.Get("Sprache:"), _language);
+        AddRow(root, 10, AppText.Get("Autostart:"), _startWithWindows); AddRow(root, 11, AppText.Get("Web UI:"), _webUrl); AddRow(root, 12, AppText.Get("Web UI Port:"), _webPort); AddRow(root, 13, AppText.Get("Netzwerk:"), _allowLanAccess);
+        AddRow(root, 14, AppText.Get("Windows-Firewall:"), CreateFirewallControl());
+        AddRow(root, 15, AppText.Get("Videoordner:"), CreateMediaFolderControl()); AddRow(root, 16, AppText.Get("FFprobe-Pfad:"), CreateFfprobePathControl()); AddRow(root, 17, AppText.Get("FFprobe-Status:"), CreateFfprobeStatusControl()); AddRow(root, 18, AppText.Get("Web-Passwort:"), _password); AddRow(root, 19, AppText.Get("Passwort wiederholen:"), _passwordRepeat); AddRow(root, 20, AppText.Get("Schutzstatus:"), _passwordStatus);
+        AddRow(root, 21, AppText.Get("Sprache:"), _language);
         _language.Items.AddRange([
             new LanguageListItem(null, AppText.Get("Systemstandard")),
             new LanguageListItem("de", AppText.Get("Deutsch")),
             new LanguageListItem("en", AppText.Get("Englisch")),
             new LanguageListItem("es", AppText.Get("Spanisch"))
         ]);
-        var save = new Button { Text = AppText.Get("Einstellungen speichern"), AutoSize = true, Anchor = AnchorStyles.Left }; save.Click += async (_, _) => await SaveSettingsAsync(); root.Controls.Add(save, 1, 21);
-        root.Controls.Add(new Label { AutoSize = true, Text = AppText.Get("Port-, Netzwerk- und Sprachänderungen gelten nach einem Neustart.") }, 1, 22); return root;
+        _saveSettings.Click += async (_, _) => await SaveSettingsAsync(); root.Controls.Add(_saveSettings, 1, 22);
+        root.Controls.Add(new Label { AutoSize = true, Text = AppText.Get("Port-, Netzwerk- und Sprachänderungen gelten nach einem Neustart.") }, 1, 23); return root;
+    }
+    private FlowLayoutPanel CreateFirewallControl()
+    {
+        var panel = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.TopDown, WrapContents = false };
+        var actions = new FlowLayoutPanel { AutoSize = true };
+        actions.Controls.Add(_checkFirewall);
+        actions.Controls.Add(_allowFirewall);
+        panel.Controls.Add(_firewallStatus);
+        panel.Controls.Add(actions);
+        panel.Controls.Add(_firewallHint);
+        return panel;
     }
     private static void AddRow(TableLayoutPanel panel, int row, string label, Control input) { panel.Controls.Add(new Label { Text = label, AutoSize = true, Anchor = AnchorStyles.Left }, 0, row); panel.Controls.Add(input, 1, row); }
     private TableLayoutPanel CreateMediaFolderControl()
@@ -214,6 +262,9 @@ internal sealed class PresenterForm : Form
     private async Task LoadSettingsAsync()
     {
         var settings = await _settingsService.GetAsync();
+        _loadingSettings = true;
+        _savedWebPort = settings.WebPort;
+        _savedAllowLanAccess = settings.AllowLanAccess;
         _startWithWindows.Checked = _startupRegistration.IsEnabled();
         _webPort.Text = settings.WebPort.ToString(System.Globalization.CultureInfo.InvariantCulture);
         _allowLanAccess.Checked = settings.AllowLanAccess;
@@ -229,6 +280,8 @@ internal sealed class PresenterForm : Form
         _webUrl.Text = PresenterNetworkAddresses.FormatWebUrls(settings.WebPort, settings.AllowLanAccess, PresenterNetworkAddresses.GetLanIpv4Addresses());
         _passwordStatus.Text = string.IsNullOrWhiteSpace(settings.PasswordHash) ? AppText.Get("Noch nicht eingerichtet") : AppText.Get("Aktiv");
         LoadMonitors(settings.MonitorDeviceName);
+        _loadingSettings = false;
+        ScheduleFirewallCheck();
         await LoadMediaFoldersAsync();
         await RefreshFfprobeStatusAsync();
         await RefreshRuntimeStatusAsync();
@@ -349,6 +402,100 @@ internal sealed class PresenterForm : Form
         var settings = await _settingsService.GetAsync(); settings.WebPort = webPort; settings.AllowLanAccess = _allowLanAccess.Checked; settings.LanguagePreference = (_language.SelectedItem as LanguageListItem)?.Code; settings.FfprobePath = string.IsNullOrWhiteSpace(_ffprobePath.Text) ? null : Path.GetFullPath(_ffprobePath.Text.Trim()); settings.ChromePath = string.IsNullOrWhiteSpace(_chromePath.Text) ? null : Path.GetFullPath(_chromePath.Text.Trim()); settings.MonitorDeviceName = selectedMonitor.DeviceName; settings.AlwaysOnTop = _alwaysOnTop.Checked; settings.AggressiveTopmost = _aggressiveTopmost.Checked; settings.PreventDisplaySleep = _preventDisplaySleep.Checked; settings.PreventSystemSleep = _preventSystemSleep.Checked; await _settingsService.SaveAsync(settings); if (!string.IsNullOrWhiteSpace(_password.Text)) await _settingsService.SetWebPasswordAsync(_password.Text);
         _password.Clear(); _passwordRepeat.Clear(); await LoadSettingsAsync(); MessageBox.Show(this, AppText.Get("Einstellungen gespeichert."), Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
+    private bool TryGetFirewallPort(out int port) => int.TryParse(_webPort.Text, out port) && port is >= 1024 and <= 65535;
+
+    private void ScheduleFirewallCheck()
+    {
+        if (_loadingSettings || _firewallActionInProgress || IsDisposed) return;
+        _firewallTimer.Stop();
+        _firewallRevision++;
+        _firewallCancellation?.Cancel();
+        _firewallResult = null;
+        UpdateFirewallHint();
+        var valid = TryGetFirewallPort(out _);
+        _checkFirewall.Enabled = valid && _allowLanAccess.Checked;
+        _allowFirewall.Enabled = false;
+        if (!valid) _firewallStatus.Text = AppText.Get("Bitte einen Port zwischen 1024 und 65535 angeben.");
+        else if (!_allowLanAccess.Checked) _firewallStatus.Text = AppText.Get("LAN-Zugriff deaktiviert – keine Freigabe erforderlich.");
+        else { _firewallStatus.Text = AppText.Get("Wird geprüft …"); _firewallTimer.Start(); }
+    }
+
+    private void UpdateFirewallHint()
+    {
+        if (!TryGetFirewallPort(out var port)) { _firewallHint.Text = string.Empty; return; }
+        var hint = AppText.Format("Prüfung für TCP-Port {0}. Freigabe: alle Profile, nur diese Anwendung und das lokale Subnetz. Administratorrechte erforderlich.", port);
+        if (port != _savedWebPort || _allowLanAccess.Checked != _savedAllowLanAccess)
+            hint += Environment.NewLine + AppText.Get("Geänderte Einstellungen zuerst speichern und die Anwendung neu starten.");
+        else if (port != _runningSettings.WebPort || _allowLanAccess.Checked != _runningSettings.AllowLanAccess)
+            hint += Environment.NewLine + AppText.Get("Gespeicherte Netzwerkänderungen gelten nach einem Neustart.");
+        _firewallHint.Text = hint;
+    }
+
+    private async Task RefreshFirewallAsync()
+    {
+        _firewallTimer.Stop();
+        if (_firewallActionInProgress || !TryGetFirewallPort(out var port) || !_allowLanAccess.Checked) return;
+        _firewallCancellation?.Cancel();
+        _firewallCancellation?.Dispose();
+        var cancellation = new CancellationTokenSource();
+        _firewallCancellation = cancellation;
+        var revision = ++_firewallRevision;
+        _checkFirewall.Enabled = _allowFirewall.Enabled = false;
+        _firewallStatus.Text = AppText.Get("Wird geprüft …");
+        try
+        {
+            var result = await _firewall.CheckAsync(port, cancellation.Token);
+            if (!IsDisposed && revision == _firewallRevision) DisplayFirewallResult(result);
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private void DisplayFirewallResult(FirewallCheckResult result)
+    {
+        _firewallResult = result;
+        _firewallStatus.Text = string.Join(Environment.NewLine, result.Profiles.Select(profile =>
+            $"{AppText.Get(profile.Profile)}: {AppText.Get(profile.Status switch
+            {
+                FirewallStatus.Allowed => "Freigegeben",
+                FirewallStatus.Missing => "Keine passende Freigabe",
+                FirewallStatus.Blocked => "Blockiert (Regel oder Richtlinie)",
+                FirewallStatus.Disabled => "Firewall deaktiviert",
+                _ => "Nicht eindeutig prüfbar"
+            })}"));
+        _checkFirewall.Enabled = TryGetFirewallPort(out _) && _allowLanAccess.Checked;
+        _allowFirewall.Enabled = _checkFirewall.Enabled && result.NeedsRule;
+    }
+
+    private async Task AllowFirewallAsync()
+    {
+        if (_firewallActionInProgress || !TryGetFirewallPort(out var port) || !_allowLanAccess.Checked || _firewallResult?.NeedsRule != true) return;
+        _firewallActionInProgress = true;
+        _firewallTimer.Stop();
+        _firewallRevision++;
+        _firewallCancellation?.Cancel();
+        _checkFirewall.Enabled = _allowFirewall.Enabled = _webPort.Enabled = _allowLanAccess.Enabled = _saveSettings.Enabled = false;
+        _firewallStatus.Text = AppText.Get("Firewall-Freigabe läuft …");
+        try
+        {
+            var result = await _firewall.AllowAsync(port);
+            if (IsDisposed) return;
+            DisplayFirewallResult(result.Check);
+            var message = result.Status switch
+            {
+                FirewallOpenStatus.Allowed => "Der Web-Port ist in der Windows-Firewall freigegeben.",
+                FirewallOpenStatus.Cancelled => "Firewall-Freigabe abgebrochen.",
+                FirewallOpenStatus.NotConfirmed => "Die Regel wurde gespeichert, die Freigabe ist jedoch nicht bestätigt. Bitte Regeln und Richtlinien in der Windows-Firewall prüfen.",
+                _ => "Die Firewall-Regel konnte nicht geändert werden. Bitte Administratorrechte und Windows-Richtlinien prüfen."
+            };
+            MessageBox.Show(this, AppText.Get(message), Text, MessageBoxButtons.OK,
+                result.Status == FirewallOpenStatus.Allowed ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+        }
+        finally
+        {
+            _firewallActionInProgress = false;
+            if (!IsDisposed) { _webPort.Enabled = _allowLanAccess.Enabled = _saveSettings.Enabled = true; UpdateFirewallHint(); }
+        }
+    }
     private async Task RefreshRuntimeStatusAsync()
     {
         if (_statusRefreshInProgress || IsDisposed)
@@ -372,7 +519,7 @@ internal sealed class PresenterForm : Form
         }
     }
     private void OpenWebUi() => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(_localWebUrl) { UseShellExecute = true });
-    private void ShowFromTray() { Show(); WindowState = FormWindowState.Normal; Activate(); }
+    private void ShowFromTray() { Show(); WindowState = FormWindowState.Normal; Activate(); if (_savedWebPort != 0) ScheduleFirewallCheck(); }
     internal void ShowFromExternalLaunch() => ShowFromTray();
     private void ExitApplication() { _allowExit = true; Close(); }
     private void OnFormClosing(object? sender, FormClosingEventArgs eventArgs) { if (!_allowExit && eventArgs.CloseReason == CloseReason.UserClosing) { eventArgs.Cancel = true; Hide(); } }

@@ -52,7 +52,11 @@ Beim ersten Start:
 3. Den Zielmonitor auswählen und bei Bedarf Chrome- oder FFprobe-Pfade konfigurieren.
 4. Die Weboberfläche auf dem lokalen Rechner unter [http://localhost:8765](http://localhost:8765) öffnen und anmelden.
 
-Aktiviere „Web UI im LAN freigeben“ in der Desktop-Anwendung, wenn du von einem anderen Gerät im Netzwerk steuern möchtest. Die Änderung wird nach einem Neustart wirksam; gegebenenfalls muss der Web-Port in der Windows-Firewall freigegeben werden.
+Aktiviere „Web UI im LAN freigeben“ in der Desktop-Anwendung, wenn du von einem anderen Gerät im Netzwerk steuern möchtest. Speichere die Einstellungen und starte die Anwendung neu, damit die LAN-Freigabe und ein geänderter Port wirksam werden.
+
+Die Zeile „Windows-Firewall“ prüft den eingetragenen Web-Port automatisch und zeigt den Status für private, öffentliche und Domänennetzwerke. Mit „Erneut prüfen“ kannst du den Status aktualisieren. „In Firewall freigeben“ öffnet den Windows-Administrator-Dialog und erstellt oder aktualisiert eine eigene Regel: eingehendes TCP auf diesem Port, nur für diese Anwendung und Teilnehmer im lokalen Subnetz, in allen drei Netzwerkprofilen. Die Aktion speichert keine Einstellungen und startet die Anwendung nicht neu. Vorhandene passende Regeln werden erkannt; fremde Regeln und Firewall-Profile werden nicht verändert.
+
+Eine Blockregel oder Unternehmensrichtlinie kann die Freigabe verhindern; eingeschränkte oder nicht eindeutig auswertbare Regeln werden entsprechend angezeigt. „Firewall deaktiviert“ bedeutet keine bestätigte Regel-Freigabe. Die Prüfung betrifft die Windows-Firewall; die tatsächliche Erreichbarkeit von einem anderen Gerät muss im jeweiligen Netzwerk geprüft werden. Nach einem Wechsel des Installationspfads die Freigabe erneut prüfen.
 
 Unter „Sprache“ kannst du „Systemstandard“, Deutsch, Englisch oder Spanisch auswählen. Beim Systemstandard verwendet die App beim Start die Windows-Sprache; ist sie nicht verfügbar, erscheint Englisch. Die Auswahl gilt auch für die Weboberfläche auf anderen Geräten und für die Beamer-Anzeige. Sprachänderungen werden nach einem Neustart wirksam.
 

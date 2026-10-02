@@ -6,6 +6,22 @@ namespace BeamerPresenter.App.Tests;
 public sealed class PresenterLanguageTests
 {
     [Theory]
+    [InlineData("de-DE", "In Firewall freigeben", "Öffentlich")]
+    [InlineData("en-US", "Allow through firewall", "Public")]
+    [InlineData("es-ES", "Permitir en el firewall", "Público")]
+    public void Firewall_controls_and_profiles_use_the_selected_desktop_language(string culture, string button, string profile)
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
+            Assert.Equal(button, AppText.Get("In Firewall freigeben"));
+            Assert.Equal(profile, AppText.Get("Public"));
+        }
+        finally { CultureInfo.CurrentUICulture = previous; }
+    }
+
+    [Theory]
     [InlineData("de-DE", "de-DE")]
     [InlineData("de-AT", "de-AT")]
     [InlineData("en-GB", "en-GB")]

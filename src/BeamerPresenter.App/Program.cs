@@ -14,6 +14,14 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        if (WindowsFirewallService.IsHelperRequest(args))
+        {
+            Environment.ExitCode = WindowsFirewallService.RunHelperAsync(args,
+                Environment.ProcessPath ?? System.Windows.Forms.Application.ExecutablePath,
+                new FirewallProcessRunner()).GetAwaiter().GetResult();
+            return;
+        }
+
         var startMinimized = args.Contains("--autostart", StringComparer.OrdinalIgnoreCase);
         using var singleInstance = SingleInstanceCoordinator.Acquire();
         if (!singleInstance.IsPrimary)
@@ -93,6 +101,9 @@ internal static class Program
         builder.Services.AddHostedService<NewsSchedulingWorker>();
         builder.Services.AddHostedService<PresenterWatchdog>();
         builder.Services.AddSingleton(new StartupRegistrationService(Environment.ProcessPath ?? System.Windows.Forms.Application.ExecutablePath));
+        builder.Services.AddSingleton(hostSettings);
+        builder.Services.AddSingleton<IWindowsFirewallService>(new WindowsFirewallService(
+            Environment.ProcessPath ?? System.Windows.Forms.Application.ExecutablePath, new FirewallProcessRunner()));
         builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options => options.MultipartBodyLengthLimit = 5L * 1024 * 1024 * 1024);
         var application = builder.Build();
         application.UseStaticFiles();

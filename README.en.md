@@ -52,7 +52,11 @@ On first run:
 3. Select the target monitor and, if needed, configure the Chrome or FFprobe paths.
 4. Open the web interface at [http://localhost:8765](http://localhost:8765) on the local computer and sign in.
 
-Enable “Allow Web UI on LAN” in the desktop app if you want to control it from another device on the network. The change takes effect after a restart; you may also need to allow the web port through Windows Firewall.
+Enable “Allow Web UI on LAN” in the desktop app if you want to control it from another device on the network. Save the settings and restart the application for LAN access and a changed port to take effect.
+
+The “Windows Firewall” row automatically checks the entered web port and displays its status for private, public, and domain networks. Use “Check again” to refresh the status. “Allow through firewall” opens the Windows administrator prompt and creates or updates an application-owned rule: inbound TCP on this port, only for this application and devices in the local subnet, on all three network profiles. This action does not save settings or restart the application. Existing matching rules are recognized; other rules and firewall profiles are not changed.
+
+A block rule or organizational policy may prevent access; restricted or ambiguous rules are reported accordingly. “Firewall disabled” does not confirm an allow rule. The check covers Windows Firewall; verify actual access from another device on your network. Check the rule again after changing the installation path.
 
 Under “Language,” select “System default,” German, English, or Spanish. With the system default, the app uses the Windows language at startup and falls back to English if that language is unavailable. The choice also applies to the web interface on other devices and to the projector display. Language changes take effect after a restart.
 

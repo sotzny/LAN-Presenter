@@ -245,4 +245,61 @@
   </data>
   <data name="Programme" xml:space="preserve"><value>Programas</value></data>
   <data name="Der Presenter wurde unerwartet beendet." xml:space="preserve"><value>El presentador se detuvo inesperadamente.</value></data>
+  <data name="Windows-Firewall:" xml:space="preserve">
+    <value>Firewall de Windows:</value>
+  </data>
+  <data name="In Firewall freigeben" xml:space="preserve">
+    <value>Permitir en el firewall</value>
+  </data>
+  <data name="LAN-Zugriff deaktiviert – keine Freigabe erforderlich." xml:space="preserve">
+    <value>Acceso LAN desactivado: no se requiere una regla.</value>
+  </data>
+  <data name="Prüfung für TCP-Port {0}. Freigabe: alle Profile, nur diese Anwendung und das lokale Subnetz. Administratorrechte erforderlich." xml:space="preserve">
+    <value>Comprobación del puerto TCP {0}. Permitir en todos los perfiles, solo para esta aplicación y la subred local. Se requieren permisos de administrador.</value>
+  </data>
+  <data name="Geänderte Einstellungen zuerst speichern und die Anwendung neu starten." xml:space="preserve">
+    <value>Guarda los cambios y reinicia la aplicación.</value>
+  </data>
+  <data name="Gespeicherte Netzwerkänderungen gelten nach einem Neustart." xml:space="preserve">
+    <value>Los cambios de red guardados se aplican después de reiniciar.</value>
+  </data>
+  <data name="Private" xml:space="preserve">
+    <value>Privado</value>
+  </data>
+  <data name="Public" xml:space="preserve">
+    <value>Público</value>
+  </data>
+  <data name="Domain" xml:space="preserve">
+    <value>Dominio</value>
+  </data>
+  <data name="Freigegeben" xml:space="preserve">
+    <value>Permitido</value>
+  </data>
+  <data name="Keine passende Freigabe" xml:space="preserve">
+    <value>No hay una regla de permiso adecuada</value>
+  </data>
+  <data name="Blockiert (Regel oder Richtlinie)" xml:space="preserve">
+    <value>Bloqueado (regla o directiva)</value>
+  </data>
+  <data name="Firewall deaktiviert" xml:space="preserve">
+    <value>Firewall desactivado</value>
+  </data>
+  <data name="Nicht eindeutig prüfbar" xml:space="preserve">
+    <value>No se puede determinar con certeza</value>
+  </data>
+  <data name="Firewall-Freigabe läuft …" xml:space="preserve">
+    <value>Permitiendo acceso en el firewall …</value>
+  </data>
+  <data name="Der Web-Port ist in der Windows-Firewall freigegeben." xml:space="preserve">
+    <value>El puerto web está permitido en el firewall de Windows.</value>
+  </data>
+  <data name="Firewall-Freigabe abgebrochen." xml:space="preserve">
+    <value>Cambio de acceso en el firewall cancelado.</value>
+  </data>
+  <data name="Die Regel wurde gespeichert, die Freigabe ist jedoch nicht bestätigt. Bitte Regeln und Richtlinien in der Windows-Firewall prüfen." xml:space="preserve">
+    <value>La regla se guardó, pero no se pudo confirmar el acceso. Comprueba las reglas y directivas del firewall de Windows.</value>
+  </data>
+  <data name="Die Firewall-Regel konnte nicht geändert werden. Bitte Administratorrechte und Windows-Richtlinien prüfen." xml:space="preserve">
+    <value>No se pudo cambiar la regla del firewall. Comprueba los permisos de administrador y las directivas de Windows.</value>
+  </data>
 </root>

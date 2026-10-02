@@ -245,4 +245,61 @@
   </data>
   <data name="Programme" xml:space="preserve"><value>Programs</value></data>
   <data name="Der Presenter wurde unerwartet beendet." xml:space="preserve"><value>The presenter stopped unexpectedly.</value></data>
+  <data name="Windows-Firewall:" xml:space="preserve">
+    <value>Windows Firewall:</value>
+  </data>
+  <data name="In Firewall freigeben" xml:space="preserve">
+    <value>Allow through firewall</value>
+  </data>
+  <data name="LAN-Zugriff deaktiviert – keine Freigabe erforderlich." xml:space="preserve">
+    <value>LAN access disabled – no firewall rule required.</value>
+  </data>
+  <data name="Prüfung für TCP-Port {0}. Freigabe: alle Profile, nur diese Anwendung und das lokale Subnetz. Administratorrechte erforderlich." xml:space="preserve">
+    <value>Checking TCP port {0}. Allow on all profiles, for this application and the local subnet only. Administrator privileges required.</value>
+  </data>
+  <data name="Geänderte Einstellungen zuerst speichern und die Anwendung neu starten." xml:space="preserve">
+    <value>Save changed settings and restart the application.</value>
+  </data>
+  <data name="Gespeicherte Netzwerkänderungen gelten nach einem Neustart." xml:space="preserve">
+    <value>Saved network changes take effect after restarting.</value>
+  </data>
+  <data name="Private" xml:space="preserve">
+    <value>Private</value>
+  </data>
+  <data name="Public" xml:space="preserve">
+    <value>Public</value>
+  </data>
+  <data name="Domain" xml:space="preserve">
+    <value>Domain</value>
+  </data>
+  <data name="Freigegeben" xml:space="preserve">
+    <value>Allowed</value>
+  </data>
+  <data name="Keine passende Freigabe" xml:space="preserve">
+    <value>No matching allow rule</value>
+  </data>
+  <data name="Blockiert (Regel oder Richtlinie)" xml:space="preserve">
+    <value>Blocked (rule or policy)</value>
+  </data>
+  <data name="Firewall deaktiviert" xml:space="preserve">
+    <value>Firewall disabled</value>
+  </data>
+  <data name="Nicht eindeutig prüfbar" xml:space="preserve">
+    <value>Cannot determine reliably</value>
+  </data>
+  <data name="Firewall-Freigabe läuft …" xml:space="preserve">
+    <value>Allowing firewall access …</value>
+  </data>
+  <data name="Der Web-Port ist in der Windows-Firewall freigegeben." xml:space="preserve">
+    <value>The web port is allowed through Windows Firewall.</value>
+  </data>
+  <data name="Firewall-Freigabe abgebrochen." xml:space="preserve">
+    <value>Firewall access change cancelled.</value>
+  </data>
+  <data name="Die Regel wurde gespeichert, die Freigabe ist jedoch nicht bestätigt. Bitte Regeln und Richtlinien in der Windows-Firewall prüfen." xml:space="preserve">
+    <value>The rule was saved, but access could not be confirmed. Check Windows Firewall rules and policies.</value>
+  </data>
+  <data name="Die Firewall-Regel konnte nicht geändert werden. Bitte Administratorrechte und Windows-Richtlinien prüfen." xml:space="preserve">
+    <value>The firewall rule could not be changed. Check administrator privileges and Windows policies.</value>
+  </data>
 </root>
