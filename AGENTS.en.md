@@ -14,7 +14,7 @@
 - Never log, test, commit, or put web passwords in `appsettings`.
 - Passwords are stored with PBKDF2-SHA512 and an individual salt. Changes to this need a safe migration path.
 - Uploads remain authenticated; always normalize filenames with `Path.GetFileName` and check allowed extensions centrally.
-- `/presenter` remains accessible without cookie authentication but, like `/media` and `/hubs/presenter`, only from loopback addresses. Do not add management endpoints there, and always register the loopback middleware before authentication and authorization.
+- `/presenter` remains accessible without cookie authentication but, like video streams under `/media/{mediaId}` and `/hubs/presenter`, only from loopback addresses. The `/media` management page (including `/media/`) requires cookie authentication and is also accessible from the LAN when LAN access is deliberately enabled. Do not add management endpoints under the local presenter resources, and always register the loopback middleware before authentication and authorization.
 - By default, the Web UI binds only to `127.0.0.1`. `PresenterSettings.AllowLanAccess` may be enabled deliberately only through the desktop setting; only then does Kestrel bind to `0.0.0.0`, while all management routes still require cookie authentication.
 - Razor Components require `UseAntiforgery()` after `UseAuthentication()` and `UseAuthorization()`; without this middleware, even `/login` returns HTTP 500.
 - The WinForms host does not create a merged static asset manifest. MSBuild therefore copies RCL and MudBlazor assets into `wwwroot/_content/...` in the app output, and `UseStaticFiles()` serves them.

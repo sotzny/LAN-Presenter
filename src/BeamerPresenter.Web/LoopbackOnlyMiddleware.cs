@@ -25,7 +25,9 @@ internal sealed class LoopbackOnlyMiddleware(RequestDelegate next)
 
     private static bool IsPresenterResource(PathString path) =>
         path.StartsWithSegments("/presenter", StringComparison.OrdinalIgnoreCase) ||
-        path.StartsWithSegments("/media", StringComparison.OrdinalIgnoreCase) ||
+        (path.StartsWithSegments("/media", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(path.Value, "/media", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(path.Value, "/media/", StringComparison.OrdinalIgnoreCase)) ||
         path.StartsWithSegments("/hubs/presenter", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsLoopback(IPAddress? address)

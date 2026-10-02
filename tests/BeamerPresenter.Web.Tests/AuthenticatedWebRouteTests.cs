@@ -51,7 +51,9 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
 
         _application.Use(async (context, next) =>
         {
-            context.Connection.RemoteIpAddress ??= IPAddress.Loopback;
+            context.Connection.RemoteIpAddress = context.Request.Headers.TryGetValue("X-Test-Remote-IP", out var remoteAddress)
+                ? IPAddress.Parse(remoteAddress.ToString())
+                : IPAddress.Loopback;
             var culture = CultureInfo.GetCultureInfo(
                 context.Request.Headers.TryGetValue("X-Test-Culture", out var cultureName)
                     ? cultureName.ToString()
@@ -93,6 +95,49 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         Assert.Contains("dashboard.js", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Wiedergabe-Queue", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Videobibliothek", html, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("/media")]
+    [InlineData("/media/")]
+    [InlineData("/MEDIA")]
+    [InlineData("/MeDiA/")]
+    public async Task Lan_media_library_requires_login_and_renders_after_authentication(string path)
+    {
+        using var client = _application!.GetTestClient();
+        client.DefaultRequestHeaders.Add("X-Test-Remote-IP", "192.168.10.42");
+
+        using var anonymous = await client.GetAsync(path);
+        Assert.Equal(HttpStatusCode.Redirect, anonymous.StatusCode);
+        Assert.Equal("/login", anonymous.Headers.Location?.AbsolutePath);
+
+        var cookie = await LoginAsync(client);
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        request.Headers.Add("Cookie", cookie);
+        using var response = await client.SendAsync(request);
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Videobibliothek", html, StringComparison.Ordinal);
+        Assert.Contains("Video hinzufügen", html, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("/media/42")]
+    [InlineData("/presenter")]
+    [InlineData("/hubs/presenter")]
+    [InlineData("/hubs/presenter/negotiate")]
+    public async Task Lan_presenter_resources_remain_forbidden_after_login(string path)
+    {
+        using var client = _application!.GetTestClient();
+        client.DefaultRequestHeaders.Add("X-Test-Remote-IP", "192.168.10.42");
+        var cookie = await LoginAsync(client);
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        request.Headers.Add("Cookie", cookie);
+
+        using var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Theory]
@@ -303,8 +348,10 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         Assert.StartsWith("/?presenter=error&message=", response.Headers.Location?.OriginalString, StringComparison.Ordinal);
     }
 
-    [Fact]
-    public async Task Media_search_filters_library_and_marks_playback_status()
+    [Theory]
+    [InlineData("127.0.0.1")]
+    [InlineData("192.168.10.42")]
+    public async Task Media_search_filters_library_and_marks_playback_status(string remoteAddress)
     {
         await using (var scope = _application!.Services.CreateAsyncScope())
         {
@@ -331,6 +378,7 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         using var client = _application.GetTestClient();
         var cookie = await LoginAsync(client);
         using var request = new HttpRequestMessage(HttpMethod.Get, "/media?q=h264");
+        request.Headers.Add("X-Test-Remote-IP", remoteAddress);
         request.Headers.Add("Cookie", cookie);
 
         using var response = await client.SendAsync(request);
@@ -346,8 +394,10 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         Assert.DoesNotContain("retro-demo.mkv", html, StringComparison.Ordinal);
     }
 
-    [Fact]
-    public async Task Media_status_filter_shows_only_matching_library_entries()
+    [Theory]
+    [InlineData("127.0.0.1")]
+    [InlineData("192.168.10.42")]
+    public async Task Media_status_filter_shows_only_matching_library_entries(string remoteAddress)
     {
         await using (var scope = _application!.Services.CreateAsyncScope())
         {
@@ -362,11 +412,13 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         using var client = _application.GetTestClient();
         var cookie = await LoginAsync(client);
         using var request = new HttpRequestMessage(HttpMethod.Get, "/media?mediaStatus=disabled");
+        request.Headers.Add("X-Test-Remote-IP", remoteAddress);
         request.Headers.Add("Cookie", cookie);
 
         using var response = await client.SendAsync(request);
         var html = await response.Content.ReadAsStringAsync();
 
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("disabled.mp4", html, StringComparison.Ordinal);
         Assert.Contains("Deaktiviert", html, StringComparison.Ordinal);
         Assert.DoesNotContain("ready.mp4", html, StringComparison.Ordinal);

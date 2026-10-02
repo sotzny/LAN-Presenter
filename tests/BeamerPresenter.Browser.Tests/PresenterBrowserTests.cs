@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Globalization;
+using System.Net;
 using System.Text.Json;
 using BeamerPresenter.Application;
 using BeamerPresenter.Domain;
@@ -54,6 +55,11 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
 
         _application.Use(async (context, next) =>
         {
+            if (context.Request.Headers.TryGetValue("X-Test-Remote-IP", out var remoteAddress))
+            {
+                context.Connection.RemoteIpAddress = IPAddress.Parse(remoteAddress.ToString());
+            }
+
             var culture = CultureInfo.GetCultureInfo(
                 context.Request.Headers.TryGetValue("X-Test-Culture", out var cultureName)
                     ? cultureName.ToString()
@@ -78,10 +84,15 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
         _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
     }
 
-    [Fact]
-    public async Task Management_uses_clickable_menu_routes_instead_of_one_long_page()
+    [Theory]
+    [InlineData("127.0.0.1")]
+    [InlineData("192.168.10.42")]
+    public async Task Management_uses_clickable_menu_routes_instead_of_one_long_page(string remoteAddress)
     {
-        await using var context = await _browser!.NewContextAsync();
+        await using var context = await _browser!.NewContextAsync(new BrowserNewContextOptions
+        {
+            ExtraHTTPHeaders = new Dictionary<string, string> { ["X-Test-Remote-IP"] = remoteAddress }
+        });
         await using var coverage = new BrowserCoverageCapture(context);
         await context.RouteAsync("**/api/status", route => route.FulfillAsync(new RouteFulfillOptions
         {
@@ -91,7 +102,8 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
         }));
         var page = await coverage.NewPageAsync();
 
-        await page.GotoAsync($"{_baseAddress}/login");
+        await page.GotoAsync($"{_baseAddress}/media");
+        await page.WaitForURLAsync($"{_baseAddress}/login?**");
         await page.FillAsync("#password", TestPassword);
         await page.Locator("form[action='/account/login'] button[type='submit']").ClickAsync();
         await page.WaitForURLAsync($"{_baseAddress}/");

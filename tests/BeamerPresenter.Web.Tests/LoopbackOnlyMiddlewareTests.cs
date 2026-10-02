@@ -10,6 +10,10 @@ public sealed class LoopbackOnlyMiddlewareTests
     [InlineData("/presenter")]
     [InlineData("/presenter/subpath")]
     [InlineData("/media/42")]
+    [InlineData("/MEDIA/42")]
+    [InlineData("/media/unknown")]
+    [InlineData("/media//")]
+    [InlineData("/hubs/presenter")]
     [InlineData("/hubs/presenter/negotiate")]
     public async Task Presenter_resources_reject_non_loopback_clients(string path)
     {
@@ -50,8 +54,13 @@ public sealed class LoopbackOnlyMiddlewareTests
         Assert.True(nextCalled);
     }
 
-    [Fact]
-    public async Task Management_routes_remain_available_to_lan_clients()
+    [Theory]
+    [InlineData("/login")]
+    [InlineData("/media")]
+    [InlineData("/media/")]
+    [InlineData("/MEDIA")]
+    [InlineData("/MeDiA/")]
+    public async Task Management_routes_remain_available_to_lan_clients(string path)
     {
         var nextCalled = false;
         var middleware = new LoopbackOnlyMiddleware(_ =>
@@ -60,7 +69,7 @@ public sealed class LoopbackOnlyMiddlewareTests
             return Task.CompletedTask;
         });
         var context = new DefaultHttpContext();
-        context.Request.Path = "/login";
+        context.Request.Path = path;
         context.Connection.RemoteIpAddress = IPAddress.Parse("192.168.10.42");
 
         await middleware.InvokeAsync(context);
