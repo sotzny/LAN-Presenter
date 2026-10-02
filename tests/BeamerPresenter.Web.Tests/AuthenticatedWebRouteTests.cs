@@ -52,12 +52,12 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         _application.Use(async (context, next) =>
         {
             context.Connection.RemoteIpAddress ??= IPAddress.Loopback;
-            if (context.Request.Headers.TryGetValue("X-Test-Culture", out var cultureName))
-            {
-                var culture = CultureInfo.GetCultureInfo(cultureName.ToString());
-                CultureInfo.CurrentCulture = culture;
-                CultureInfo.CurrentUICulture = culture;
-            }
+            var culture = CultureInfo.GetCultureInfo(
+                context.Request.Headers.TryGetValue("X-Test-Culture", out var cultureName)
+                    ? cultureName.ToString()
+                    : "de-DE");
+            CultureInfo.CurrentCulture = culture;
+            CultureInfo.CurrentUICulture = culture;
             await next();
         });
         _application.UsePresenterLoopbackProtection();
