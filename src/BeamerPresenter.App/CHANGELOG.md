@@ -1,4 +1,11 @@
 Beamerpresenter.App Changelog
+<a name="1.1.0"></a>
+## [1.1.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.1.0) (2026-10-02)
+
+### Features
+
+* check and configure Windows Firewall for LAN access ([221dbf8](https://www.github.com/sotzny/LAN-Presenter/commit/221dbf88b7c1f9ea5ebd95bbabb1ee2da826f13a))
+
 <a name="1.0.0"></a>
 ## [1.0.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.0.0) (2026-10-02)
 
