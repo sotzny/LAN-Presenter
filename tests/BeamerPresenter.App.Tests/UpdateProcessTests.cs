@@ -4,6 +4,7 @@ using BeamerPresenter.Updater;
 
 namespace BeamerPresenter.App.Tests;
 
+[Collection("Windows process tests")]
 public sealed class UpdateProcessTests
 {
     [Fact]
@@ -16,7 +17,7 @@ public sealed class UpdateProcessTests
         await host.Process.WaitForExitAsync(timeout.Token);
         Assert.Equal(0, host.Process.ExitCode);
         Assert.True(File.Exists(Path.Combine(host.Directory, "disposed.txt")));
-        using var listener = new TcpListener(System.Net.IPAddress.Loopback, new Uri(host.Address).Port); listener.Start(); listener.Stop();
+        AssertPortCanBeReusedByKestrel(host.Address);
         using var primary = BeamerPresenter.App.SingleInstanceCoordinator.Acquire(host.InstanceId);
         Assert.True(primary.IsPrimary);
     }
@@ -30,9 +31,21 @@ public sealed class UpdateProcessTests
         Assert.False(WindowsUpdateProcesses.Matches(host.Process, other.Executable, WindowsUpdateProcesses.CurrentSid));
         Assert.False(WindowsUpdateProcesses.Matches(host.Process, host.Executable, "S-1-0-0"));
         Assert.False(WindowsUpdateProcesses.Matches(host.Process, host.Executable, WindowsUpdateProcesses.CurrentSid, 0));
+        Assert.Throws<SocketException>(() => AssertPortCanBeReusedByKestrel(host.Address));
         await WindowsUpdateProcesses.StopTargetAsync(host.Executable, WindowsUpdateProcesses.CurrentSid, gracefulTimeout: TimeSpan.FromMilliseconds(100));
         Assert.True(host.Process.HasExited); Assert.False(other.Process.HasExited);
-        using var listener = new TcpListener(System.Net.IPAddress.Loopback, new Uri(host.Address).Port); listener.Start(); listener.Stop();
+        AssertPortCanBeReusedByKestrel(host.Address);
+        using var primary = BeamerPresenter.App.SingleInstanceCoordinator.Acquire(host.InstanceId);
+        Assert.True(primary.IsPrimary);
+    }
+
+    private static void AssertPortCanBeReusedByKestrel(string address)
+    {
+        // Use the same socket options as the production server. TcpListener's exclusive
+        // binding also rejects Windows TIME_WAIT sockets after the listener has gone.
+        using var socket = Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(
+            new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, new Uri(address).Port));
+        socket.Listen(1);
     }
 
     [Fact]

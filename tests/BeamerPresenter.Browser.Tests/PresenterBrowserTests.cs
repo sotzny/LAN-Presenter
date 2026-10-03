@@ -176,6 +176,35 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Combined_handshake_and_playback_command_report_connection_before_playing()
+    {
+        await using var context = await _browser!.NewContextAsync();
+        await context.AddInitScriptAsync(MediaAndSocketTestDoubles + "\n" + """
+            window.__reportedStatuses = [];
+            window.WebSocket = class extends EventTarget {
+                static OPEN = 1;
+                readyState = 1;
+                constructor() { super(); setTimeout(() => this.dispatchEvent(new Event('open')), 0); }
+                send(payload) {
+                    const message = JSON.parse(payload.split('\u001e')[0]);
+                    if (message.protocol) {
+                        setTimeout(() => this.dispatchEvent(new MessageEvent('message', {
+                            data: '{}\u001e' + JSON.stringify({ type: 1, target: 'LoadLocalVideo', arguments: [1, 0, 30, true] }) + '\u001e'
+                        })), 0);
+                    } else if (message.target === 'ReportStatus') window.__reportedStatuses.push(message.arguments[0]);
+                }
+                close() { this.readyState = 3; }
+            };
+            """);
+        var page = await context.NewPageAsync();
+        await page.GotoAsync($"{_baseAddress}/presenter");
+        await page.WaitForFunctionAsync("window.__reportedStatuses.includes('Playing')");
+        var statuses = await page.EvaluateAsync<string[]>("window.__reportedStatuses");
+        Assert.True(Array.IndexOf(statuses, "Connected") < Array.IndexOf(statuses, "Playing"));
+        Assert.Equal("Playing", statuses[^1]);
+    }
+
+    [Fact]
     public async Task Backend_resume_plays_after_pause_hide_and_stop_with_a_new_presenter_connection()
     {
         var firstEntry = await SeedQueueEntryAsync();

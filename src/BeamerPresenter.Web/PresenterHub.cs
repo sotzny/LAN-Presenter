@@ -61,7 +61,9 @@ public sealed class PresenterConnectionState : IPresenterTelemetry
         lock (reportLock)
         {
             var previousStatus = latestReport.Status;
-            Volatile.Write(ref latestReport, new PresenterClientReport(status, positionSeconds, durationSeconds, message, DateTimeOffset.UtcNow));
+            var heartbeat = status.Equals("Heartbeat", StringComparison.OrdinalIgnoreCase);
+            Volatile.Write(ref latestReport, new PresenterClientReport(heartbeat ? previousStatus : status,
+                positionSeconds, durationSeconds, heartbeat ? latestReport.Message : message, DateTimeOffset.UtcNow));
             return IsTerminal(status) && !IsTerminal(previousStatus);
         }
     }

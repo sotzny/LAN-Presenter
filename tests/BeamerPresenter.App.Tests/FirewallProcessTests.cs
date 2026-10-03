@@ -4,6 +4,7 @@ using BeamerPresenter.App;
 
 namespace BeamerPresenter.App.Tests;
 
+[Collection("Windows process tests")]
 public sealed class FirewallProcessTests
 {
     [Fact]

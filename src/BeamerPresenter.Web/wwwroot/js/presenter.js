@@ -250,11 +250,11 @@
             socket = new WebSocket(`${scheme}://${location.host}/hubs/presenter?id=${encodeURIComponent(details.connectionToken)}`);
             socket.addEventListener("open", () => socket.send(JSON.stringify({ protocol: "json", version: 1 }) + recordSeparator));
             socket.addEventListener("message", async event => {
-                await handleMessages(String(event.data));
                 if (String(event.data).startsWith("{}")) {
                     setStatus(t("Verbunden. Bereit für die nächste Wiedergabe."));
                     report("Connected");
                 }
+                await handleMessages(String(event.data));
             });
             socket.addEventListener("close", () => {
                 setStatus(t("Verbindung getrennt. Neuer Versuch …"));
