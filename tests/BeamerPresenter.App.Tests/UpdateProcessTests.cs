@@ -17,7 +17,7 @@ public sealed class UpdateProcessTests
         await host.Process.WaitForExitAsync(timeout.Token);
         Assert.Equal(0, host.Process.ExitCode);
         Assert.True(File.Exists(Path.Combine(host.Directory, "disposed.txt")));
-        AssertPortCanBeReusedByKestrel(host.Address);
+        await WaitForPortReuseAsync(host.Address);
         using var primary = BeamerPresenter.App.SingleInstanceCoordinator.Acquire(host.InstanceId);
         Assert.True(primary.IsPrimary);
     }
@@ -34,7 +34,7 @@ public sealed class UpdateProcessTests
         Assert.Throws<SocketException>(() => AssertPortCanBeReusedByKestrel(host.Address));
         await WindowsUpdateProcesses.StopTargetAsync(host.Executable, WindowsUpdateProcesses.CurrentSid, gracefulTimeout: TimeSpan.FromMilliseconds(100));
         Assert.True(host.Process.HasExited); Assert.False(other.Process.HasExited);
-        AssertPortCanBeReusedByKestrel(host.Address);
+        await WaitForPortReuseAsync(host.Address);
         using var primary = BeamerPresenter.App.SingleInstanceCoordinator.Acquire(host.InstanceId);
         Assert.True(primary.IsPrimary);
     }
@@ -46,6 +46,28 @@ public sealed class UpdateProcessTests
         using var socket = Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(
             new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, new Uri(address).Port));
         socket.Listen(1);
+    }
+
+    private static async Task WaitForPortReuseAsync(string address)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        while (true)
+        {
+            try { AssertPortCanBeReusedByKestrel(address); return; }
+            catch (SocketException exception) when (exception.SocketErrorCode == SocketError.AddressAlreadyInUse)
+            {
+                if (timeout.IsCancellationRequested)
+                {
+                    var port = new Uri(address).Port;
+                    var properties = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties();
+                    var listeners = properties.GetActiveTcpListeners().Count(endpoint => endpoint.Port == port);
+                    var connections = properties.GetActiveTcpConnections().Where(connection => connection.LocalEndPoint.Port == port)
+                        .Select(connection => connection.State.ToString());
+                    throw new IOException($"Kestrel port was not released within five seconds: listeners={listeners}; connections={string.Join(',', connections)}", exception);
+                }
+                await Task.Delay(50);
+            }
+        }
     }
 
     [Fact]
