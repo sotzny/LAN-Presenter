@@ -5,6 +5,90 @@ namespace BeamerPresenter.Application.Tests;
 
 public sealed class PlaybackOrchestratorTests
 {
+    [Theory]
+    [InlineData(PresenterState.Active, true)]
+    [InlineData(PresenterState.Paused, false)]
+    [InlineData(PresenterState.Hidden, false)]
+    [InlineData(PresenterState.Stopped, false)]
+    public async Task Update_resume_preserves_actual_position_queue_and_playback_mode(PresenterState mode, bool autoPlay)
+    {
+        var calls = new List<string>(); var state = new PlaybackController(); var settings = new StubSettingsService();
+        var store = new QueuedPlaybackStore(calls); var presenter = new RecordingPresenter(calls);
+        var orchestrator = new PlaybackOrchestrator(state, new RecordingBrowser(calls), presenter, settings, new RecordingPowerManagement(calls),
+            new PlaybackQueueService(store, new EmptyMediaLibrary(), settings, new MediaSegmentPlanner(new ZeroRandomSource()), TimeProvider.System));
+        await orchestrator.RestoreAfterUpdateAsync(new(mode, 1, TimeSpan.FromSeconds(123), true, null, null, null));
+        Assert.Equal(mode, state.State);
+        await orchestrator.RestoreOnConnectionAsync();
+        if (mode == PresenterState.Stopped) Assert.Empty(presenter.AutoPlayFlags);
+        else
+        {
+            Assert.Equal(autoPlay, Assert.Single(presenter.AutoPlayFlags));
+            Assert.Contains("presenter:load:1:00:02:03-00:07:00", calls);
+        }
+        var current = (await store.GetQueueAsync()).Single(entry => entry.Status == QueueEntryStatus.Playing);
+        Assert.Equal(TimeSpan.Zero, current.StartPosition); Assert.Equal(TimeSpan.FromMinutes(7), current.EndPosition);
+        Assert.DoesNotContain(calls, call => call.StartsWith("store:", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Update_capture_freezes_commands_and_shutdown_releases_browser_and_power()
+    {
+        var calls = new List<string>(); var state = new PlaybackController(); state.Activate(); var settings = new StubSettingsService();
+        var store = new QueuedPlaybackStore(calls);
+        var orchestrator = new PlaybackOrchestrator(state, new RecordingBrowser(calls), new RecordingPresenter(calls), settings,
+            new RecordingPowerManagement(calls), new PlaybackQueueService(store, new EmptyMediaLibrary(), settings, new MediaSegmentPlanner(new ZeroRandomSource()), TimeProvider.System));
+        var checkpoint = await orchestrator.CaptureResumeAsync(new UpdateTelemetry());
+        Assert.Equal(TimeSpan.FromSeconds(123), checkpoint.Position); Assert.Equal(1, checkpoint.QueueEntryId);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => orchestrator.AdvanceAsync(TimeSpan.FromSeconds(125)));
+        await orchestrator.CancelUpdatePreparationAsync();
+        Assert.False(orchestrator.IsStopping); Assert.Contains("presenter:play", calls);
+        await orchestrator.ShutdownAsync(default);
+        Assert.Equal(PresenterState.Stopped, state.State); Assert.Contains("browser:stop", calls); Assert.Contains("power:release", calls);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => orchestrator.ActivateAsync());
+        Assert.DoesNotContain(calls, call => call.StartsWith("store:", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Update_resume_discards_expired_news_preserves_remaining_duration_and_rejects_changed_queue()
+    {
+        var calls = new List<string>(); var settings = new StubSettingsService();
+        var orchestrator = new PlaybackOrchestrator(new PlaybackController(), new RecordingBrowser(calls), new RecordingPresenter(calls), settings,
+            new RecordingPowerManagement(calls), new PlaybackQueueService(new QueuedPlaybackStore(calls), new EmptyMediaLibrary(), settings,
+                new MediaSegmentPlanner(new ZeroRandomSource()), TimeProvider.System));
+        var main = new NewsItem { Id = 101, Title = "main", Text = "main", Mode = NewsMode.Fullscreen, Duration = TimeSpan.FromHours(1) };
+        var ticker = new NewsItem { Id = 102, Title = "ticker", Text = "ticker", Mode = NewsMode.Ticker, Permanent = true };
+        await orchestrator.RestoreAfterUpdateAsync(new(PresenterState.Active, 1, TimeSpan.FromSeconds(123), true,
+            new(main, DateTimeOffset.UtcNow.AddMinutes(2)), null, new(ticker, DateTimeOffset.UtcNow.AddMinutes(-1))));
+        var display = await orchestrator.GetNewsDisplayAsync();
+        Assert.NotNull(display.Main); Assert.InRange(display.Main.Duration!.Value.TotalSeconds, 110, 120); Assert.Null(display.Ticker);
+        await orchestrator.RestoreOnConnectionAsync();
+        Assert.DoesNotContain("presenter:play", calls);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => orchestrator.RestoreAfterUpdateAsync(new(PresenterState.Active, 999, null, true, null, null, null)));
+        await orchestrator.ShutdownAsync(default);
+    }
+
+    [Fact]
+    public async Task Update_resume_restores_suspended_overlay_when_fullscreen_has_expired()
+    {
+        var calls = new List<string>(); var settings = new StubSettingsService();
+        var orchestrator = new PlaybackOrchestrator(new PlaybackController(), new RecordingBrowser(calls), new RecordingPresenter(calls), settings,
+            new RecordingPowerManagement(calls), new PlaybackQueueService(new QueuedPlaybackStore(calls), new EmptyMediaLibrary(), settings,
+                new MediaSegmentPlanner(new ZeroRandomSource()), TimeProvider.System));
+        var fullscreen = new NewsItem { Id = 101, Title = "main", Text = "main", Mode = NewsMode.Fullscreen, Permanent = true };
+        var overlay = new NewsItem { Id = 102, Title = "overlay", Text = "overlay", Mode = NewsMode.SplitScreen, Permanent = true };
+        await orchestrator.RestoreAfterUpdateAsync(new(PresenterState.Paused, 1, TimeSpan.FromSeconds(123), true,
+            new(fullscreen, DateTimeOffset.UtcNow.AddMinutes(-1)), new(overlay, DateTimeOffset.UtcNow.AddMinutes(2)), null));
+        Assert.Equal(102, (await orchestrator.GetNewsDisplayAsync()).Main?.Id);
+        await orchestrator.RestoreOnConnectionAsync();
+        Assert.DoesNotContain("presenter:play", calls);
+        await orchestrator.ShutdownAsync(default);
+    }
+
+    private sealed class UpdateTelemetry : IPresenterTelemetry
+    {
+        public PresenterTelemetrySnapshot Current => new(true, "Playing", TimeSpan.FromSeconds(123), TimeSpan.FromMinutes(7), null, DateTimeOffset.UtcNow);
+    }
+
     [Fact]
     public async Task Presenter_states_coordinate_browser_realtime_and_power_services()
     {
@@ -69,7 +153,11 @@ public sealed class PlaybackOrchestratorTests
         {
             await orchestrator.ShowNewsAsync(new NewsItem
             {
-                Id = 1, Title = "News", Text = "Text", Mode = NewsMode.Fullscreen, Permanent = true
+                Id = 1,
+                Title = "News",
+                Text = "Text",
+                Mode = NewsMode.Fullscreen,
+                Permanent = true
             });
         }
         if (previousState == PresenterState.Paused)
@@ -105,7 +193,11 @@ public sealed class PlaybackOrchestratorTests
         await orchestrator.StopAsync();
         await orchestrator.ShowNewsAsync(new NewsItem
         {
-            Id = 1, Title = "News", Text = "Text", Mode = NewsMode.Ticker, Permanent = true
+            Id = 1,
+            Title = "News",
+            Text = "Text",
+            Mode = NewsMode.Ticker,
+            Permanent = true
         });
         calls.Clear();
 

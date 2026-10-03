@@ -16,6 +16,14 @@ internal sealed class PresenterForm : Form
     private readonly PlaybackOrchestrator _playbackOrchestrator;
     private readonly IBrowserController _browser;
     private readonly IWindowsFirewallService _firewall;
+    private readonly IApplicationUpdateService _updates;
+    private readonly ApplicationLifetime _lifetime;
+    private readonly Label _updateStatus = new() { AutoSize = true, MaximumSize = new Size(430, 0) };
+    private readonly CheckBox _automaticUpdates = new() { AutoSize = true, Text = AppText.Get("Automatische Updates") };
+    private readonly ToolStripMenuItem _trayUpdateStatus = new() { Enabled = false };
+    private bool _refreshingUpdates;
+    private string? _notifiedUpdate;
+    private readonly string _updateNotificationPath;
     private readonly PresenterHostSettings _runningSettings;
     private readonly Label _version = new() { AutoSize = true };
     private readonly Label _build = new() { AutoSize = true };
@@ -78,6 +86,9 @@ internal sealed class PresenterForm : Form
         _playbackOrchestrator = host.Services.GetRequiredService<PlaybackOrchestrator>();
         _browser = host.Services.GetRequiredService<IBrowserController>();
         _firewall = host.Services.GetRequiredService<IWindowsFirewallService>();
+        _updates = host.Services.GetRequiredService<IApplicationUpdateService>();
+        _lifetime = host.Services.GetRequiredService<ApplicationLifetime>();
+        _updateNotificationPath = Path.Combine(host.Services.GetRequiredService<PresenterPaths>().RootDirectory, "update-notification.json");
         _runningSettings = host.Services.GetRequiredService<PresenterHostSettings>();
         var buildInformation = BuildInformation.Current;
         _version.Text = buildInformation.Version;
@@ -100,6 +111,10 @@ internal sealed class PresenterForm : Form
         _stopPresenter.Click += async (_, _) => await ChangePresenterStateAsync(_playbackOrchestrator.StopAsync);
         _monitor.SelectedIndexChanged += (_, _) => UpdateSelectedMonitorStatus();
         _statusTimer.Tick += async (_, _) => await RefreshRuntimeStatusAsync();
+        _automaticUpdates.CheckedChanged += async (_, _) =>
+        {
+            if (!_refreshingUpdates) await RunUpdateActionAsync(token => _updates.SetAutomaticAsync(_automaticUpdates.Checked, token));
+        };
         _webPort.TextChanged += (_, _) => ScheduleFirewallCheck();
         _allowLanAccess.CheckedChanged += (_, _) => ScheduleFirewallCheck();
         _firewallTimer.Tick += async (_, _) => { _firewallTimer.Stop(); await RefreshFirewallAsync(); };
@@ -126,7 +141,7 @@ internal sealed class PresenterForm : Form
     }
     private TableLayoutPanel CreateContent()
     {
-        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(18), ColumnCount = 2, RowCount = 24, AutoScroll = true };
+        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(18), ColumnCount = 2, RowCount = 25, AutoScroll = true };
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 32)); root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 68));
         AddRow(root, 0, AppText.Get("Version:"), _version); AddRow(root, 1, AppText.Get("Build:"), _build); AddRow(root, 2, AppText.Get("Commit:"), _commit); AddRow(root, 3, AppText.Get("Runtime:"), _runtime); AddRow(root, 4, AppText.Get("Presenter:"), _presenterStatus);
         AddRow(root, 5, AppText.Get("Chrome-Status:"), _chromeStatus); AddRow(root, 6, AppText.Get("Monitor:"), _monitor); AddRow(root, 7, AppText.Get("Monitorstatus:"), _monitorStatus); AddRow(root, 8, AppText.Get("Chrome-Pfad:"), CreateChromePathControl()); AddRow(root, 9, AppText.Get("Presenter-Optionen:"), CreatePresenterOptionsControl());
@@ -141,7 +156,54 @@ internal sealed class PresenterForm : Form
             new LanguageListItem("es", AppText.Get("Spanisch"))
         ]);
         _saveSettings.Click += async (_, _) => await SaveSettingsAsync(); root.Controls.Add(_saveSettings, 1, 22);
-        root.Controls.Add(new Label { AutoSize = true, Text = AppText.Get("Port-, Netzwerk- und Sprachänderungen gelten nach einem Neustart.") }, 1, 23); return root;
+        root.Controls.Add(new Label { AutoSize = true, Text = AppText.Get("Port-, Netzwerk- und Sprachänderungen gelten nach einem Neustart.") }, 1, 23);
+        AddRow(root, 24, AppText.Get("Updates:"), CreateUpdateControl()); return root;
+    }
+    private FlowLayoutPanel CreateUpdateControl()
+    {
+        var panel = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.TopDown, WrapContents = false };
+        panel.Controls.Add(_updateStatus);
+        panel.Controls.Add(_automaticUpdates);
+        foreach (var (label, action) in new (string, Func<CancellationToken, Task>)[] {
+            ("Nach Updates suchen", _updates.CheckAsync), ("Sofort", _updates.InstallAsync), ("1 Stunde später", _updates.PostponeAsync) })
+        {
+            var button = new Button { AutoSize = true, Text = AppText.Get(label) };
+            button.Click += async (_, _) => await RunUpdateActionAsync(action);
+            panel.Controls.Add(button);
+        }
+        return panel;
+    }
+    private async Task RunUpdateActionAsync(Func<CancellationToken, Task> action)
+    {
+        if (_lifetime.IsStopping) return;
+        try { await action(CancellationToken.None); }
+        catch (Exception) { if (!IsDisposed) _updateStatus.Text = AppText.Get("Die Update-Aktion ist fehlgeschlagen."); }
+        if (!IsDisposed) RefreshUpdateStatus();
+    }
+    private void RefreshUpdateStatus()
+    {
+        var update = _updates.Current;
+        var text = AppText.Format("Installiert: {0} · Verfügbar: {1}", update.InstalledVersion, update.AvailableVersion ?? "–") +
+            "\n" + AppText.Get(update.Phase) + (update.Phase == "Downloading" ? $" {update.Progress}%" : string.Empty);
+        if (update.InstallAtUtc is { } deadline)
+            text += "\n" + AppText.Format("Installation in {0} Sekunden", Math.Max(0, (int)(deadline - DateTimeOffset.UtcNow).TotalSeconds));
+        if (update.Error is not null) text += "\n" + AppText.Get(update.Error);
+        _updateStatus.Text = text;
+        _trayUpdateStatus.Text = text.Replace('\n', ' ');
+        _refreshingUpdates = true; _automaticUpdates.Checked = update.AutomaticUpdatesEnabled; _refreshingUpdates = false;
+        _automaticUpdates.Enabled = update.Phase != "Installing";
+        if (update.Phase == "Ready" && update.AvailableVersion != _notifiedUpdate)
+        {
+            _notifiedUpdate = update.AvailableVersion;
+            _ = SaveUpdateNotificationAsync(update.AvailableVersion!);
+            _notifyIcon.ShowBalloonTip(10000, AppText.Get("Update verfügbar"), text, ToolTipIcon.Info);
+        }
+    }
+    private async Task SaveUpdateNotificationAsync(string version)
+    {
+        try { await UpdateJson.WriteAsync(_updateNotificationPath, version); }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
     }
     private FlowLayoutPanel CreateFirewallControl()
     {
@@ -217,6 +279,10 @@ internal sealed class PresenterForm : Form
     {
         var menu = new ContextMenuStrip();
         menu.Items.Add(_trayStatus);
+        menu.Items.Add(_trayUpdateStatus);
+        menu.Items.Add(AppText.Get("Nach Updates suchen"), null, async (_, _) => await RunUpdateActionAsync(_updates.CheckAsync));
+        menu.Items.Add(AppText.Get("Sofort aktualisieren"), null, async (_, _) => await RunUpdateActionAsync(_updates.InstallAsync));
+        menu.Items.Add(AppText.Get("1 Stunde später"), null, async (_, _) => await RunUpdateActionAsync(_updates.PostponeAsync));
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_activatePresenter);
         menu.Items.Add(_pausePresenter);
@@ -242,6 +308,7 @@ internal sealed class PresenterForm : Form
         {
             await command(CancellationToken.None);
             UpdatePresenterStatus();
+            RefreshUpdateStatus();
             await RefreshRuntimeStatusAsync();
         }
         catch (Exception exception)
@@ -261,6 +328,8 @@ internal sealed class PresenterForm : Form
     }
     private async Task LoadSettingsAsync()
     {
+        try { _notifiedUpdate = await UpdateJson.ReadAsync<string>(_updateNotificationPath); }
+        catch (Exception exception) when (exception is IOException or System.Text.Json.JsonException or UnauthorizedAccessException) { }
         var settings = await _settingsService.GetAsync();
         _loadingSettings = true;
         _savedWebPort = settings.WebPort;
@@ -521,8 +590,15 @@ internal sealed class PresenterForm : Form
     private void OpenWebUi() => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(_localWebUrl) { UseShellExecute = true });
     private void ShowFromTray() { Show(); WindowState = FormWindowState.Normal; Activate(); if (_savedWebPort != 0) ScheduleFirewallCheck(); }
     internal void ShowFromExternalLaunch() => ShowFromTray();
-    private void ExitApplication() { _allowExit = true; Close(); }
-    private void OnFormClosing(object? sender, FormClosingEventArgs eventArgs) { if (!_allowExit && eventArgs.CloseReason == CloseReason.UserClosing) { eventArgs.Cancel = true; Hide(); } }
+    private void ExitApplication() { _statusTimer.Stop(); _lifetime.RequestShutdown(); }
+    internal void CloseAfterShutdown() { _allowExit = true; Close(); }
+    protected override void OnVisibleChanged(EventArgs e) { base.OnVisibleChanged(e); if (_lifetime is not null) _lifetime.ShowStatusWindow = Visible; }
+    private void OnFormClosing(object? sender, FormClosingEventArgs eventArgs)
+    {
+        if (_allowExit) return;
+        if (eventArgs.CloseReason == CloseReason.UserClosing) { eventArgs.Cancel = true; Hide(); }
+        else { eventArgs.Cancel = true; ExitApplication(); }
+    }
 
     private sealed record MediaFolderListItem(int Id, string Path, bool IncludeSubdirectories)
     {

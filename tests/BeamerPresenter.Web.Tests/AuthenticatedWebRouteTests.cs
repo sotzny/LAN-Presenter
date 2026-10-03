@@ -25,6 +25,7 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
     private readonly RecordingPlaybackCommands _playbackCommands = new();
     private readonly BlockingYouTubeDownloadTool _youTubeDownloads = new();
     private readonly RecordingPresenterControls _presenterControls = new();
+    private readonly BeamerPresenter.TestSupport.RecordingApplicationUpdates _updates = new();
     private WebApplication? _application;
 
     public async Task InitializeAsync()
@@ -37,6 +38,7 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         builder.Services.AddPresenterInfrastructure(_dataDirectory);
         builder.Services.AddSingleton<IYouTubeDownloadTool>(_youTubeDownloads);
         builder.Services.AddPresenterWebUi();
+        builder.Services.AddSingleton<IApplicationUpdateService>(_updates);
         builder.Services.AddSingleton<IPlaybackCommandService>(_playbackCommands);
         builder.Services.AddSingleton<INewsCommandService>(_playbackCommands);
         builder.Services.AddSingleton<IPresenterControlService>(_presenterControls);
@@ -95,6 +97,40 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         Assert.Contains("dashboard.js", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Wiedergabe-Queue", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Videobibliothek", html, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("check")]
+    [InlineData("install")]
+    [InlineData("postpone")]
+    [InlineData("settings")]
+    public async Task Update_commands_require_login_and_antiforgery(string action)
+    {
+        using var client = _application!.GetTestClient();
+        using var anonymous = await client.PostAsync("/api/updates/" + action, new FormUrlEncodedContent([]));
+        Assert.Equal(HttpStatusCode.Redirect, anonymous.StatusCode);
+        var cookie = await LoginAsync(client);
+        client.DefaultRequestHeaders.Add("Cookie", cookie);
+        using var forged = await client.PostAsync("/api/updates/" + action, new FormUrlEncodedContent([]));
+        Assert.Equal(HttpStatusCode.BadRequest, forged.StatusCode);
+        Assert.Equal(0, _updates.Checks + _updates.Installs + _updates.Postpones);
+        using var page = await client.GetAsync("/");
+        var html = await page.Content.ReadAsStringAsync();
+        var token = System.Text.RegularExpressions.Regex.Match(html, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value;
+        Assert.NotEmpty(token);
+        var antiCookie = string.Join("; ", page.Headers.GetValues("Set-Cookie").Select(value => value.Split(';')[0]));
+        client.DefaultRequestHeaders.Remove("Cookie"); client.DefaultRequestHeaders.Add("Cookie", cookie + "; " + antiCookie);
+        using var valid = await client.PostAsync("/api/updates/" + action,
+            new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = token, ["enabled"] = "false" }));
+        Assert.Equal(HttpStatusCode.Redirect, valid.StatusCode);
+        Assert.Equal("/?update=requested", valid.Headers.Location!.OriginalString);
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        while (action is "check" or "install" && _updates.Checks + _updates.Installs == 0) await Task.Delay(20, timeout.Token);
+        using var status = await client.GetAsync("/api/status");
+        using var document = JsonDocument.Parse(await status.Content.ReadAsStringAsync());
+        Assert.Equal("1.2.0", document.RootElement.GetProperty("update").GetProperty("availableVersion").GetString());
+        if (action == "settings") Assert.False(_updates.Current.AutomaticUpdatesEnabled);
+        if (action == "postpone") Assert.InRange((_updates.Current.InstallAtUtc!.Value - DateTimeOffset.UtcNow).TotalMinutes, 59, 60);
     }
 
     [Theory]

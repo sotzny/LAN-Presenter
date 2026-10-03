@@ -20,7 +20,8 @@ public sealed record PresenterDashboardSnapshot(
     int PlayableCount,
     int ErrorCount,
     int QueueCount,
-    DateTimeOffset GeneratedUtc);
+    DateTimeOffset GeneratedUtc,
+    ApplicationUpdateSnapshot? Update = null);
 
 public sealed class PresenterDashboardService(
     IMediaLibraryService mediaLibrary,
@@ -29,7 +30,8 @@ public sealed class PresenterDashboardService(
     IPresenterTelemetry telemetry,
     IMediaScannerStatus mediaScannerStatus,
     IFfprobeService ffprobeService,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    IApplicationUpdateService? updates = null)
 {
     private static readonly TimeSpan PresenterFreshness = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan FfprobeRefreshInterval = TimeSpan.FromMinutes(1);
@@ -70,7 +72,8 @@ public sealed class PresenterDashboardService(
             videos.Count(IsPlayable),
             videos.Count(IsProblem),
             queue.Count,
-            now);
+            now,
+            updates?.Current);
     }
 
     private async Task<FfprobeAvailability> GetFfprobeAvailabilityAsync(CancellationToken cancellationToken)

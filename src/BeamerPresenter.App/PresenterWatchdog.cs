@@ -36,6 +36,7 @@ internal sealed class PresenterWatchdog(
 
     internal async Task CheckAsync(CancellationToken cancellationToken = default)
     {
+        if (recovery is PlaybackOrchestrator { IsStopping: true }) return;
         var now = timeProvider.GetUtcNow();
         var presenterState = playback.State;
         if (presenterState is not (PresenterState.Active or PresenterState.Paused))

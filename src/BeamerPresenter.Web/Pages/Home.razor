@@ -4,6 +4,7 @@
 @page "/news"
 @using BeamerPresenter.Domain
 @using MudBlazor
+@using Microsoft.AspNetCore.Components.Forms
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject BeamerPresenter.Application.IMediaLibraryService MediaLibraryService
 @inject BeamerPresenter.Application.PlaybackQueueService PlaybackQueue
@@ -16,6 +17,21 @@
 <MudStack Spacing="4">
     @if (IsDashboard)
     {
+        <MudPaper Elevation="0" Class="content-panel pa-6" id="update-panel">
+            <MudText Typo="Typo.h6">@WebText.Get("Updates")</MudText>
+            <p id="update-versions">@WebText.Format("Installiert: {0} · Verfügbar: {1}", _status?.Update?.InstalledVersion ?? "–", _status?.Update?.AvailableVersion ?? "–")</p>
+            <p id="update-status" aria-live="polite">@WebText.Get(_status?.Update?.Phase ?? "Idle")</p>
+            <p id="update-countdown"></p><p id="update-error" role="alert">@WebText.Get(_status?.Update?.Error ?? "")</p>
+            <div class="presenter-controls">
+                <form method="post" action="/api/updates/check"><AntiforgeryToken /><button type="submit">@WebText.Get("Nach Updates suchen")</button></form>
+                <form method="post" action="/api/updates/install"><AntiforgeryToken /><button type="submit" id="update-install">@WebText.Get("Sofort")</button></form>
+                <form method="post" action="/api/updates/postpone"><AntiforgeryToken /><button type="submit" id="update-postpone">@WebText.Get("1 Stunde später")</button></form>
+            </div>
+            <form method="post" action="/api/updates/settings">
+                <AntiforgeryToken /><label><input type="checkbox" name="enabled" value="true" id="update-automatic" checked="@(_status?.Update?.AutomaticUpdatesEnabled ?? true)" /> @WebText.Get("Automatische Updates")</label>
+                <button type="submit">@WebText.Get("Speichern")</button>
+            </form>
+        </MudPaper>
         <MudPaper Elevation="0" Class="hero-panel pa-7 pa-sm-9">
             <MudGrid Class="hero-grid">
                 <MudItem xs="12" md="8">

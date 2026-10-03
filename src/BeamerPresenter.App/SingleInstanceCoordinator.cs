@@ -27,7 +27,7 @@ internal sealed class SingleInstanceCoordinator : IDisposable
 
     public static SingleInstanceCoordinator Acquire(string applicationId = "BeamerPresenterForLanParties") => new(applicationId);
 
-    public void StartListening(Action activationRequested)
+    public void StartListening(Action activationRequested, Action? shutdownRequested = null)
     {
         ObjectDisposedException.ThrowIf(_stopping.IsCancellationRequested, this);
         if (!IsPrimary)
@@ -36,7 +36,9 @@ internal sealed class SingleInstanceCoordinator : IDisposable
         }
 
         ArgumentNullException.ThrowIfNull(activationRequested);
-        _listenerTask ??= ListenAsync(activationRequested, _stopping.Token);
+        // Never capture the WinForms synchronization context. Dispose runs after its
+        // message loop has ended and must still be able to cancel and join the listener.
+        _listenerTask ??= Task.Run(() => ListenAsync(activationRequested, shutdownRequested, _stopping.Token));
     }
 
     public async Task<bool> SignalPrimaryAsync(CancellationToken cancellationToken = default)
@@ -71,7 +73,7 @@ internal sealed class SingleInstanceCoordinator : IDisposable
         return false;
     }
 
-    private async Task ListenAsync(Action activationRequested, CancellationToken cancellationToken)
+    private async Task ListenAsync(Action activationRequested, Action? shutdownRequested, CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -79,7 +81,7 @@ internal sealed class SingleInstanceCoordinator : IDisposable
             {
                 await using var pipe = new NamedPipeServerStream(
                     _pipeName,
-                    PipeDirection.In,
+                    PipeDirection.InOut,
                     1,
                     PipeTransmissionMode.Byte,
                     PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
@@ -89,6 +91,12 @@ internal sealed class SingleInstanceCoordinator : IDisposable
                 if (string.Equals(command, ShowCommand, StringComparison.Ordinal))
                 {
                     activationRequested();
+                }
+                else if (command?.StartsWith("shutdown:", StringComparison.Ordinal) == true &&
+                    int.TryParse(command.AsSpan(9), out var processId) && processId == Environment.ProcessId && shutdownRequested is not null)
+                {
+                    await pipe.WriteAsync(Encoding.UTF8.GetBytes("accepted\n"), cancellationToken);
+                    shutdownRequested();
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

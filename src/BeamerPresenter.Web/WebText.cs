@@ -24,7 +24,13 @@ public static class WebText
         "Video wird analysiert …", "Video wird lokal geladen …", "YouTube Player API timeout",
         "YouTube Player API unavailable", "YouTube Player Fehler {0}",
         "YouTube Player wird geladen …", "YouTube ist nicht verfügbar.",
-        "YouTube-Link nicht erkannt.", "YouTube-Link wird geprüft …", "yt-dlp wird eingerichtet …"
+        "YouTube-Link nicht erkannt.", "YouTube-Link wird geprüft …", "yt-dlp wird eingerichtet …",
+        "Idle", "Checking", "Downloading", "Ready", "Installing", "Failed",
+        "Installiert: {0} · Verfügbar: {1}", "Installation in {0} Sekunden",
+        "Das Update konnte nicht geladen oder geprüft werden.", "Das Update konnte nicht installiert werden.",
+        "Das Update wurde nicht erfolgreich abgeschlossen.",
+        "Das Update konnte nicht installiert werden. Bitte das Setup erneut ausführen.",
+        "Die Wiedergabe konnte nach dem Update nicht wiederhergestellt werden. Bitte Medium und Monitor prüfen."
     ];
 
     public static string Get(string key) => Resources.TryGetValue(key, out var translations)

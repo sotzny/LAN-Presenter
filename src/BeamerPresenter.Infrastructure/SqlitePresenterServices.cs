@@ -308,6 +308,7 @@ internal sealed class SqlitePresenterSettingsService(IDbContextFactory<Presenter
             {
                 existing.WebPort = settings.WebPort;
                 existing.AllowLanAccess = settings.AllowLanAccess;
+                existing.AutomaticUpdatesEnabled = settings.AutomaticUpdatesEnabled;
                 existing.LanguagePreference = settings.LanguagePreference;
                 existing.MediaFolder = settings.MediaFolder;
                 existing.FfprobePath = settings.FfprobePath;

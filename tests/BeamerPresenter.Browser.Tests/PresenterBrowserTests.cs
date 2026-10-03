@@ -25,6 +25,7 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
     private static readonly SemaphoreSlim CoverageFileGate = new(1, 1);
     private readonly RecordingPlaybackCommands _playbackCommands = new();
     private readonly RecordingNewsDisplayState _newsDisplayState = new();
+    private readonly BeamerPresenter.TestSupport.RecordingApplicationUpdates _updates = new();
     private WebApplication? _application;
     private IPlaywright? _playwright;
     private IBrowser? _browser;
@@ -40,6 +41,7 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
         builder.WebHost.UseUrls("http://127.0.0.1:0");
         builder.Services.AddPresenterInfrastructure(_dataDirectory);
         builder.Services.AddPresenterWebUi();
+        builder.Services.AddSingleton<IApplicationUpdateService>(_updates);
         builder.Services.AddSingleton<IPlaybackCommandService>(_playbackCommands);
         builder.Services.AddSingleton<INewsCommandService>(_playbackCommands);
         builder.Services.AddSingleton<INewsDisplayState>(_newsDisplayState);
@@ -143,6 +145,37 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Management_update_controls_use_shared_status_and_survive_offline_polling()
+    {
+        await using var context = await _browser!.NewContextAsync();
+        await using var coverage = new BrowserCoverageCapture(context);
+        var page = await coverage.NewPageAsync();
+        await page.GotoAsync($"{_baseAddress}/login");
+        await page.FillAsync("#password", TestPassword);
+        await page.Locator("form[action='/account/login'] button[type='submit']").ClickAsync();
+        await page.WaitForURLAsync($"{_baseAddress}/");
+        await WaitForTextAsync(page, "#update-status", "Bereit zur Installation");
+        Assert.Contains("1.2.0", await page.TextContentAsync("#update-versions"));
+        await page.Locator("#update-postpone").ClickAsync();
+        await page.WaitForURLAsync($"{_baseAddress}/?update=requested");
+        Assert.Equal(1, _updates.Postpones);
+        await page.Locator("#update-automatic").UncheckAsync();
+        await page.Locator("form[action='/api/updates/settings'] button").ClickAsync();
+        await page.WaitForLoadStateAsync();
+        Assert.False(_updates.Current.AutomaticUpdatesEnabled);
+        await page.Locator("form[action='/api/updates/check'] button").ClickAsync();
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        while (_updates.Checks == 0) await Task.Delay(20, timeout.Token);
+        await page.Locator("#update-install").ClickAsync();
+        await WaitForTextAsync(page, "#update-status", "Wird installiert");
+        Assert.Equal(1, _updates.Installs);
+        await context.RouteAsync("**/api/status", route => route.AbortAsync());
+        await WaitForTextAsync(page, "#dashboard-browser-state", "Browser: Status nicht erreichbar");
+        await context.UnrouteAsync("**/api/status");
+        await WaitForTextAsync(page, "#dashboard-browser-state", "Browser: Getrennt");
+    }
+
+    [Fact]
     public async Task Backend_resume_plays_after_pause_hide_and_stop_with_a_new_presenter_connection()
     {
         var firstEntry = await SeedQueueEntryAsync();
@@ -219,7 +252,11 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
         {
             _newsDisplayState.Snapshot = new NewsDisplaySnapshot(new NewsItem
             {
-                Id = 123, Title = "News", Text = "Text", Mode = NewsMode.Fullscreen, Permanent = true
+                Id = 123,
+                Title = "News",
+                Text = "Text",
+                Mode = NewsMode.Fullscreen,
+                Permanent = true
             }, null);
             await orchestrator.ShowNewsAsync(_newsDisplayState.Snapshot.Main!);
         }
@@ -248,16 +285,24 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
         await using var database = await factory.CreateDbContextAsync();
         var video = new VideoAsset
         {
-            FileName = fileName, FullPath = Path.Combine(_dataDirectory, fileName),
-            IsAvailable = true, Duration = TimeSpan.FromSeconds(90), PlaybackStatus = MediaPlaybackStatus.Supported
+            FileName = fileName,
+            FullPath = Path.Combine(_dataDirectory, fileName),
+            IsAvailable = true,
+            Duration = TimeSpan.FromSeconds(90),
+            PlaybackStatus = MediaPlaybackStatus.Supported
         };
         database.Videos.Add(video);
         await database.SaveChangesAsync();
         return await _application.Services.GetRequiredService<IPlaybackStore>().AddQueueEntryAsync(new QueueEntry
         {
-            MediaId = video.Id, SourceType = MediaSourceType.Local, Status = status,
-            StartPosition = TimeSpan.FromSeconds(3), EndPosition = TimeSpan.FromSeconds(60),
-            Origin = QueueEntryOrigin.ManualNow, CreatedUtc = DateTimeOffset.UtcNow, StartedUtc = DateTimeOffset.UtcNow
+            MediaId = video.Id,
+            SourceType = MediaSourceType.Local,
+            Status = status,
+            StartPosition = TimeSpan.FromSeconds(3),
+            EndPosition = TimeSpan.FromSeconds(60),
+            Origin = QueueEntryOrigin.ManualNow,
+            CreatedUtc = DateTimeOffset.UtcNow,
+            StartedUtc = DateTimeOffset.UtcNow
         });
     }
 

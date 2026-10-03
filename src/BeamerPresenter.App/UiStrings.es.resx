@@ -302,4 +302,25 @@
   <data name="Die Firewall-Regel konnte nicht geändert werden. Bitte Administratorrechte und Windows-Richtlinien prüfen." xml:space="preserve">
     <value>No se pudo cambiar la regla del firewall. Comprueba los permisos de administrador y las directivas de Windows.</value>
   </data>
+  <data name="Updates:" xml:space="preserve"><value>Actualizaciones:</value></data>
+  <data name="Updates" xml:space="preserve"><value>Actualizaciones</value></data>
+  <data name="Automatische Updates" xml:space="preserve"><value>Actualizaciones automáticas</value></data>
+  <data name="Nach Updates suchen" xml:space="preserve"><value>Buscar actualizaciones</value></data>
+  <data name="Sofort aktualisieren" xml:space="preserve"><value>Actualizar ahora</value></data>
+  <data name="1 Stunde später" xml:space="preserve"><value>Dentro de una hora</value></data>
+  <data name="Update verfügbar" xml:space="preserve"><value>Actualización disponible</value></data>
+  <data name="Die Update-Aktion ist fehlgeschlagen." xml:space="preserve"><value>La acción de actualización falló.</value></data>
+  <data name="Installiert: {0} · Verfügbar: {1}" xml:space="preserve"><value>Instalada: {0} · Disponible: {1}</value></data>
+  <data name="Installation in {0} Sekunden" xml:space="preserve"><value>Instalación en {0} segundos</value></data>
+  <data name="Idle" xml:space="preserve"><value>Al día</value></data>
+  <data name="Checking" xml:space="preserve"><value>Comprobando</value></data>
+  <data name="Downloading" xml:space="preserve"><value>Descargando</value></data>
+  <data name="Ready" xml:space="preserve"><value>Lista para instalar</value></data>
+  <data name="Installing" xml:space="preserve"><value>Instalando</value></data>
+  <data name="Failed" xml:space="preserve"><value>Error de actualización</value></data>
+  <data name="Das Update konnte nicht geladen oder geprüft werden." xml:space="preserve"><value>No se pudo descargar o verificar la actualización.</value></data>
+  <data name="Das Update konnte nicht installiert werden." xml:space="preserve"><value>No se pudo instalar la actualización.</value></data>
+  <data name="Das Update wurde nicht erfolgreich abgeschlossen." xml:space="preserve"><value>La actualización no se completó correctamente.</value></data>
+  <data name="Das Update konnte nicht installiert werden. Bitte das Setup erneut ausführen." xml:space="preserve"><value>No se pudo instalar la actualización. Vuelva a ejecutar el instalador.</value></data>
+  <data name="Die Wiedergabe konnte nach dem Update nicht wiederhergestellt werden. Bitte Medium und Monitor prüfen." xml:space="preserve"><value>No se pudo restaurar la reproducción. Compruebe el contenido y la pantalla.</value></data>
 </root>

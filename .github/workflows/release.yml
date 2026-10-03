@@ -35,6 +35,13 @@ jobs:
         run: dotnet publish src/BeamerPresenter.App/BeamerPresenter.App.csproj -c Release -r win-x64 --self-contained true --no-restore -o artifacts/publish -p:Version=$env:VERSION
       - name: Create portable archive
         shell: pwsh
+        run: |
+          dotnet publish src/BeamerPresenter.Updater/BeamerPresenter.Updater.csproj -c Release -r win-x64 --self-contained true --no-restore -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts/updater
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item artifacts/updater/BeamerPresenter.Updater.exe artifacts/publish/BeamerPresenter.Updater.exe -Force
+          ./scripts/New-UpdateManifest.ps1 -PublishDirectory artifacts/publish -Version $env:VERSION
+      - name: Package portable archive
+        shell: pwsh
         run: Compress-Archive -Path artifacts/publish/* -DestinationPath "BeamerPresenter-$env:VERSION-win-x64-portable.zip"
       - name: Install Inno Setup
         shell: pwsh

@@ -8,7 +8,8 @@ public sealed class PlaybackOrchestrator(
     IPresenterGateway presenter,
     IPresenterSettingsService settingsService,
     IPowerManagementService powerManagement,
-    PlaybackQueueService queue) : IPlaybackCommandService, INewsCommandService, INewsDisplayState, IPresenterRecoveryService, IPresenterControlService
+    PlaybackQueueService queue,
+    IMediaLibraryService? mediaLibrary = null) : IPlaybackCommandService, INewsCommandService, INewsDisplayState, IPresenterRecoveryService, IPresenterControlService
 {
     private readonly SemaphoreSlim commandGate = new(1, 1);
     private CancellationTokenSource? newsTimeout;
@@ -17,6 +18,118 @@ public sealed class PlaybackOrchestrator(
     private NewsItem? suspendedNews;
     private NewsItem? currentTicker;
     private bool mediaPlaybackRequested;
+    private volatile bool stopping;
+    private TimeSpan? resumePosition;
+    private bool restoringAfterUpdate;
+    private bool preparingUpdate;
+    private DateTimeOffset? mainExpiresUtc;
+    private DateTimeOffset? suspendedExpiresUtc;
+    private DateTimeOffset? tickerExpiresUtc;
+    public bool IsStopping => stopping || preparingUpdate;
+    public void BeginShutdown() => stopping = true;
+
+    public Task<PlaybackResume> CaptureResumeAsync(IPresenterTelemetry telemetry, CancellationToken cancellationToken = default) =>
+        ExecuteSerializedAsync(async () =>
+        {
+            var current = (await queue.GetQueueAsync(cancellationToken)).SingleOrDefault(entry => entry.Status == QueueEntryStatus.Playing);
+            preparingUpdate = true;
+            await presenter.PauseAsync(cancellationToken);
+            var report = telemetry.Current;
+            var position = report.IsConnected && DateTimeOffset.UtcNow - report.ReceivedUtc < TimeSpan.FromSeconds(15) ? report.Position : null;
+            if (current is not null && position.HasValue)
+                position = TimeSpan.FromTicks(Math.Clamp(position.Value.Ticks, current.StartPosition.Ticks, current.EndPosition.Ticks));
+            return new PlaybackResume(playback.State, current?.Id, position, mediaPlaybackRequested,
+                currentNews is null ? null : new(currentNews, mainExpiresUtc),
+                suspendedNews is null ? null : new(suspendedNews, suspendedExpiresUtc),
+                currentTicker is null ? null : new(currentTicker, tickerExpiresUtc));
+        }, cancellationToken);
+
+    public async Task CancelUpdatePreparationAsync()
+    {
+        await commandGate.WaitAsync();
+        try
+        {
+            preparingUpdate = false;
+            if (!stopping && playback.State == PresenterState.Active && currentNews?.Mode != NewsMode.Fullscreen)
+                await presenter.PlayAsync();
+        }
+        finally { commandGate.Release(); }
+    }
+
+    public Task RestoreAfterUpdateAsync(PlaybackResume resume, CancellationToken cancellationToken = default) =>
+        ExecuteSerializedAsync(async () =>
+        {
+            if (resume.State == PresenterState.Stopped) return;
+            var current = (await queue.GetQueueAsync(cancellationToken)).SingleOrDefault(entry => entry.Status == QueueEntryStatus.Playing);
+            if (resume.MediaRequested && (current is null || current.Id != resume.QueueEntryId))
+                throw new InvalidOperationException("Der gespeicherte Queue-Eintrag ist nicht mehr verfügbar.");
+            if (resume.MediaRequested && current?.MediaId is int mediaId && mediaLibrary is not null &&
+                await mediaLibrary.GetByIdAsync(mediaId, cancellationToken) is not { Enabled: true, IsAvailable: true, PlaybackStatus: MediaPlaybackStatus.Supported })
+                throw new InvalidOperationException("Das gespeicherte Medium ist nicht mehr verfügbar.");
+            var configuration = await settingsService.GetAsync(cancellationToken);
+            mediaPlaybackRequested = resume.MediaRequested;
+            restoringAfterUpdate = true;
+            resumePosition = current is null || resume.Position is null ? null : TimeSpan.FromTicks(
+                Math.Clamp(resume.Position.Value.Ticks, current.StartPosition.Ticks, current.EndPosition.Ticks));
+            currentNews = RestoreNews(resume.Main);
+            suspendedNews = RestoreNews(resume.Suspended);
+            currentTicker = RestoreNews(resume.Ticker);
+            suspendedExpiresUtc = resume.Suspended?.ExpiresUtc;
+            if (currentNews is null && suspendedNews is not null)
+            {
+                currentNews = suspendedNews;
+                suspendedNews = null;
+            }
+            if (currentNews is not null) ScheduleNewsTimeout(currentNews);
+            if (currentTicker is not null) ScheduleNewsTimeout(currentTicker);
+            switch (resume.State)
+            {
+                case PresenterState.Active: playback.Activate(); break;
+                case PresenterState.Paused: playback.Pause(); break;
+                case PresenterState.Hidden: playback.Hide(); break;
+            }
+            await browser.StartAsync(cancellationToken);
+            if (resume.State == PresenterState.Hidden) await browser.HideAsync(cancellationToken);
+            if (resume.State != PresenterState.Hidden)
+                await powerManagement.ApplyAsync(configuration.PreventDisplaySleep, configuration.PreventSystemSleep, cancellationToken);
+        }, cancellationToken);
+
+    private static NewsItem? RestoreNews(NewsResume? resume)
+    {
+        if (resume is null || resume.ExpiresUtc <= DateTimeOffset.UtcNow || resume.Item.ValidUntil <= DateTimeOffset.UtcNow) return null;
+        var item = resume.Item;
+        return new NewsItem
+        {
+            Id = item.Id,
+            Title = item.Title,
+            Text = item.Text,
+            Mode = item.Mode,
+            Permanent = item.Permanent,
+            Duration = resume.ExpiresUtc.HasValue ? resume.ExpiresUtc.Value - DateTimeOffset.UtcNow : item.Duration,
+            ValidFrom = item.ValidFrom,
+            ValidUntil = item.ValidUntil,
+            Priority = item.Priority,
+            CreatedUtc = item.CreatedUtc
+        };
+    }
+
+    public async Task ShutdownAsync(CancellationToken cancellationToken)
+    {
+        stopping = true;
+        await commandGate.WaitAsync(cancellationToken);
+        try
+        {
+            CancelNewsTimeout(); CancelTickerTimeout();
+            playback.Stop(); mediaPlaybackRequested = false;
+            try { await presenter.StopAsync(cancellationToken); }
+            finally
+            {
+                try { await browser.StopAsync(cancellationToken); }
+                finally { await powerManagement.ReleaseAsync(CancellationToken.None); }
+            }
+        }
+        finally { commandGate.Release(); }
+    }
 
     public Task<NewsDisplaySnapshot> GetNewsDisplayAsync(CancellationToken cancellationToken = default) =>
         ExecuteSerializedAsync(() => Task.FromResult(new NewsDisplaySnapshot(currentNews, currentTicker)), cancellationToken);
@@ -62,7 +175,8 @@ public sealed class PlaybackOrchestrator(
     public Task RestoreOnConnectionAsync(CancellationToken cancellationToken = default) =>
         ExecuteSerializedAsync(async () =>
         {
-            if (mediaPlaybackRequested && playback.State is PresenterState.Active or PresenterState.Paused)
+            if (mediaPlaybackRequested && (playback.State is PresenterState.Active or PresenterState.Paused ||
+                restoringAfterUpdate && playback.State == PresenterState.Hidden))
             {
                 await ReloadCurrentCoreAsync(
                     autoPlay: playback.State == PresenterState.Active && currentNews?.Mode != NewsMode.Fullscreen,
@@ -79,7 +193,12 @@ public sealed class PlaybackOrchestrator(
             .SingleOrDefault(entry => entry.Status == QueueEntryStatus.Playing);
         if (current is not null)
         {
-            await LoadEntryAsync(current, autoPlay, cancellationToken);
+            if (resumePosition is { } position)
+            {
+                await LoadEntryAtAsync(current, position, autoPlay, cancellationToken);
+                resumePosition = null;
+            }
+            else await LoadEntryAsync(current, autoPlay, cancellationToken);
         }
     }
 
@@ -263,6 +382,7 @@ public sealed class PlaybackOrchestrator(
         if (currentNews?.Mode == NewsMode.SplitScreen)
         {
             suspendedNews = currentNews;
+            suspendedExpiresUtc = mainExpiresUtc;
         }
 
         CancelNewsTimeout();
@@ -283,6 +403,7 @@ public sealed class PlaybackOrchestrator(
             if (suspendedNews is null || item.Priority >= suspendedNews.Priority)
             {
                 suspendedNews = item;
+                suspendedExpiresUtc = !item.Permanent && item.Duration > TimeSpan.Zero ? DateTimeOffset.UtcNow + item.Duration : item.ValidUntil;
             }
 
             return;
@@ -347,13 +468,16 @@ public sealed class PlaybackOrchestrator(
             await presenter.HideNewsAsync(cancellationToken);
             if (stoppedMode == NewsMode.Fullscreen)
             {
-                await presenter.PlayAsync(cancellationToken);
+                if (playback.State == PresenterState.Active) await presenter.PlayAsync(cancellationToken);
                 if (suspendedNews is not null)
                 {
-                    currentNews = suspendedNews;
+                    currentNews = RestoreNews(new(suspendedNews, suspendedExpiresUtc));
                     suspendedNews = null;
-                    await presenter.ShowNewsAsync(currentNews, cancellationToken);
-                    ScheduleNewsTimeout(currentNews);
+                    if (currentNews is not null)
+                    {
+                        await presenter.ShowNewsAsync(currentNews, cancellationToken);
+                        ScheduleNewsTimeout(currentNews);
+                    }
                 }
             }
         }, cancellationToken);
@@ -382,6 +506,13 @@ public sealed class PlaybackOrchestrator(
         _ => throw new InvalidOperationException("Der Queue-Eintrag besitzt keine gültige Wiedergabequelle.")
     };
 
+    private Task LoadEntryAtAsync(QueueEntry entry, TimeSpan position, bool autoPlay, CancellationToken token) => entry.SourceType switch
+    {
+        MediaSourceType.Local when entry.MediaId is int mediaId => presenter.LoadLocalVideoAsync(mediaId, position, entry.EndPosition, autoPlay, token),
+        MediaSourceType.YouTube when TryGetYouTubeId(entry.ExternalSourceKey, out var videoId) => presenter.LoadYouTubeVideoAsync(videoId, position, entry.EndPosition, autoPlay, token),
+        _ => throw new InvalidOperationException("Ungültige Wiedergabequelle.")
+    };
+
     private static bool TryGetYouTubeId(string? sourceKey, out string videoId)
     {
         const string prefix = "youtube:";
@@ -397,6 +528,10 @@ public sealed class PlaybackOrchestrator(
 
     private void ScheduleNewsTimeout(NewsItem item)
     {
+        var expires = !item.Permanent && item.Duration > TimeSpan.Zero ? DateTimeOffset.UtcNow + item.Duration : item.ValidUntil;
+        if (item.ValidUntil.HasValue && expires > item.ValidUntil) expires = item.ValidUntil;
+        if (item.Mode == NewsMode.Ticker) tickerExpiresUtc = expires;
+        else mainExpiresUtc = expires;
         if (item.Permanent || item.Duration is null || item.Duration <= TimeSpan.Zero)
         {
             return;
@@ -416,8 +551,13 @@ public sealed class PlaybackOrchestrator(
 
     private async Task StopNewsAfterDelayAsync(long newsId, TimeSpan duration, CancellationToken cancellationToken)
     {
-        await Task.Delay(duration, cancellationToken);
-        await StopNewsAsync(newsId, CancellationToken.None);
+        try
+        {
+            await Task.Delay(duration, cancellationToken);
+            if (!stopping) await StopNewsAsync(newsId, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+        catch (InvalidOperationException) when (IsStopping) { }
     }
 
     private void CancelNewsTimeout()
@@ -439,6 +579,7 @@ public sealed class PlaybackOrchestrator(
         await commandGate.WaitAsync(cancellationToken);
         try
         {
+            if (IsStopping) throw new InvalidOperationException("Die Anwendung wird beendet.");
             await command();
         }
         finally
@@ -452,6 +593,7 @@ public sealed class PlaybackOrchestrator(
         await commandGate.WaitAsync(cancellationToken);
         try
         {
+            if (IsStopping) throw new InvalidOperationException("Die Anwendung wird beendet.");
             return await command();
         }
         finally

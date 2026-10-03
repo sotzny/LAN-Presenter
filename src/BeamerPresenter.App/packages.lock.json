@@ -175,6 +175,12 @@
           "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.11, )"
         }
       },
+      "beamerpresenter.updater": {
+        "type": "Project",
+        "dependencies": {
+          "BeamerPresenter.Infrastructure": "[0.1.0, )"
+        }
+      },
       "beamerpresenter.web": {
         "type": "Project",
         "dependencies": {

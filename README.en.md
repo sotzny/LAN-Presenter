@@ -29,6 +29,20 @@ Playback can be paused, hidden, resumed, or stopped at any time. Announcements c
 
 Supported local video formats: `.mp4`, `.m4v`, `.mkv`, `.webm`, `.avi`, and `.mov`.
 
+## Updates and shutdown
+
+The desktop status window, tray and authenticated web dashboard show available updates, download progress and the installation deadline. Stable GitHub releases are checked at startup and every six hours. Automatic updates are enabled by default: a five-minute countdown starts after a fully verified download, including during playback.
+
+**“Now”** skips the countdown; **“In one hour”** postpones installation. Automatic installation can be disabled permanently; manual checks and installation remain available. Web actions require authentication and antiforgery protection.
+
+Both installed and portable editions update their existing directory. Downloads are verified against GitHub's SHA-256 digest. Personal settings, media and the database stay in the user profile. Portable updates back up managed program files and restore them if replacement fails; additional user files are retained.
+
+Before installation the app shuts down its browser and web server. A stuck Presenter process is stopped specifically; setup does not replace files while that process is running. After success the app restarts once and restores playback mode, the last confirmed position and news that remain valid. Missing media or monitor leave playback stopped with an error.
+
+**The first edition supporting updates must be installed once using setup or the ZIP.** Older editions cannot download this feature themselves. Network and verification errors keep playback running; failed installations are reported and are not immediately retried automatically.
+
+The tray's “Exit” command terminates the process completely. Closing the status window with its close button still only hides it.
+
 ## Requirements
 
 - Windows x64

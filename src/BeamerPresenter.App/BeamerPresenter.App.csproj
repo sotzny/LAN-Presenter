@@ -17,6 +17,7 @@
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Sinks.File" />
     <ProjectReference Include="..\BeamerPresenter.Infrastructure\BeamerPresenter.Infrastructure.csproj" />
+    <ProjectReference Include="..\BeamerPresenter.Updater\BeamerPresenter.Updater.csproj" />
     <ProjectReference Include="..\BeamerPresenter.Web\BeamerPresenter.Web.csproj" />
   </ItemGroup>
 

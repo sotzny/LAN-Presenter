@@ -70,6 +70,7 @@ public static class WebApplicationExtensions
         app.MapPost("/api/presenter/hide", (Delegate)HidePresenterAsync).RequireAuthorization();
         app.MapPost("/api/presenter/stop", (Delegate)StopPresenterAsync).RequireAuthorization();
         app.MapGet("/api/status", (Delegate)GetStatusAsync).RequireAuthorization();
+        app.MapPost("/api/updates/{action}", (Delegate)UpdateActionAsync).RequireAuthorization();
         app.MapGet("/health/details", (Delegate)GetStatusAsync).RequireAuthorization();
         app.MapGet("/health", (Delegate)GetHealthAsync).AllowAnonymous();
         app.MapGet("/media/{mediaId:int}", (Delegate)StreamMediaAsync).AllowAnonymous();
@@ -81,6 +82,37 @@ public static class WebApplicationExtensions
         PresenterDashboardService dashboard,
         CancellationToken cancellationToken) =>
         Results.Ok(await dashboard.GetAsync(cancellationToken));
+
+    private static async Task<IResult> UpdateActionAsync(string action, HttpContext context,
+        Microsoft.AspNetCore.Antiforgery.IAntiforgery antiforgery, IServiceProvider services,
+        Microsoft.Extensions.Hosting.IHostApplicationLifetime lifetime, CancellationToken cancellationToken)
+    {
+        if (action is not ("check" or "install" or "postpone" or "settings")) return Results.NotFound();
+        try { await antiforgery.ValidateRequestAsync(context); }
+        catch (Microsoft.AspNetCore.Antiforgery.AntiforgeryValidationException) { return Results.BadRequest(); }
+        var updates = services.GetService<IApplicationUpdateService>();
+        if (updates is null) return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+        if (action == "settings")
+        {
+            var form = await context.Request.ReadFormAsync(cancellationToken);
+            await updates.SetAutomaticAsync(form["enabled"] == "true", cancellationToken);
+        }
+        else if (action == "postpone") await updates.PostponeAsync(cancellationToken);
+        else
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    if (action == "check") await updates.CheckAsync(lifetime.ApplicationStopping);
+                    else await updates.InstallAsync(lifetime.ApplicationStopping);
+                }
+                catch (OperationCanceledException) when (lifetime.ApplicationStopping.IsCancellationRequested) { }
+                catch (Exception exception) { services.GetRequiredService<ILoggerFactory>().CreateLogger("Updates").LogWarning(exception, "Update action failed"); }
+            }, CancellationToken.None);
+        }
+        return Results.Redirect("/?update=requested");
+    }
 
     private static async Task<IResult> GetHealthAsync(
         PresenterDashboardService dashboard,

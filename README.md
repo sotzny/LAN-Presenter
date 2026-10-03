@@ -29,6 +29,20 @@ Die Wiedergabe lässt sich jederzeit pausieren, ausblenden, fortsetzen oder been
 
 Unterstützte lokale Videoformate: `.mp4`, `.m4v`, `.mkv`, `.webm`, `.avi` und `.mov`.
 
+## Updates und Beenden
+
+Desktop-Statusfenster, Tray und Web-Dashboard zeigen verfügbare Updates, Downloadfortschritt und Installationszeitpunkt. Die Anwendung prüft beim Start und alle sechs Stunden auf stabile GitHub-Releases. Automatische Updates sind standardmäßig aktiviert: Nach vollständig geprüftem Download beginnt ein fünfminütiger Countdown, auch bei laufender Wiedergabe.
+
+Mit **„Sofort“** startet die Installation ohne Countdown; **„1 Stunde später“** verschiebt sie. **„Automatische Updates“** kann dauerhaft abgeschaltet werden; manuelle Prüfung und Installation bleiben möglich. Die Webaktionen verlangen Anmeldung und Antiforgery-Schutz.
+
+Setup und portable Ausgabe werden am bisherigen Ort aktualisiert. Downloads werden anhand der GitHub-SHA-256-Prüfsumme geprüft. Einstellungen, Medien und Datenbank bleiben im Benutzerprofil erhalten. Portable Updates sichern verwaltete Programmdateien und stellen sie bei einem Austauschfehler wieder her; eigene zusätzliche Dateien werden nicht gelöscht.
+
+Die Anwendung beendet vor der Installation Browser und Webserver. Ein hängender Presenter-Prozess wird gezielt beendet; das Setup ersetzt keine Dateien, solange der Prozess noch läuft. Nach einem erfolgreichen Update startet die Anwendung einmal neu und stellt Wiedergabemodus, zuletzt bestätigte Position und noch gültige News wieder her. Fehlen Medium oder Monitor, bleibt die Wiedergabe gestoppt und zeigt einen Fehler.
+
+**Die erste Ausgabe mit Update-Funktion muss einmal regulär per Setup oder ZIP eingespielt werden.** Bereits installierte ältere Ausgaben können diese Funktion noch nicht selbst nachladen. Netzwerk- und Prüffehler unterbrechen die Wiedergabe nicht; eine fehlgeschlagene Installation wird angezeigt und nicht unmittelbar automatisch wiederholt.
+
+„Beenden“ im Tray beendet den Prozess vollständig. Das Schließen des Statusfensters mit dem Fensterkreuz versteckt es weiterhin nur.
+
 ## Voraussetzungen
 
 - Windows x64

@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/BeamerPresenter.App/BeamerPresenter.App.csproj" />
+    <Project Path="src/BeamerPresenter.Updater/BeamerPresenter.Updater.csproj" />
     <Project Path="src/BeamerPresenter.Application/BeamerPresenter.Application.csproj" />
     <Project Path="src/BeamerPresenter.Domain/BeamerPresenter.Domain.csproj" />
     <Project Path="src/BeamerPresenter.Infrastructure/BeamerPresenter.Infrastructure.csproj" />

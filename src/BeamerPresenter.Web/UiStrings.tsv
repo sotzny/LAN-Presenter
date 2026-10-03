@@ -257,3 +257,24 @@ WinGet ist nicht verfügbar. yt-dlp konnte nicht installiert werden.|WinGet ist 
 yt-dlp wurde installiert, ist aber nicht ausführbar.|yt-dlp wurde installiert, ist aber nicht ausführbar.|yt-dlp was installed but cannot be run.|yt-dlp se instaló, pero no se puede ejecutar.
 yt-dlp konnte nicht gestartet werden.|yt-dlp konnte nicht gestartet werden.|yt-dlp could not be started.|No se pudo iniciar yt-dlp.
 Die heruntergeladene Videodatei ist nicht verfügbar.|Die heruntergeladene Videodatei ist nicht verfügbar.|The downloaded video file is unavailable.|El archivo de vídeo descargado no está disponible.
+Updates:|Updates:|Updates:|Actualizaciones:
+Updates|Updates|Updates|Actualizaciones
+Automatische Updates|Automatische Updates|Automatic updates|Actualizaciones automáticas
+Nach Updates suchen|Nach Updates suchen|Check for updates|Buscar actualizaciones
+Sofort aktualisieren|Sofort aktualisieren|Update now|Actualizar ahora
+1 Stunde später|1 Stunde später|In one hour|Dentro de una hora
+Update verfügbar|Update verfügbar|Update available|Actualización disponible
+Die Update-Aktion ist fehlgeschlagen.|Die Update-Aktion ist fehlgeschlagen.|The update action failed.|La acción de actualización falló.
+Installiert: {0} · Verfügbar: {1}|Installiert: {0} · Verfügbar: {1}|Installed: {0} · Available: {1}|Instalada: {0} · Disponible: {1}
+Installation in {0} Sekunden|Installation in {0} Sekunden|Installing in {0} seconds|Instalación en {0} segundos
+Idle|Aktuell|Up to date|Al día
+Checking|Wird geprüft|Checking|Comprobando
+Downloading|Wird heruntergeladen|Downloading|Descargando
+Ready|Bereit zur Installation|Ready to install|Lista para instalar
+Installing|Wird installiert|Installing|Instalando
+Failed|Update fehlgeschlagen|Update failed|Error de actualización
+Das Update konnte nicht geladen oder geprüft werden.|Das Update konnte nicht geladen oder geprüft werden.|The update could not be downloaded or verified.|No se pudo descargar o verificar la actualización.
+Das Update konnte nicht installiert werden.|Das Update konnte nicht installiert werden.|The update could not be installed.|No se pudo instalar la actualización.
+Das Update wurde nicht erfolgreich abgeschlossen.|Das Update wurde nicht erfolgreich abgeschlossen.|The update did not complete successfully.|La actualización no se completó correctamente.
+Das Update konnte nicht installiert werden. Bitte das Setup erneut ausführen.|Das Update konnte nicht installiert werden. Bitte das Setup erneut ausführen.|The update could not be installed. Please run setup again.|No se pudo instalar la actualización. Vuelva a ejecutar el instalador.
+Die Wiedergabe konnte nach dem Update nicht wiederhergestellt werden. Bitte Medium und Monitor prüfen.|Die Wiedergabe konnte nach dem Update nicht wiederhergestellt werden. Bitte Medium und Monitor prüfen.|Playback could not be restored after the update. Please check media and monitor.|No se pudo restaurar la reproducción. Compruebe el contenido y la pantalla.

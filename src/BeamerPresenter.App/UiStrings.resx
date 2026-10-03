@@ -302,4 +302,25 @@
   <data name="Die Firewall-Regel konnte nicht geändert werden. Bitte Administratorrechte und Windows-Richtlinien prüfen." xml:space="preserve">
     <value>Die Firewall-Regel konnte nicht geändert werden. Bitte Administratorrechte und Windows-Richtlinien prüfen.</value>
   </data>
+  <data name="Updates:" xml:space="preserve"><value>Updates:</value></data>
+  <data name="Updates" xml:space="preserve"><value>Updates</value></data>
+  <data name="Automatische Updates" xml:space="preserve"><value>Automatische Updates</value></data>
+  <data name="Nach Updates suchen" xml:space="preserve"><value>Nach Updates suchen</value></data>
+  <data name="Sofort aktualisieren" xml:space="preserve"><value>Sofort aktualisieren</value></data>
+  <data name="1 Stunde später" xml:space="preserve"><value>1 Stunde später</value></data>
+  <data name="Update verfügbar" xml:space="preserve"><value>Update verfügbar</value></data>
+  <data name="Die Update-Aktion ist fehlgeschlagen." xml:space="preserve"><value>Die Update-Aktion ist fehlgeschlagen.</value></data>
+  <data name="Installiert: {0} · Verfügbar: {1}" xml:space="preserve"><value>Installiert: {0} · Verfügbar: {1}</value></data>
+  <data name="Installation in {0} Sekunden" xml:space="preserve"><value>Installation in {0} Sekunden</value></data>
+  <data name="Idle" xml:space="preserve"><value>Aktuell</value></data>
+  <data name="Checking" xml:space="preserve"><value>Wird geprüft</value></data>
+  <data name="Downloading" xml:space="preserve"><value>Wird heruntergeladen</value></data>
+  <data name="Ready" xml:space="preserve"><value>Bereit zur Installation</value></data>
+  <data name="Installing" xml:space="preserve"><value>Wird installiert</value></data>
+  <data name="Failed" xml:space="preserve"><value>Update fehlgeschlagen</value></data>
+  <data name="Das Update konnte nicht geladen oder geprüft werden." xml:space="preserve"><value>Das Update konnte nicht geladen oder geprüft werden.</value></data>
+  <data name="Das Update konnte nicht installiert werden." xml:space="preserve"><value>Das Update konnte nicht installiert werden.</value></data>
+  <data name="Das Update wurde nicht erfolgreich abgeschlossen." xml:space="preserve"><value>Das Update wurde nicht erfolgreich abgeschlossen.</value></data>
+  <data name="Das Update konnte nicht installiert werden. Bitte das Setup erneut ausführen." xml:space="preserve"><value>Das Update konnte nicht installiert werden. Bitte das Setup erneut ausführen.</value></data>
+  <data name="Die Wiedergabe konnte nach dem Update nicht wiederhergestellt werden. Bitte Medium und Monitor prüfen." xml:space="preserve"><value>Die Wiedergabe konnte nach dem Update nicht wiederhergestellt werden. Bitte Medium und Monitor prüfen.</value></data>
 </root>

@@ -23,7 +23,7 @@ public sealed class PresenterDatabaseMigrationTests
 
             await using var connection = new SqliteConnection(PresenterDatabase.CreateConnectionString(dataDirectory));
             await connection.OpenAsync();
-            Assert.EndsWith("_AddLanguagePreference", await ReadAppliedMigrationAsync(connection), StringComparison.Ordinal);
+            Assert.EndsWith("_AddAutomaticUpdates", await ReadAppliedMigrationAsync(connection), StringComparison.Ordinal);
             Assert.Equal("YouTubeSourceKey", await ReadScalarAsync(connection,
                 "SELECT name FROM pragma_table_info('Videos') WHERE name = 'YouTubeSourceKey';"));
             Assert.Equal("LanguagePreference", await ReadScalarAsync(connection,
@@ -66,7 +66,8 @@ public sealed class PresenterDatabaseMigrationTests
 
             await using var connection = new SqliteConnection(PresenterDatabase.CreateConnectionString(dataDirectory));
             await connection.OpenAsync();
-            Assert.EndsWith("_AddLanguagePreference", await ReadAppliedMigrationAsync(connection), StringComparison.Ordinal);
+            Assert.EndsWith("_AddAutomaticUpdates", await ReadAppliedMigrationAsync(connection), StringComparison.Ordinal);
+            Assert.Equal("1", await ReadScalarAsync(connection, "SELECT AutomaticUpdatesEnabled FROM Settings WHERE Id = 1;"));
             Assert.Equal("YouTubeSourceKey", await ReadScalarAsync(connection,
                 "SELECT name FROM pragma_table_info('Videos') WHERE name = 'YouTubeSourceKey';"));
             Assert.Equal("D:\\LAN\\Videos", await ReadScalarAsync(connection, "SELECT MediaFolder FROM Settings WHERE Id = 1;"));
@@ -99,6 +100,8 @@ public sealed class PresenterDatabaseMigrationTests
             var settings = await settingsService.GetAsync();
             settings.ChromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
             settings.AllowLanAccess = true;
+            Assert.True(settings.AutomaticUpdatesEnabled);
+            settings.AutomaticUpdatesEnabled = false;
             settings.LanguagePreference = "es";
             settings.MonitorDeviceName = "\\\\.\\DISPLAY2";
             settings.AlwaysOnTop = false;
@@ -117,6 +120,7 @@ public sealed class PresenterDatabaseMigrationTests
 
             Assert.Equal(settings.ChromePath, persisted.ChromePath);
             Assert.True(persisted.AllowLanAccess);
+            Assert.False(persisted.AutomaticUpdatesEnabled);
             Assert.Equal("es", persisted.LanguagePreference);
             Assert.Equal("es", PresenterDatabase.GetConfiguredHostSettings(dataDirectory).LanguagePreference);
             Assert.Equal(settings.MonitorDeviceName, persisted.MonitorDeviceName);
