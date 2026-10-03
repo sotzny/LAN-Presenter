@@ -1,4 +1,15 @@
 Beamerpresenter.App Changelog
+<a name="1.2.0"></a>
+## [1.2.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.2.0) (2026-10-03)
+
+### Features
+
+* **updates:** add verified automatic updates and reliable shutdown ([902954d](https://www.github.com/sotzny/LAN-Presenter/commit/902954d33cb19b9688a298986e743a0d655e0143))
+
+### Bug Fixes
+
+* **playback:** restore resume after pause and stop ([08e0023](https://www.github.com/sotzny/LAN-Presenter/commit/08e0023dfd71f203bc69d76421ef390c10e39b7a))
+
 <a name="1.1.1"></a>
 ## [1.1.1](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.1.1) (2026-10-02)
 
