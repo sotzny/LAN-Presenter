@@ -9,7 +9,7 @@
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  <Version>1.2.0</Version></PropertyGroup>
+  <Version>1.2.1</Version></PropertyGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />

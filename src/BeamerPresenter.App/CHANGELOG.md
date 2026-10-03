@@ -1,4 +1,11 @@
 Beamerpresenter.App Changelog
+<a name="1.2.1"></a>
+## [1.2.1](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.2.1) (2026-10-03)
+
+### Bug Fixes
+
+* **playback:** retain playback status across handshake and heartbeats ([868ca6c](https://www.github.com/sotzny/LAN-Presenter/commit/868ca6c8a5da118bdce9aca8a23b1170a3229e7d))
+
 <a name="1.2.0"></a>
 ## [1.2.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.2.0) (2026-10-03)
 
