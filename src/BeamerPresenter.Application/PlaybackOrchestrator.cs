@@ -16,6 +16,7 @@ public sealed class PlaybackOrchestrator(
     private NewsItem? currentNews;
     private NewsItem? suspendedNews;
     private NewsItem? currentTicker;
+    private bool mediaPlaybackRequested;
 
     public Task<NewsDisplaySnapshot> GetNewsDisplayAsync(CancellationToken cancellationToken = default) =>
         ExecuteSerializedAsync(() => Task.FromResult(new NewsDisplaySnapshot(currentNews, currentTicker)), cancellationToken);
@@ -24,6 +25,7 @@ public sealed class PlaybackOrchestrator(
     {
         await ExecuteSerializedAsync(async () =>
         {
+            var previousState = playback.State;
             var settings = await settingsService.GetAsync(cancellationToken);
             try
             {
@@ -36,7 +38,17 @@ public sealed class PlaybackOrchestrator(
 
                 await browser.StartAsync(cancellationToken);
                 await powerManagement.ApplyAsync(settings.PreventDisplaySleep, settings.PreventSystemSleep, cancellationToken);
+                if (previousState != PresenterState.Stopped && !mediaPlaybackRequested)
+                {
+                    await ReloadCurrentCoreAsync(autoPlay: currentNews?.Mode != NewsMode.Fullscreen, cancellationToken);
+                }
+                else if (previousState is PresenterState.Paused or PresenterState.Hidden && currentNews?.Mode != NewsMode.Fullscreen)
+                {
+                    await presenter.PlayAsync(cancellationToken);
+                }
+
                 playback.Activate();
+                mediaPlaybackRequested = true;
             }
             catch
             {
@@ -47,16 +59,29 @@ public sealed class PlaybackOrchestrator(
         }, cancellationToken);
     }
 
-    public Task ReloadCurrentAsync(bool autoPlay, CancellationToken cancellationToken = default) =>
+    public Task RestoreOnConnectionAsync(CancellationToken cancellationToken = default) =>
         ExecuteSerializedAsync(async () =>
         {
-            var current = (await queue.GetQueueAsync(cancellationToken))
-                .SingleOrDefault(entry => entry.Status == QueueEntryStatus.Playing);
-            if (current is not null)
+            if (mediaPlaybackRequested && playback.State is PresenterState.Active or PresenterState.Paused)
             {
-                await LoadEntryAsync(current, autoPlay, cancellationToken);
+                await ReloadCurrentCoreAsync(
+                    autoPlay: playback.State == PresenterState.Active && currentNews?.Mode != NewsMode.Fullscreen,
+                    cancellationToken);
             }
         }, cancellationToken);
+
+    public Task ReloadCurrentAsync(bool autoPlay, CancellationToken cancellationToken = default) =>
+        ExecuteSerializedAsync(() => ReloadCurrentCoreAsync(autoPlay, cancellationToken), cancellationToken);
+
+    private async Task ReloadCurrentCoreAsync(bool autoPlay, CancellationToken cancellationToken)
+    {
+        var current = (await queue.GetQueueAsync(cancellationToken))
+            .SingleOrDefault(entry => entry.Status == QueueEntryStatus.Playing);
+        if (current is not null)
+        {
+            await LoadEntryAsync(current, autoPlay, cancellationToken);
+        }
+    }
 
     public async Task FailCurrentAndAdvanceAsync(
         TimeSpan? actualPosition,
@@ -89,6 +114,7 @@ public sealed class PlaybackOrchestrator(
             await browser.StopAsync(cancellationToken);
             await powerManagement.ReleaseAsync(cancellationToken);
             playback.Stop();
+            mediaPlaybackRequested = false;
         }, cancellationToken);
 
     public Task<QueueEntry> PlayNextAsync(
@@ -112,6 +138,7 @@ public sealed class PlaybackOrchestrator(
             {
                 await presenter.LoadLocalVideoAsync(entry.MediaId!.Value, entry.StartPosition, entry.EndPosition, autoPlay: true, cancellationToken);
                 playback.Activate();
+                mediaPlaybackRequested = true;
                 return entry;
             }
             catch
@@ -146,6 +173,7 @@ public sealed class PlaybackOrchestrator(
             {
                 await LoadEntryAsync(entry, autoPlay: true, cancellationToken);
                 playback.Activate();
+                mediaPlaybackRequested = true;
                 return entry;
             }
             catch
@@ -170,6 +198,7 @@ public sealed class PlaybackOrchestrator(
             {
                 await LoadEntryAsync(entry, autoPlay: true, cancellationToken);
                 playback.Activate();
+                mediaPlaybackRequested = true;
                 return entry;
             }
             catch

@@ -118,6 +118,7 @@ public sealed record PresenterTelemetrySnapshot(
 
 public interface IPresenterRecoveryService
 {
+    Task RestoreOnConnectionAsync(CancellationToken cancellationToken = default);
     Task ReloadCurrentAsync(bool autoPlay, CancellationToken cancellationToken = default);
     Task FailCurrentAndAdvanceAsync(TimeSpan? actualPosition, CancellationToken cancellationToken = default);
 }

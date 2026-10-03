@@ -49,6 +49,77 @@ public sealed class PlaybackOrchestratorTests
             calls);
     }
 
+    [Theory]
+    [InlineData(PresenterState.Paused, false)]
+    [InlineData(PresenterState.Hidden, false)]
+    [InlineData(PresenterState.Paused, true)]
+    [InlineData(PresenterState.Hidden, true)]
+    public async Task Activation_resumes_loaded_media_unless_fullscreen_news_is_visible(PresenterState previousState, bool fullscreen)
+    {
+        var calls = new List<string>();
+        var playback = new PlaybackController();
+        var settings = new StubSettingsService();
+        var orchestrator = new PlaybackOrchestrator(
+            playback, new RecordingBrowser(calls), new RecordingPresenter(calls), settings,
+            new RecordingPowerManagement(calls),
+            new PlaybackQueueService(new RecordingPlaybackStore(calls), new EmptyMediaLibrary(), settings,
+                new MediaSegmentPlanner(new ZeroRandomSource()), TimeProvider.System));
+        await orchestrator.ActivateAsync();
+        if (fullscreen)
+        {
+            await orchestrator.ShowNewsAsync(new NewsItem
+            {
+                Id = 1, Title = "News", Text = "Text", Mode = NewsMode.Fullscreen, Permanent = true
+            });
+        }
+        if (previousState == PresenterState.Paused)
+        {
+            await orchestrator.PauseAsync();
+        }
+        else
+        {
+            await orchestrator.HideAsync();
+        }
+        calls.Clear();
+
+        await orchestrator.ActivateAsync();
+
+        Assert.Equal(PresenterState.Active, playback.State);
+        Assert.Equal(fullscreen ? 0 : 1, calls.Count(call => call == "presenter:play"));
+        Assert.DoesNotContain(calls, call => call.StartsWith("presenter:load:", StringComparison.Ordinal));
+        Assert.DoesNotContain(calls, call => call.StartsWith("store:", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task News_only_connection_does_not_restore_stopped_media_but_explicit_activation_loads_it()
+    {
+        var calls = new List<string>();
+        var playback = new PlaybackController();
+        var settings = new StubSettingsService();
+        var orchestrator = new PlaybackOrchestrator(
+            playback, new RecordingBrowser(calls), new RecordingPresenter(calls), settings,
+            new RecordingPowerManagement(calls),
+            new PlaybackQueueService(new RecordingPlaybackStore(calls), new EmptyMediaLibrary(), settings,
+                new MediaSegmentPlanner(new ZeroRandomSource()), TimeProvider.System));
+        await orchestrator.ActivateAsync();
+        await orchestrator.StopAsync();
+        await orchestrator.ShowNewsAsync(new NewsItem
+        {
+            Id = 1, Title = "News", Text = "Text", Mode = NewsMode.Ticker, Permanent = true
+        });
+        calls.Clear();
+
+        await orchestrator.RestoreOnConnectionAsync();
+
+        Assert.Equal(PresenterState.Active, playback.State);
+        Assert.Empty(calls);
+
+        await orchestrator.ActivateAsync();
+
+        Assert.Contains("presenter:load:1:00:00:00-00:07:00", calls);
+        Assert.DoesNotContain("presenter:play", calls);
+    }
+
     [Fact]
     public async Task Play_now_persists_interruption_before_stopping_and_loading_new_video()
     {

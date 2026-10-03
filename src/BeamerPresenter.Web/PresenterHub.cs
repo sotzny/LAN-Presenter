@@ -85,6 +85,12 @@ public sealed class PresenterHub(
     public override async Task OnConnectedAsync()
     {
         connectionState.Connected();
+        var recovery = services.GetService<IPresenterRecoveryService>();
+        if (recovery is not null)
+        {
+            await recovery.RestoreOnConnectionAsync(Context.ConnectionAborted);
+        }
+
         var displayState = services.GetService<INewsDisplayState>();
         if (displayState is not null)
         {

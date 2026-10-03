@@ -76,7 +76,8 @@ internal sealed class PresenterWatchdog(
         if (awaitingConnectionRecovery || !wasConnected)
         {
             await browser.ShowAsync(cancellationToken);
-            await recovery.ReloadCurrentAsync(autoPlay: presenterState == PresenterState.Active, cancellationToken);
+            // PresenterHub restores media on each connection, including a quick Stop/Resume
+            // between watchdog polls. Reloading here would restart that media a second time.
             awaitingConnectionRecovery = false;
             lastWindowVerificationUtc = now;
         }

@@ -20,7 +20,7 @@ public sealed class PresenterWatchdogTests
     }
 
     [Fact]
-    public async Task Fresh_reconnect_restores_current_entry_and_aggressive_topmost()
+    public async Task Fresh_reconnect_restores_window_without_loading_media_twice()
     {
         var fixture = new WatchdogFixture(browserRunning: true, aggressiveTopmost: true);
         fixture.Telemetry.Snapshot = Connected("Ready", null, fixture.Clock.GetUtcNow());
@@ -30,7 +30,7 @@ public sealed class PresenterWatchdogTests
         fixture.Telemetry.Snapshot = Connected("Playing", TimeSpan.FromSeconds(1), fixture.Clock.GetUtcNow());
         await fixture.Watchdog.CheckAsync();
 
-        Assert.Equal(1, fixture.Recovery.ReloadCalls);
+        Assert.Equal(0, fixture.Recovery.ReloadCalls);
         Assert.Equal(2, fixture.Browser.ShowCalls);
     }
 
@@ -48,7 +48,7 @@ public sealed class PresenterWatchdogTests
         fixture.Telemetry.Snapshot = Connected("Playing", TimeSpan.FromSeconds(10), fixture.Clock.GetUtcNow());
         await fixture.Watchdog.CheckAsync();
 
-        Assert.Equal(2, fixture.Recovery.ReloadCalls);
+        Assert.Equal(1, fixture.Recovery.ReloadCalls);
         Assert.Equal(1, fixture.Recovery.FailAndAdvanceCalls);
         Assert.Equal(TimeSpan.FromSeconds(10), fixture.Recovery.LastFailedPosition);
     }
@@ -80,7 +80,7 @@ public sealed class PresenterWatchdogTests
     }
 
     [Fact]
-    public async Task Paused_presenter_restarts_missing_chrome_and_restores_without_autoplay()
+    public async Task Paused_presenter_restarts_missing_chrome_without_reloading_connected_media()
     {
         var fixture = new WatchdogFixture(browserRunning: false, paused: true);
 
@@ -89,7 +89,7 @@ public sealed class PresenterWatchdogTests
         await fixture.Watchdog.CheckAsync();
 
         Assert.Equal(1, fixture.Browser.StartCalls);
-        Assert.Equal([false], fixture.Recovery.AutoPlayValues);
+        Assert.Empty(fixture.Recovery.AutoPlayValues);
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public sealed class PresenterWatchdogTests
         fixture.Telemetry.Snapshot = Connected("Playing", TimeSpan.FromSeconds(10), fixture.Clock.GetUtcNow());
         await fixture.Watchdog.CheckAsync();
 
-        Assert.Equal([false], fixture.Recovery.AutoPlayValues);
+        Assert.Empty(fixture.Recovery.AutoPlayValues);
         Assert.Equal(0, fixture.Recovery.FailAndAdvanceCalls);
     }
 
@@ -134,7 +134,7 @@ public sealed class PresenterWatchdogTests
         fixture.Telemetry.Snapshot = Connected("Playing", TimeSpan.FromSeconds(11), fixture.Clock.GetUtcNow());
         await fixture.Watchdog.CheckAsync();
 
-        Assert.Equal(1, fixture.Recovery.ReloadCalls);
+        Assert.Equal(0, fixture.Recovery.ReloadCalls);
         Assert.Equal(0, fixture.Recovery.FailAndAdvanceCalls);
     }
 
@@ -195,6 +195,7 @@ public sealed class PresenterWatchdogTests
 
     private sealed class RecordingRecovery : IPresenterRecoveryService
     {
+        public Task RestoreOnConnectionAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
         public int ReloadCalls { get; private set; }
         public int FailAndAdvanceCalls { get; private set; }
         public TimeSpan? LastFailedPosition { get; private set; }

@@ -43,7 +43,11 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
         builder.Services.AddSingleton<IPlaybackCommandService>(_playbackCommands);
         builder.Services.AddSingleton<INewsCommandService>(_playbackCommands);
         builder.Services.AddSingleton<INewsDisplayState>(_newsDisplayState);
-        builder.Services.AddSingleton<IPresenterControlService, NoOpPresenterControls>();
+        builder.Services.AddSingleton<IBrowserController, TestPresenterBrowser>();
+        builder.Services.AddSingleton<IPowerManagementService, NoOpPowerManagement>();
+        builder.Services.AddSingleton<PlaybackOrchestrator>();
+        builder.Services.AddSingleton<IPresenterControlService>(provider => provider.GetRequiredService<PlaybackOrchestrator>());
+        builder.Services.AddSingleton<IPresenterRecoveryService>(provider => provider.GetRequiredService<PlaybackOrchestrator>());
 
         _application = builder.Build();
         await using (var scope = _application.Services.CreateAsyncScope())
@@ -136,6 +140,131 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
             Url = $"{_baseAddress}/_content/BeamerPresenter.Web/js/dashboard.js"
         });
         await WaitForTextAsync(page, "#dashboard-presenter-state", "coverage-state");
+    }
+
+    [Fact]
+    public async Task Backend_resume_plays_after_pause_hide_and_stop_with_a_new_presenter_connection()
+    {
+        var firstEntry = await SeedQueueEntryAsync();
+        _playbackCommands.QueueCommands = _application!.Services.GetRequiredService<PlaybackOrchestrator>();
+        await using var context = await _browser!.NewContextAsync();
+        await context.AddInitScriptAsync(MediaAndSocketTestDoubles);
+        var management = await context.NewPageAsync();
+        await management.GotoAsync($"{_baseAddress}/login");
+        await management.FillAsync("#password", TestPassword);
+        await management.Locator("form[action='/account/login'] button[type='submit']").ClickAsync();
+        await management.WaitForURLAsync($"{_baseAddress}/");
+        await SubmitPresenterCommandAsync(management, "activate", "active");
+
+        var presenter = await context.NewPageAsync();
+        await presenter.GotoAsync($"{_baseAddress}/presenter");
+        await presenter.WaitForFunctionAsync("document.querySelector('#presenter-video').dataset.playCalls === '1'");
+        await WaitForTelemetryAsync("Playing");
+        await presenter.EvalOnSelectorAsync("#presenter-video", "video => video.currentTime = 7");
+
+        await SubmitPresenterCommandAsync(management, "pause", "paused");
+        await WaitForTelemetryAsync("Paused");
+        await SubmitPresenterCommandAsync(management, "activate", "active");
+        await presenter.WaitForFunctionAsync("document.querySelector('#presenter-video').dataset.playCalls === '2'");
+        Assert.Equal(7, await presenter.EvalOnSelectorAsync<double>("#presenter-video", "video => video.currentTime"));
+
+        await SubmitPresenterCommandAsync(management, "hide", "hidden");
+        await WaitForTelemetryAsync("Paused");
+        await SubmitPresenterCommandAsync(management, "activate", "active");
+        await presenter.WaitForFunctionAsync("document.querySelector('#presenter-video').dataset.playCalls === '3'");
+        Assert.Equal(7, await presenter.EvalOnSelectorAsync<double>("#presenter-video", "video => video.currentTime"));
+
+        var entry = await SeedQueueEntryAsync("switched.mp4", QueueEntryStatus.Pending);
+        await management.GotoAsync($"{_baseAddress}/playback");
+        await management.Locator("form[action='/api/queue/play-now']")
+            .Filter(new LocatorFilterOptions { Has = management.Locator($"input[name='id'][value='{entry.Id}']") })
+            .Locator("button").ClickAsync();
+        await management.WaitForURLAsync($"{_baseAddress}/playback?queue=success");
+        await presenter.WaitForFunctionAsync(
+            "id => document.querySelector('#presenter-video').getAttribute('src')?.endsWith('/media/' + id)", entry.MediaId);
+        await WaitForTelemetryAsync("Playing");
+        await management.GotoAsync($"{_baseAddress}/");
+
+        await SubmitPresenterCommandAsync(management, "stop", "stopped");
+        await WaitForTelemetryAsync("Stopped");
+        await presenter.CloseAsync();
+        await WaitForTelemetryAsync("Disconnected");
+        await SubmitPresenterCommandAsync(management, "activate", "active");
+        presenter = await context.NewPageAsync();
+        await presenter.GotoAsync($"{_baseAddress}/presenter");
+        await presenter.WaitForFunctionAsync("document.querySelector('#presenter-video').dataset.playCalls === '1'");
+        await WaitForTelemetryAsync("Playing");
+        Assert.EndsWith($"/media/{entry.MediaId}", await presenter.GetAttributeAsync("#presenter-video", "src"), StringComparison.Ordinal);
+        Assert.Equal(entry.StartPosition.TotalSeconds, await presenter.EvalOnSelectorAsync<double>("#presenter-video", "video => video.currentTime"));
+        var store = _application!.Services.GetRequiredService<IPlaybackStore>();
+        Assert.Equal(entry.Id, Assert.Single(await store.GetQueueAsync(), candidate => candidate.Status == QueueEntryStatus.Playing).Id);
+        var history = Assert.Single(await store.GetHistoryAsync());
+        Assert.Equal(firstEntry.MediaId, history.MediaId);
+        Assert.Equal(TimeSpan.FromSeconds(7), history.ActualEnd);
+    }
+
+    [Theory]
+    [InlineData(PresenterState.Paused, false, true)]
+    [InlineData(PresenterState.Active, true, true)]
+    [InlineData(PresenterState.Stopped, false, false)]
+    [InlineData(PresenterState.Hidden, false, false)]
+    public async Task Connecting_presenter_respects_paused_fullscreen_and_inactive_states(PresenterState state, bool fullscreen, bool shouldLoad)
+    {
+        var entry = await SeedQueueEntryAsync();
+        var orchestrator = _application!.Services.GetRequiredService<PlaybackOrchestrator>();
+        if (state != PresenterState.Stopped) await orchestrator.ActivateAsync();
+        if (state == PresenterState.Paused) await orchestrator.PauseAsync();
+        else if (state == PresenterState.Hidden) await orchestrator.HideAsync();
+        if (fullscreen)
+        {
+            _newsDisplayState.Snapshot = new NewsDisplaySnapshot(new NewsItem
+            {
+                Id = 123, Title = "News", Text = "Text", Mode = NewsMode.Fullscreen, Permanent = true
+            }, null);
+            await orchestrator.ShowNewsAsync(_newsDisplayState.Snapshot.Main!);
+        }
+        await using var context = await _browser!.NewContextAsync();
+        await context.AddInitScriptAsync(MediaAndSocketTestDoubles);
+        var presenter = await context.NewPageAsync();
+        await presenter.GotoAsync($"{_baseAddress}/presenter");
+        if (shouldLoad)
+        {
+            await presenter.WaitForFunctionAsync("document.querySelector('#presenter-video').hasAttribute('src')");
+            Assert.EndsWith($"/media/{entry.MediaId}", await presenter.GetAttributeAsync("#presenter-video", "src"), StringComparison.Ordinal);
+        }
+        if (fullscreen) await presenter.WaitForFunctionAsync("document.querySelector('#presenter-news').dataset.newsId === '123'");
+        Assert.Null(await presenter.GetAttributeAsync("#presenter-video", "data-play-calls"));
+        if (!shouldLoad)
+        {
+            // Hub invocations are processed after OnConnectedAsync has finished.
+            await WaitForTelemetryAsync("Connected");
+            Assert.Null(await presenter.GetAttributeAsync("#presenter-video", "src"));
+        }
+    }
+
+    private async Task<QueueEntry> SeedQueueEntryAsync(string fileName = "resume.mp4", QueueEntryStatus status = QueueEntryStatus.Playing)
+    {
+        var factory = _application!.Services.GetRequiredService<IDbContextFactory<PresenterDbContext>>();
+        await using var database = await factory.CreateDbContextAsync();
+        var video = new VideoAsset
+        {
+            FileName = fileName, FullPath = Path.Combine(_dataDirectory, fileName),
+            IsAvailable = true, Duration = TimeSpan.FromSeconds(90), PlaybackStatus = MediaPlaybackStatus.Supported
+        };
+        database.Videos.Add(video);
+        await database.SaveChangesAsync();
+        return await _application.Services.GetRequiredService<IPlaybackStore>().AddQueueEntryAsync(new QueueEntry
+        {
+            MediaId = video.Id, SourceType = MediaSourceType.Local, Status = status,
+            StartPosition = TimeSpan.FromSeconds(3), EndPosition = TimeSpan.FromSeconds(60),
+            Origin = QueueEntryOrigin.ManualNow, CreatedUtc = DateTimeOffset.UtcNow, StartedUtc = DateTimeOffset.UtcNow
+        });
+    }
+
+    private async Task SubmitPresenterCommandAsync(IPage management, string command, string result)
+    {
+        await management.Locator($"form[action='/api/presenter/{command}'] button").ClickAsync();
+        await management.WaitForURLAsync($"{_baseAddress}/?presenter={result}");
     }
 
     [Fact]
@@ -878,6 +1007,7 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
 
     private sealed class RecordingPlaybackCommands : IPlaybackCommandService, INewsCommandService
     {
+        public IPlaybackCommandService? QueueCommands { get; set; }
         public ConcurrentQueue<AdvanceCall> AdvanceCalls { get; } = new();
 
         public Task<QueueEntry?> AdvanceAsync(TimeSpan? actualPosition, bool successful = true, CancellationToken cancellationToken = default)
@@ -902,7 +1032,7 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
             throw new NotSupportedException();
 
         public Task<QueueEntry> PlayQueuedNowAsync(long queueEntryId, TimeSpan? currentPosition, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
+            QueueCommands?.PlayQueuedNowAsync(queueEntryId, currentPosition, cancellationToken) ?? throw new NotSupportedException();
 
         public Task ShowNewsAsync(NewsItem item, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
@@ -922,12 +1052,20 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
             Task.FromResult(Snapshot);
     }
 
-    private sealed class NoOpPresenterControls : IPresenterControlService
+    private sealed class TestPresenterBrowser : IBrowserController
     {
-        public Task ActivateAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task PauseAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task StartAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task ShowAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task HideAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task StopAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task<bool> IsRunningAsync(CancellationToken cancellationToken = default) => Task.FromResult(true);
+        public Task<bool> IsTopmostAsync(CancellationToken cancellationToken = default) => Task.FromResult(true);
+    }
+
+    private sealed class NoOpPowerManagement : IPowerManagementService
+    {
+        public Task ApplyAsync(bool preventDisplaySleep, bool preventSystemSleep, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task ReleaseAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private sealed record AdvanceCall(TimeSpan? Position, bool Successful);
