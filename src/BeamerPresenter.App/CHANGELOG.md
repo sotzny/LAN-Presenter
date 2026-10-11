@@ -1,4 +1,11 @@
 Beamerpresenter.App Changelog
+<a name="1.6.0"></a>
+## [1.6.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.6.0) (2026-10-11)
+
+### Features
+
+* **web:** add projector monitor preview with live refresh ([3195bc3](https://www.github.com/sotzny/LAN-Presenter/commit/3195bc3e577243cb03b399ec5f80492879b5b891))
+
 <a name="1.5.0"></a>
 ## [1.5.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.5.0) (2026-10-11)
 
