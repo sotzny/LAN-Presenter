@@ -1,4 +1,11 @@
 Beamerpresenter.App Changelog
+<a name="1.3.0"></a>
+## [1.3.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.3.0) (2026-10-11)
+
+### Features
+
+* **media:** clean up missing library entries safely ([583d6b2](https://www.github.com/sotzny/LAN-Presenter/commit/583d6b2d28f77dac23bb01e6f0cda6653f23f72f))
+
 <a name="1.2.1"></a>
 ## [1.2.1](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.2.1) (2026-10-03)
 
