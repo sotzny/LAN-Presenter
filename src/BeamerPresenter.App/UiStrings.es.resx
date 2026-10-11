@@ -323,4 +323,18 @@
   <data name="Das Update wurde nicht erfolgreich abgeschlossen." xml:space="preserve"><value>La actualización no se completó correctamente.</value></data>
   <data name="Das Update konnte nicht installiert werden. Bitte das Setup erneut ausführen." xml:space="preserve"><value>No se pudo instalar la actualización. Vuelva a ejecutar el instalador.</value></data>
   <data name="Die Wiedergabe konnte nach dem Update nicht wiederhergestellt werden. Bitte Medium und Monitor prüfen." xml:space="preserve"><value>No se pudo restaurar la reproducción. Compruebe el contenido y la pantalla.</value></data>
+  <data name="Übersicht" xml:space="preserve"><value>Resumen</value></data>
+  <data name="Live-Status" xml:space="preserve"><value>Estado actual</value></data>
+  <data name="Anwendung" xml:space="preserve"><value>Aplicación</value></data>
+  <data name="Allgemein" xml:space="preserve"><value>General</value></data>
+  <data name="Presenter" xml:space="preserve"><value>Presentador</value></data>
+  <data name="Anzeige und Browser" xml:space="preserve"><value>Pantalla y navegador</value></data>
+  <data name="Vordergrund" xml:space="preserve"><value>Primer plano</value></data>
+  <data name="Energie" xml:space="preserve"><value>Energía</value></data>
+  <data name="Medien" xml:space="preserve"><value>Medios</value></data>
+  <data name="Medienanalyse" xml:space="preserve"><value>Análisis de medios</value></data>
+  <data name="Webzugriff" xml:space="preserve"><value>Acceso web</value></data>
+  <data name="Verbindung" xml:space="preserve"><value>Conexión</value></data>
+  <data name="Passwortschutz" xml:space="preserve"><value>Protección por contraseña</value></data>
+  <data name="✓ FFprobe verfügbar" xml:space="preserve"><value>✓ FFprobe disponible</value></data>
 </root>

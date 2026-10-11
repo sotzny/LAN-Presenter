@@ -323,4 +323,18 @@
   <data name="Das Update wurde nicht erfolgreich abgeschlossen." xml:space="preserve"><value>Das Update wurde nicht erfolgreich abgeschlossen.</value></data>
   <data name="Das Update konnte nicht installiert werden. Bitte das Setup erneut ausführen." xml:space="preserve"><value>Das Update konnte nicht installiert werden. Bitte das Setup erneut ausführen.</value></data>
   <data name="Die Wiedergabe konnte nach dem Update nicht wiederhergestellt werden. Bitte Medium und Monitor prüfen." xml:space="preserve"><value>Die Wiedergabe konnte nach dem Update nicht wiederhergestellt werden. Bitte Medium und Monitor prüfen.</value></data>
+  <data name="Übersicht" xml:space="preserve"><value>Übersicht</value></data>
+  <data name="Live-Status" xml:space="preserve"><value>Live-Status</value></data>
+  <data name="Anwendung" xml:space="preserve"><value>Anwendung</value></data>
+  <data name="Allgemein" xml:space="preserve"><value>Allgemein</value></data>
+  <data name="Presenter" xml:space="preserve"><value>Presenter</value></data>
+  <data name="Anzeige und Browser" xml:space="preserve"><value>Anzeige und Browser</value></data>
+  <data name="Vordergrund" xml:space="preserve"><value>Vordergrund</value></data>
+  <data name="Energie" xml:space="preserve"><value>Energie</value></data>
+  <data name="Medien" xml:space="preserve"><value>Medien</value></data>
+  <data name="Medienanalyse" xml:space="preserve"><value>Medienanalyse</value></data>
+  <data name="Webzugriff" xml:space="preserve"><value>Webzugriff</value></data>
+  <data name="Verbindung" xml:space="preserve"><value>Verbindung</value></data>
+  <data name="Passwortschutz" xml:space="preserve"><value>Passwortschutz</value></data>
+  <data name="✓ FFprobe verfügbar" xml:space="preserve"><value>✓ FFprobe verfügbar</value></data>
 </root>
