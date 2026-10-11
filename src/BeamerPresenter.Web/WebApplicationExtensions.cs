@@ -72,12 +72,38 @@ public static class WebApplicationExtensions
         app.MapPost("/api/presenter/hide", (Delegate)HidePresenterAsync).RequireAuthorization();
         app.MapPost("/api/presenter/stop", (Delegate)StopPresenterAsync).RequireAuthorization();
         app.MapGet("/api/status", (Delegate)GetStatusAsync).RequireAuthorization();
+        app.MapGet("/api/screen-preview", (Delegate)GetScreenPreviewAsync).RequireAuthorization();
         app.MapPost("/api/updates/{action}", (Delegate)UpdateActionAsync).RequireAuthorization();
         app.MapGet("/health/details", (Delegate)GetStatusAsync).RequireAuthorization();
         app.MapGet("/health", (Delegate)GetHealthAsync).AllowAnonymous();
         app.MapGet("/media/{mediaId:int}", (Delegate)StreamMediaAsync).AllowAnonymous();
         app.MapHub<PresenterHub>("/hubs/presenter");
         app.MapRazorComponents<PresenterWebApp>(); return app;
+    }
+
+    private static async Task<IResult> GetScreenPreviewAsync(HttpContext context,
+        IServiceProvider services, CancellationToken cancellationToken)
+    {
+        context.Response.Headers.CacheControl = "no-store";
+        try
+        {
+            var service = services.GetService<IPresenterScreenshotService>();
+            if (service is null) return Results.Json(new { error = "capture_unavailable" }, statusCode: 503);
+            var screenshot = await service.CaptureAsync(cancellationToken);
+            context.Response.Headers["X-Captured-At-Utc"] = screenshot.CapturedAtUtc.ToString("O", System.Globalization.CultureInfo.InvariantCulture);
+            return Results.File(screenshot.Jpeg, "image/jpeg");
+        }
+        catch (PresenterScreenshotUnavailableException)
+        {
+            return Results.Json(new { error = "monitor_unavailable" }, statusCode: 503);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        catch (Exception exception)
+        {
+            services.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>()
+                .CreateLogger("ScreenPreview").LogWarning(exception, "Monitor screenshot capture failed");
+            return Results.Json(new { error = "capture_failed" }, statusCode: 503);
+        }
     }
 
     private static async Task<IResult> GetStatusAsync(

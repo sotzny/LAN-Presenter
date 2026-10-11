@@ -63,6 +63,21 @@
             </MudGrid>
         </MudPaper>
 
+        <MudPaper Elevation="0" Class="content-panel pa-6 screen-preview-panel">
+            <div class="screen-preview-toolbar">
+                <MudText Typo="Typo.h5">@WebText.Get("Beamer-Vorschau")</MudText>
+                <label for="screen-preview-mode">@WebText.Get("Aktualisierung")</label>
+                <select id="screen-preview-mode">
+                    <option value="10000">@WebText.Get("Alle 10 Sekunden")</option>
+                    <option value="1000">@WebText.Get("Live · 1 Bild/s")</option>
+                </select>
+            </div>
+            <p>@WebText.Get("Zeigt den gesamten konfigurierten Beamer-Monitor.")</p>
+            <img id="screen-preview-image" class="screen-preview-image" alt="@WebText.Get("Aktuelles Bild des Beamer-Monitors")" hidden />
+            <p id="screen-preview-status" role="status" aria-live="polite">@WebText.Get("Vorschau wird geladen …")</p>
+            <time id="screen-preview-time" hidden></time>
+        </MudPaper>
+
         @if (PresenterResult == "error")
         {
             <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@WebText.ForError(PresenterMessage, "Der Presenter-Befehl ist fehlgeschlagen.")</MudAlert>
@@ -540,7 +555,11 @@
     }
 </MudStack>
 
-@if (IsPlayback)
+@if (IsDashboard)
+{
+    <script src="_content/BeamerPresenter.Web/js/screen-preview.js"></script>
+}
+else if (IsPlayback)
 {
     <script src="_content/BeamerPresenter.Web/js/youtube-management.js"></script>
 }

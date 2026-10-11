@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup><Compile Include="../BeamerPresenter.Shared/RecordingApplicationUpdates.cs" Link="RecordingApplicationUpdates.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../BeamerPresenter.Shared/RecordingScreenshots.cs" Link="RecordingScreenshots.cs" /></ItemGroup>
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>

@@ -41,6 +41,7 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
         builder.WebHost.UseUrls("http://127.0.0.1:0");
         builder.Services.AddPresenterInfrastructure(_dataDirectory);
         builder.Services.AddPresenterWebUi();
+        builder.Services.AddSingleton<IPresenterScreenshotService, BeamerPresenter.TestSupport.RecordingScreenshots>();
         builder.Services.AddSingleton<IApplicationUpdateService>(_updates);
         builder.Services.AddSingleton<IPlaybackCommandService>(_playbackCommands);
         builder.Services.AddSingleton<INewsCommandService>(_playbackCommands);
@@ -88,6 +89,151 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
         _baseAddress = Assert.Single(addresses!);
         _playwright = await Playwright.CreateAsync();
         _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+    }
+
+    [Fact]
+    public async Task Screen_preview_loads_immediately_switches_intervals_and_pauses_when_hidden()
+    {
+        await using var context = await _browser!.NewContextAsync();
+        await using var coverage = new BrowserCoverageCapture(context);
+        var page = await coverage.NewPageAsync();
+        var now = new DateTime(2026, 10, 11, 12, 0, 0, DateTimeKind.Utc);
+        await page.Clock.InstallAsync(new ClockInstallOptions { Time = now.ToString("O", CultureInfo.InvariantCulture) });
+        await page.Clock.PauseAtAsync(now);
+        var calls = 0;
+        var failure = 0;
+        await context.RouteAsync("**/api/screen-preview", async route =>
+        {
+            Interlocked.Increment(ref calls);
+            if (failure == 1) { await route.AbortAsync(); return; }
+            if (failure == 2)
+            {
+                await route.FulfillAsync(new RouteFulfillOptions { Status = 503, ContentType = "application/json", Body = "{\"error\":\"monitor_unavailable\"}" });
+                return;
+            }
+            if (failure == 3)
+            {
+                await route.FulfillAsync(new RouteFulfillOptions { Status = 401 });
+                return;
+            }
+            await route.FulfillAsync(new RouteFulfillOptions
+            {
+                Status = 200,
+                ContentType = "image/jpeg",
+                BodyBytes = BeamerPresenter.TestSupport.RecordingScreenshots.Jpeg,
+                Headers = new Dictionary<string, string> { ["X-Captured-At-Utc"] = "2026-10-11T12:00:00Z" }
+            });
+        });
+        await page.GotoAsync($"{_baseAddress}/login");
+        await page.FillAsync("#password", TestPassword);
+        await page.Locator("form[action='/account/login'] button[type='submit']").ClickAsync();
+        await page.WaitForURLAsync($"{_baseAddress}/");
+        await WaitForTextAsync(page, "#screen-preview-status", "Vorschau aktuell");
+        Assert.Equal(1, calls);
+        Assert.Equal("10000", await page.Locator("#screen-preview-mode").InputValueAsync());
+        Assert.True(await page.Locator("#screen-preview-image").IsVisibleAsync());
+        Assert.Equal(2, await page.Locator("#screen-preview-image").EvaluateAsync<int>("image => image.naturalWidth"));
+        Assert.Equal("2026-10-11T12:00:00.000Z", await page.Locator("#screen-preview-time").GetAttributeAsync("datetime"));
+        await page.Clock.RunForAsync(9999);
+        Assert.Equal(1, calls);
+        await page.Clock.RunForAsync(1);
+        await page.WaitForFunctionAsync("document.querySelector('#screen-preview-image').src.startsWith('blob:')");
+        using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            while (Volatile.Read(ref calls) < 2) await Task.Delay(20, timeout.Token);
+        await page.SelectOptionAsync("#screen-preview-mode", "1000");
+        await WaitForTextAsync(page, "#screen-preview-status", "Vorschau aktuell");
+        using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            while (Volatile.Read(ref calls) < 3) await Task.Delay(20, timeout.Token);
+        await page.Clock.RunForAsync(1000);
+        using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            while (Volatile.Read(ref calls) < 4) await Task.Delay(20, timeout.Token);
+
+        await page.EvaluateAsync("Object.defineProperty(document, 'hidden', { configurable: true, get: () => window.previewHidden === true }); window.previewHidden = true; document.dispatchEvent(new Event('visibilitychange'));");
+        var hiddenCalls = Volatile.Read(ref calls);
+        await page.Clock.RunForAsync(20000);
+        Assert.Equal(hiddenCalls, calls);
+        await page.EvaluateAsync("window.previewHidden = false; document.dispatchEvent(new Event('visibilitychange'));");
+        using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            while (Volatile.Read(ref calls) == hiddenCalls) await Task.Delay(20, timeout.Token);
+
+        failure = 1;
+        await page.SelectOptionAsync("#screen-preview-mode", "10000");
+        await WaitForTextAsync(page, "#screen-preview-status", "Verbindung unterbrochen – letztes Bild ist veraltet.");
+        Assert.True(await page.Locator("#screen-preview-image").IsVisibleAsync());
+        failure = 2;
+        await page.SelectOptionAsync("#screen-preview-mode", "1000");
+        await WaitForTextAsync(page, "#screen-preview-status", "Der konfigurierte Beamer-Monitor ist nicht verfügbar.");
+        Assert.False(await page.Locator("#screen-preview-image").IsVisibleAsync());
+        failure = 0;
+        await page.SelectOptionAsync("#screen-preview-mode", "10000");
+        await WaitForTextAsync(page, "#screen-preview-status", "Vorschau aktuell");
+        failure = 3;
+        await page.SelectOptionAsync("#screen-preview-mode", "1000");
+        await WaitForTextAsync(page, "#screen-preview-status", "Bitte erneut anmelden, um die Vorschau zu sehen.");
+        var loggedOutCalls = calls;
+        await page.Clock.RunForAsync(20000);
+        Assert.Equal(loggedOutCalls, calls);
+    }
+
+    [Fact]
+    public async Task Screen_preview_does_not_overlap_requests_and_cleans_up_on_dashboard_removal()
+    {
+        await using var context = await _browser!.NewContextAsync();
+        await using var coverage = new BrowserCoverageCapture(context);
+        var page = await coverage.NewPageAsync();
+        await page.GotoAsync($"{_baseAddress}/login");
+        await page.FillAsync("#password", TestPassword);
+        await page.Locator("form[action='/account/login'] button[type='submit']").ClickAsync();
+        await page.WaitForURLAsync($"{_baseAddress}/");
+        await WaitForTextAsync(page, "#screen-preview-status", "Vorschau aktuell");
+        await page.EvaluateAsync("window.dispatchEvent(new PageTransitionEvent('pagehide', {persisted: true}))");
+        Assert.False(await page.Locator("#screen-preview-image").IsVisibleAsync());
+        await page.EvaluateAsync("window.dispatchEvent(new PageTransitionEvent('pageshow', {persisted: true}))");
+        await page.WaitForFunctionAsync("!document.querySelector('#screen-preview-image').hidden");
+        await page.EvaluateAsync("window.presenterScreenPreviewCleanup()");
+        await page.EvaluateAsync("""
+            window.previewFetchCalls = 0;
+            window.originalFetch = window.fetch;
+            window.fetch = (...args) => args[0] === '/api/screen-preview'
+                ? (window.previewFetchCalls++, new Promise(resolve => { window.resolvePreview = resolve; }))
+                : window.originalFetch(...args);
+            """);
+        await page.AddScriptTagAsync(new PageAddScriptTagOptions { Url = $"{_baseAddress}/_content/BeamerPresenter.Web/js/screen-preview.js" });
+        Assert.Equal(1, await page.EvaluateAsync<int>("window.previewFetchCalls"));
+        await page.SelectOptionAsync("#screen-preview-mode", "1000");
+        await page.SelectOptionAsync("#screen-preview-mode", "10000");
+        Assert.Equal(1, await page.EvaluateAsync<int>("window.previewFetchCalls"));
+        await page.EvaluateAsync("document.querySelector('.screen-preview-panel').remove()");
+        await page.EvaluateAsync("window.resolvePreview(new Response('', {status: 503}))");
+        Assert.Equal(1, await page.EvaluateAsync<int>("window.previewFetchCalls"));
+    }
+
+    [Theory]
+    [InlineData("capture_failed", "Die Bildschirmaufnahme ist nicht verfügbar.")]
+    [InlineData("wrong_type", "Vorschau nicht erreichbar. Neuer Versuch …")]
+    [InlineData("missing_time", "Vorschau nicht erreichbar. Neuer Versuch …")]
+    [InlineData("invalid_jpeg", "Vorschau nicht erreichbar. Neuer Versuch …")]
+    public async Task Screen_preview_rejects_unavailable_or_invalid_frames(string failure, string expectedStatus)
+    {
+        await using var context = await _browser!.NewContextAsync();
+        await using var coverage = new BrowserCoverageCapture(context);
+        var page = await coverage.NewPageAsync();
+        await context.RouteAsync("**/api/screen-preview", route => route.FulfillAsync(new RouteFulfillOptions
+        {
+            Status = failure == "capture_failed" ? 503 : 200,
+            ContentType = failure == "capture_failed" ? "application/json" : failure == "wrong_type" ? "text/html" : "image/jpeg",
+            BodyBytes = failure == "capture_failed" ? System.Text.Encoding.UTF8.GetBytes("{\"error\":\"capture_failed\"}") :
+                failure == "invalid_jpeg" ? [1, 2, 3] : BeamerPresenter.TestSupport.RecordingScreenshots.Jpeg,
+            Headers = failure == "missing_time" ? new Dictionary<string, string>() :
+                new Dictionary<string, string> { ["X-Captured-At-Utc"] = "2026-10-11T12:00:00Z" }
+        }));
+        await page.GotoAsync($"{_baseAddress}/login");
+        await page.FillAsync("#password", TestPassword);
+        await page.Locator("form[action='/account/login'] button[type='submit']").ClickAsync();
+        await page.WaitForURLAsync($"{_baseAddress}/");
+        await WaitForTextAsync(page, "#screen-preview-status", expectedStatus);
+        Assert.False(await page.Locator("#screen-preview-image").IsVisibleAsync());
+        Assert.False(await page.Locator("#screen-preview-time").IsVisibleAsync());
     }
 
     [Theory]
@@ -919,6 +1065,7 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
         var projectPath = relativePath switch
         {
             "dashboard.js" => "src/BeamerPresenter.Web/wwwroot/js/dashboard.js",
+            "screen-preview.js" => "src/BeamerPresenter.Web/wwwroot/js/screen-preview.js",
             "media-previews.js" => "src/BeamerPresenter.Web/wwwroot/js/media-previews.js",
             "presenter.js" => "src/BeamerPresenter.Web/wwwroot/js/presenter.js",
             "youtube-management.js" => "src/BeamerPresenter.Web/wwwroot/js/youtube-management.js",

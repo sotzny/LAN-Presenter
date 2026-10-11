@@ -8,6 +8,9 @@ public static class WebText
     private static readonly IReadOnlyDictionary<string, string[]> Resources = LoadResources();
     private static readonly string[] JavaScriptKeys =
     [
+        "Bitte erneut anmelden, um die Vorschau zu sehen.", "Der konfigurierte Beamer-Monitor ist nicht verfügbar.",
+        "Die Bildschirmaufnahme ist nicht verfügbar.", "Aufnahme: {0}", "Vorschau aktuell",
+        "Verbindung unterbrochen – letztes Bild ist veraltet.", "Vorschau nicht erreichbar. Neuer Versuch …",
         " Lokale Wiedergabe wurde als Nächstes eingereiht.", " Lokale Wiedergabe wurde gestartet.",
         " {0} ist vorgemerkt.", "Active", "Als Nächstes", "Autoplay wurde abgelehnt.",
         "Bereit", "Bereit für die nächste Wiedergabe.", "Browser: Status nicht erreichbar",

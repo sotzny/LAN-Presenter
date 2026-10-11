@@ -24,6 +24,7 @@ Die Wiedergabe lässt sich jederzeit pausieren, ausblenden, fortsetzen oder been
 - **News-Einblendungen:** Meldungen als Ticker, 50:50-Split-Screen oder Vollbild erstellen, planen, priorisieren und anzeigen.
 - **Beamer-Steuerung:** Chrome startet im Kioskmodus auf dem gewählten Monitor. Aktivieren, Pause, Ausblenden und Stop lassen sich zentral steuern.
 - **Übersicht und Wiederherstellung:** Dashboard mit Live-Status, Medienanalyse und Scannerzustand; automatische Erholung bei Browser- oder Wiedergabeproblemen.
+- **Beamer-Vorschau:** Das Dashboard zeigt den gesamten ausgewählten Beamer-Monitor, einschließlich überdeckender Fenster. Umschaltbar zwischen einem Screenshot alle zehn Sekunden und Live mit einem Bild pro Sekunde, ohne Audio. Die Vorschau benötigt eine Anmeldung und pausiert bei verborgenem Browser-Tab; Aufnahmen bleiben ausschließlich im Arbeitsspeicher.
 - **Lokale Datenhaltung:** Einstellungen, Bibliothek, Queue, Verlauf, Logs und Backups liegen im Benutzerprofil unter `%LOCALAPPDATA%\BeamerPresenter\Presenter`.
 - **Drei Sprachen:** Desktop-App, Webverwaltung und Beamer-Anzeige stehen auf Deutsch, Englisch und Spanisch zur Verfügung.
 
@@ -111,6 +112,8 @@ pwsh tests/BeamerPresenter.Browser.Tests/bin/Release/net10.0/playwright.ps1 inst
 # Gesamte Testsuite
 dotnet test BeamerPresenterForLanParties.slnx -c Release
 ```
+
+Die Beamer-Vorschau zusätzlich unter Windows am echten Zielmonitor abnehmen: Video und News mit dem sichtbaren Monitorbild vergleichen, ein anderes Fenster darüberlegen und Pause/Hide/Stop prüfen. Zwischen zehn Sekunden und Live wechseln; Live soll ungefähr ein neues Bild pro Sekunde liefern. Zielmonitor abziehen: Die Vorschau muss eine Fehlermeldung anzeigen und darf nicht auf einen anderen Bildschirm wechseln.
 
 Nach Änderungen an Paketversionen die Lockfiles aktualisieren:
 

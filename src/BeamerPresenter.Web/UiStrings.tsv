@@ -283,3 +283,17 @@ Das Update konnte nicht installiert werden.|Das Update konnte nicht installiert 
 Das Update wurde nicht erfolgreich abgeschlossen.|Das Update wurde nicht erfolgreich abgeschlossen.|The update did not complete successfully.|La actualización no se completó correctamente.
 Das Update konnte nicht installiert werden. Bitte das Setup erneut ausführen.|Das Update konnte nicht installiert werden. Bitte das Setup erneut ausführen.|The update could not be installed. Please run setup again.|No se pudo instalar la actualización. Vuelva a ejecutar el instalador.
 Die Wiedergabe konnte nach dem Update nicht wiederhergestellt werden. Bitte Medium und Monitor prüfen.|Die Wiedergabe konnte nach dem Update nicht wiederhergestellt werden. Bitte Medium und Monitor prüfen.|Playback could not be restored after the update. Please check media and monitor.|No se pudo restaurar la reproducción. Compruebe el contenido y la pantalla.
+Beamer-Vorschau|Beamer-Vorschau|Projector preview|Vista previa del proyector
+Aktualisierung|Aktualisierung|Refresh interval|Intervalo de actualización
+Alle 10 Sekunden|Alle 10 Sekunden|Every 10 seconds|Cada 10 segundos
+Live · 1 Bild/s|Live · 1 Bild/s|Live · 1 frame/s|En vivo · 1 imagen/s
+Zeigt den gesamten konfigurierten Beamer-Monitor.|Zeigt den gesamten konfigurierten Beamer-Monitor.|Shows the entire configured projector monitor.|Muestra todo el monitor configurado del proyector.
+Aktuelles Bild des Beamer-Monitors|Aktuelles Bild des Beamer-Monitors|Current projector monitor image|Imagen actual del monitor del proyector
+Vorschau wird geladen …|Vorschau wird geladen …|Loading preview …|Cargando vista previa …
+Bitte erneut anmelden, um die Vorschau zu sehen.|Bitte erneut anmelden, um die Vorschau zu sehen.|Please sign in again to view the preview.|Inicia sesión de nuevo para ver la vista previa.
+Der konfigurierte Beamer-Monitor ist nicht verfügbar.|Der konfigurierte Beamer-Monitor ist nicht verfügbar.|The configured projector monitor is unavailable.|El monitor configurado del proyector no está disponible.
+Die Bildschirmaufnahme ist nicht verfügbar.|Die Bildschirmaufnahme ist nicht verfügbar.|Screen capture is unavailable.|La captura de pantalla no está disponible.
+Aufnahme: {0}|Aufnahme: {0}|Captured: {0}|Captura: {0}
+Vorschau aktuell|Vorschau aktuell|Preview up to date|Vista previa actualizada
+Verbindung unterbrochen – letztes Bild ist veraltet.|Verbindung unterbrochen – letztes Bild ist veraltet.|Connection lost – last image is outdated.|Conexión perdida – la última imagen está desactualizada.
+Vorschau nicht erreichbar. Neuer Versuch …|Vorschau nicht erreichbar. Neuer Versuch …|Preview unavailable. Retrying …|Vista previa no disponible. Reintentando …

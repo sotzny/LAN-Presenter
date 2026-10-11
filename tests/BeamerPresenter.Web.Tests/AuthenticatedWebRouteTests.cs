@@ -27,6 +27,7 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
     private readonly RecordingPresenterControls _presenterControls = new();
     private readonly BeamerPresenter.TestSupport.RecordingApplicationUpdates _updates = new();
     private WebApplication? _application;
+    private readonly BeamerPresenter.TestSupport.RecordingScreenshots _screenshots = new();
 
     public async Task InitializeAsync()
     {
@@ -38,6 +39,7 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         builder.Services.AddPresenterInfrastructure(_dataDirectory);
         builder.Services.AddSingleton<IYouTubeDownloadTool>(_youTubeDownloads);
         builder.Services.AddPresenterWebUi();
+        builder.Services.AddSingleton<IPresenterScreenshotService>(_screenshots);
         builder.Services.AddSingleton<IApplicationUpdateService>(_updates);
         builder.Services.AddSingleton<IPlaybackCommandService>(_playbackCommands);
         builder.Services.AddSingleton<INewsCommandService>(_playbackCommands);
@@ -73,6 +75,44 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
 
         var settings = _application.Services.GetRequiredService<IPresenterSettingsService>();
         await settings.SetWebPasswordAsync(TestPassword);
+    }
+
+    [Fact]
+    public async Task Screen_preview_requires_login_and_delivers_uncached_jpeg_to_authenticated_LAN_client()
+    {
+        using var client = _application!.GetTestClient();
+        using var anonymous = await client.GetAsync("/api/screen-preview");
+        Assert.Equal(HttpStatusCode.Redirect, anonymous.StatusCode);
+        var cookie = await LoginAsync(client);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/screen-preview");
+        request.Headers.Add("Cookie", cookie);
+        request.Headers.Add("X-Test-Remote-IP", "192.168.10.42");
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("image/jpeg", response.Content.Headers.ContentType!.MediaType);
+        Assert.True(response.Headers.CacheControl!.NoStore);
+        Assert.Equal(BeamerPresenter.TestSupport.RecordingScreenshots.CapturedAt,
+            DateTimeOffset.Parse(Assert.Single(response.Headers.GetValues("X-Captured-At-Utc")), CultureInfo.InvariantCulture));
+        Assert.Equal(BeamerPresenter.TestSupport.RecordingScreenshots.Jpeg, await response.Content.ReadAsByteArrayAsync());
+    }
+
+    [Theory]
+    [InlineData(true, "monitor_unavailable")]
+    [InlineData(false, "capture_failed")]
+    public async Task Screen_preview_returns_safe_errors_without_internal_details(bool missingMonitor, string expectedError)
+    {
+        _screenshots.Error = missingMonitor ? new PresenterScreenshotUnavailableException("Private monitor detail") :
+            new InvalidOperationException("Private capture detail");
+        using var client = _application!.GetTestClient();
+        var cookie = await LoginAsync(client);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/screen-preview");
+        request.Headers.Add("Cookie", cookie);
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.True(response.Headers.CacheControl!.NoStore);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains(expectedError, body, StringComparison.Ordinal);
+        Assert.DoesNotContain("Private", body, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -24,6 +24,7 @@ Playback can be paused, hidden, resumed, or stopped at any time. Announcements c
 - **News overlays:** Create, schedule, prioritize, and display announcements as a ticker, 50:50 split screen, or fullscreen overlay.
 - **Projector control:** Chrome starts in kiosk mode on the selected monitor. Activation, pause, hide, and stop are managed centrally.
 - **Monitoring and recovery:** A dashboard shows live status, media analysis, and scanner state; the app recovers automatically from browser or playback problems.
+- **Projector preview:** The dashboard shows the entire selected projector monitor, including overlapping windows. Switch between a screenshot every ten seconds and live viewing at one frame per second, without audio. The preview requires authentication and pauses when the browser tab is hidden; captures remain in memory only.
 - **Local data storage:** Settings, library, queue, history, logs, and backups are stored in the user profile under `%LOCALAPPDATA%\BeamerPresenter\Presenter`.
 - **Three languages:** The desktop app, web management interface, and projector display are available in German, English, and Spanish.
 
@@ -117,6 +118,8 @@ After changing package versions, update the lock files:
 ```powershell
 dotnet restore BeamerPresenterForLanParties.slnx --force-evaluate
 ```
+
+Manually validate the projector preview on Windows with the real target monitor: compare video and news with the visible screen, overlap another window, and check Pause/Hide/Stop. Switch between ten-second refresh and live mode; live mode should deliver approximately one new frame per second. Disconnect the target monitor: the preview must report an error without switching to another screen.
 
 ## Architecture
 

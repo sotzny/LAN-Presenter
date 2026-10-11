@@ -130,6 +130,8 @@ internal static class Program
         builder.Services.AddPresenterInfrastructure(paths.DataDirectory, paths.ToolsDirectory);
         builder.Services.AddPresenterWebUi();
         builder.Services.AddSingleton<IMonitorService, WindowsMonitorService>();
+        builder.Services.AddSingleton<IMonitorScreenshotCapture, WindowsMonitorScreenshotCapture>();
+        builder.Services.AddSingleton<IPresenterScreenshotService, WindowsPresenterScreenshotService>();
         builder.Services.AddSingleton<IChromeProcessLauncher, ChromeProcessLauncher>();
         builder.Services.AddSingleton<IChromeWindowController, ChromeWindowController>();
         builder.Services.AddSingleton<IBrowserController>(provider => new ChromeBrowserController(

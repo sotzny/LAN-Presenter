@@ -1236,3 +1236,8 @@ body .mud-button-text-secondary {
         opacity: .45;
     }
 }
+.screen-preview-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.screen-preview-toolbar select { padding: .5rem; font: inherit; color: inherit; background: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); border-radius: .4rem; }
+.screen-preview-image { display: block; width: 100%; height: auto; background: #000; border-radius: .5rem; }
+.screen-preview-image[hidden] { display: none; }
+.screen-preview-panel time { font-size: .875rem; }
