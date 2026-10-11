@@ -1,4 +1,11 @@
 Beamerpresenter.App Changelog
+<a name="1.4.0"></a>
+## [1.4.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.4.0) (2026-10-11)
+
+### Features
+
+* **web:** move updates to a dedicated page with menu indicator ([141477e](https://www.github.com/sotzny/LAN-Presenter/commit/141477e4954ecefcbd4e9d08e289fa123604f5a2))
+
 <a name="1.3.0"></a>
 ## [1.3.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.3.0) (2026-10-11)
 
