@@ -1,6 +1,8 @@
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Routing
+@using BeamerPresenter.Application
 @inherits LayoutComponentBase
+@inject IServiceProvider Services
 
 <MudLayout>
     <MudAppBar Color="Color.Transparent" Elevation="0" Class="app-bar">
@@ -24,6 +26,9 @@
                 <MudNavLink Href="/playback" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PlaylistPlay">@WebText.Get("Wiedergabe")</MudNavLink>
                 <MudNavLink Href="/media" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.VideoLibrary">@WebText.Get("Mediathek")</MudNavLink>
                 <MudNavLink Href="/news" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Campaign">@WebText.Get("News")</MudNavLink>
+                <MudNavLink Href="/updates" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SystemUpdate">
+                    <span class="update-nav-label">@WebText.Get("Updates")<span id="update-indicator" class="update-indicator" hidden="@(!HasUpdate)" title="@WebText.Get("Update verfügbar")"><span class="visually-hidden">@WebText.Get("Update verfügbar")</span></span></span>
+                </MudNavLink>
             </MudNavMenu>
         </aside>
         <MudMainContent Class="main-content management-content">
@@ -33,3 +38,9 @@
         </MudMainContent>
     </div>
 </MudLayout>
+<script src="_content/BeamerPresenter.Web/js/dashboard.js"></script>
+
+@code {
+    private bool HasUpdate => Services.GetService(typeof(IApplicationUpdateService)) is IApplicationUpdateService updates
+        && updates.Current.HasAvailableUpdate;
+}

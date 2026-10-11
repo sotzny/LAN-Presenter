@@ -33,7 +33,7 @@ Fehlende Dateien werden beim Medienabgleich automatisch aus der Mediathek entfer
 
 ## Updates und Beenden
 
-Desktop-Statusfenster, Tray und Web-Dashboard zeigen verfügbare Updates, Downloadfortschritt und Installationszeitpunkt. Die Anwendung prüft beim Start und alle sechs Stunden auf stabile GitHub-Releases. Automatische Updates sind standardmäßig aktiviert: Nach vollständig geprüftem Download beginnt ein fünfminütiger Countdown, auch bei laufender Wiedergabe.
+Desktop-Statusfenster, Tray und die Web-Seite **„Updates“** zeigen verfügbare Updates, Downloadfortschritt und Installationszeitpunkt. Ein kleiner roter Punkt am Web-Menüeintrag weist auf eine verfügbare Version hin und bleibt auch nach dem Öffnen der Seite sichtbar. Die Anwendung prüft bei jedem Start sofort im Hintergrund und danach alle sechs Stunden auf stabile GitHub-Releases – auch beim ersten Start und beim Autostart, unabhängig von der Web-Anmeldung. Automatische Updates sind standardmäßig aktiviert: Nach vollständig geprüftem Download beginnt ein fünfminütiger Countdown, auch bei laufender Wiedergabe.
 
 Mit **„Sofort“** startet die Installation ohne Countdown; **„1 Stunde später“** verschiebt sie. **„Automatische Updates“** kann dauerhaft abgeschaltet werden; manuelle Prüfung und Installation bleiben möglich. Die Webaktionen verlangen Anmeldung und Antiforgery-Schutz.
 

@@ -6,6 +6,19 @@ namespace BeamerPresenter.Application.Tests;
 public sealed class ApplicationUpdateTests
 {
     [Theory]
+    [InlineData("1.2.0", "1.10.0", true)]
+    [InlineData("1.2.0", "v1.3.0", true)]
+    [InlineData("1.2.0", "1.2.0", false)]
+    [InlineData("1.2.0", "1.1.0", false)]
+    [InlineData("1.2.0", "1.3.0-beta", false)]
+    [InlineData("1.2.0", null, false)]
+    public void Availability_requires_a_newer_stable_version_even_for_restored_update_state(string installed, string? available, bool expected)
+    {
+        var snapshot = new ApplicationUpdateSnapshot(installed, available, "Failed", 0, null, true, null);
+        Assert.Equal(expected, snapshot.HasAvailableUpdate);
+    }
+
+    [Theory]
     [InlineData("v1.2.3", true)]
     [InlineData("1.20.3", true)]
     [InlineData("v0.2.3", false)]

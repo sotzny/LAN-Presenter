@@ -107,6 +107,76 @@ body .mud-button-text-secondary {
     background: #292052;
 }
 
+.update-nav-label {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.management-nav .mud-nav-link.active .update-nav-label {
+    color: #fff;
+}
+
+.update-indicator {
+    flex: 0 0 .45rem;
+    width: .45rem;
+    height: .45rem;
+    border-radius: 50%;
+    background: #ff5252;
+}
+
+.update-indicator[hidden] {
+    display: none;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.update-panel {
+    max-width: 48rem;
+}
+
+.update-detail {
+    color: #6f7892;
+    font-size: .875rem;
+}
+
+.update-error {
+    color: #b42318;
+}
+
+.update-detail:empty, .update-error:empty {
+    display: none;
+}
+
+.update-actions {
+    margin-top: 1.5rem;
+}
+
+.update-settings {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(117, 136, 180, .16);
+    align-items: center;
+}
+
+.update-settings label {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.update-panel button:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
 .main-content {
     min-height: 100vh;
     padding: 96px 0 48px;
@@ -875,7 +945,7 @@ body .mud-button-text-secondary {
     }
 
     .management-nav {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .management-nav .mud-nav-link {

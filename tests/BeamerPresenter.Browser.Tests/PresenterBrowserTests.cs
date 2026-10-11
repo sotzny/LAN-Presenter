@@ -120,7 +120,8 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
         Assert.Equal("OK", await page.TextContentAsync("#dashboard-ffprobe"));
         Assert.Equal("Bereit", await page.TextContentAsync("#dashboard-scanner"));
 
-        Assert.Equal(4, await page.Locator(".management-nav a").CountAsync());
+        Assert.Equal(5, await page.Locator(".management-nav a").CountAsync());
+        Assert.False(await page.Locator("#update-panel").IsVisibleAsync());
         Assert.True(await page.GetByText("AKTUELLE WIEDERGABE", new() { Exact = true }).IsVisibleAsync());
         Assert.False(await page.GetByText("Wiedergabe-Queue", new() { Exact = true }).IsVisibleAsync());
 
@@ -154,10 +155,13 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
         await page.FillAsync("#password", TestPassword);
         await page.Locator("form[action='/account/login'] button[type='submit']").ClickAsync();
         await page.WaitForURLAsync($"{_baseAddress}/");
+        await page.Locator(".management-nav a[href='/updates']").ClickAsync();
+        await page.WaitForURLAsync($"{_baseAddress}/updates");
         await WaitForTextAsync(page, "#update-status", "Bereit zur Installation");
+        await page.WaitForFunctionAsync("() => document.getElementById('update-connection').hidden");
         Assert.Contains("1.2.0", await page.TextContentAsync("#update-versions"));
         await page.Locator("#update-postpone").ClickAsync();
-        await page.WaitForURLAsync($"{_baseAddress}/?update=requested");
+        await page.WaitForURLAsync($"{_baseAddress}/updates?update=requested");
         Assert.Equal(1, _updates.Postpones);
         await page.Locator("#update-automatic").UncheckAsync();
         await page.Locator("form[action='/api/updates/settings'] button").ClickAsync();
@@ -170,9 +174,123 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
         await WaitForTextAsync(page, "#update-status", "Wird installiert");
         Assert.Equal(1, _updates.Installs);
         await context.RouteAsync("**/api/status", route => route.AbortAsync());
+        await page.WaitForFunctionAsync("() => !document.getElementById('update-connection').hidden");
+        Assert.Equal("Wird installiert", await page.TextContentAsync("#update-status"));
+        Assert.True(await page.Locator("#update-indicator").IsVisibleAsync());
+        await context.UnrouteAsync("**/api/status");
+        await page.WaitForFunctionAsync("() => document.getElementById('update-connection').hidden");
+        await page.GotoAsync($"{_baseAddress}/");
+        await context.RouteAsync("**/api/status", route => route.AbortAsync());
         await WaitForTextAsync(page, "#dashboard-browser-state", "Browser: Status nicht erreichbar");
         await context.UnrouteAsync("**/api/status");
         await WaitForTextAsync(page, "#dashboard-browser-state", "Browser: Getrennt");
+    }
+
+    [Theory]
+    [InlineData("/", 1280)]
+    [InlineData("/playback", 1280)]
+    [InlineData("/media", 1280)]
+    [InlineData("/news", 1280)]
+    [InlineData("/updates", 1280)]
+    [InlineData("/updates", 390)]
+    public async Task Update_indicator_refreshes_on_every_management_page_and_fits_mobile_navigation(string path, int width)
+    {
+        await using var context = await _browser!.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = width, Height = 900 }
+        });
+        await using var coverage = new BrowserCoverageCapture(context);
+        var page = await coverage.NewPageAsync();
+        await LoginManagementAsync(page);
+        await page.GotoAsync($"{_baseAddress}{path}");
+        Assert.True(await page.Locator("#update-indicator").IsVisibleAsync());
+        Assert.Contains("Update verfügbar", await page.Locator(".management-nav a[href='/updates']").InnerTextAsync());
+        Assert.Equal("rgb(255, 82, 82)", await page.Locator("#update-indicator").EvaluateAsync<string>("element => getComputedStyle(element).backgroundColor"));
+        Assert.True(await page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= innerWidth"));
+
+        if (path == "/updates")
+        {
+            await page.WaitForFunctionAsync("() => document.getElementById('update-connection').hidden");
+            var directory = Path.Combine(RepositoryRoot, "artifacts", "Screenshots");
+            Directory.CreateDirectory(directory);
+            await page.ScreenshotAsync(new PageScreenshotOptions
+            {
+                Path = Path.Combine(directory, width == 390 ? "updates-mobile.png" : "updates-desktop.png"),
+                FullPage = true
+            });
+        }
+
+        _updates.Snapshot = _updates.Snapshot with { AvailableVersion = null, Phase = "Idle", InstallAtUtc = null };
+        await page.WaitForFunctionAsync("() => document.getElementById('update-indicator').hidden");
+        _updates.Snapshot = _updates.Snapshot with { AvailableVersion = "1.3.0", Phase = "Downloading", Progress = 45 };
+        await page.WaitForFunctionAsync("() => !document.getElementById('update-indicator').hidden");
+        Assert.True(await page.Locator("#update-indicator").IsVisibleAsync());
+        _updates.Snapshot = _updates.Snapshot with { InstalledVersion = "1.3.0", Phase = "Failed" };
+        await page.WaitForFunctionAsync("() => document.getElementById('update-indicator').hidden");
+    }
+
+    [Fact]
+    public async Task Update_details_follow_progress_errors_and_automatic_settings_without_overwriting_user_edits()
+    {
+        await using var context = await _browser!.NewContextAsync();
+        await using var coverage = new BrowserCoverageCapture(context);
+        var page = await coverage.NewPageAsync();
+        await LoginManagementAsync(page);
+        await page.GotoAsync($"{_baseAddress}/updates");
+        await WaitForTextAsync(page, "#update-status", "Bereit zur Installation");
+        Assert.Equal(1, await page.Locator("#update-panel form[action='/api/updates/settings'] button").CountAsync());
+        _updates.Snapshot = _updates.Snapshot with { Phase = "Downloading", Progress = 45, InstallAtUtc = null, AutomaticUpdatesEnabled = false };
+        await WaitForTextAsync(page, "#update-status", "Wird heruntergeladen 45%");
+        Assert.False(await page.Locator("#update-automatic").IsCheckedAsync());
+        Assert.True(await page.Locator("#update-postpone").IsDisabledAsync());
+        Assert.Equal("", await page.TextContentAsync("#update-countdown"));
+        await page.Locator("#update-automatic").CheckAsync();
+        _updates.Snapshot = _updates.Snapshot with { Phase = "Failed", Error = "Das Update konnte nicht geladen oder geprüft werden." };
+        await WaitForTextAsync(page, "#update-status", "Update fehlgeschlagen");
+        Assert.True(await page.Locator("#update-automatic").IsCheckedAsync());
+        Assert.Contains("Das Update konnte nicht geladen oder geprüft werden.", await page.TextContentAsync("#update-error"));
+        Assert.True(await page.Locator("#update-indicator").IsVisibleAsync());
+        _updates.Snapshot = _updates.Snapshot with { Phase = "Idle", AvailableVersion = null, Error = null };
+        await WaitForTextAsync(page, "#update-status", "Aktuell");
+        Assert.Equal("", await page.TextContentAsync("#update-error"));
+        Assert.False(await page.Locator("#update-indicator").IsVisibleAsync());
+    }
+
+    [Fact]
+    public async Task Shared_status_polling_does_not_duplicate_or_overlap_requests()
+    {
+        await using var context = await _browser!.NewContextAsync();
+        await using var coverage = new BrowserCoverageCapture(context);
+        var page = await coverage.NewPageAsync();
+        await LoginManagementAsync(page);
+        var requests = 0;
+        var received = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        await context.RouteAsync("**/api/status", async route =>
+        {
+            Interlocked.Increment(ref requests);
+            received.TrySetResult();
+            await release.Task;
+            await route.ContinueAsync();
+        });
+        await page.GotoAsync($"{_baseAddress}/updates");
+        await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        try
+        {
+            await page.AddScriptTagAsync(new PageAddScriptTagOptions { Url = $"{_baseAddress}/_content/BeamerPresenter.Web/js/dashboard.js" });
+            await Task.Delay(TimeSpan.FromMilliseconds(2500));
+            Assert.Equal(1, Volatile.Read(ref requests));
+        }
+        finally { release.TrySetResult(); }
+        await WaitForTextAsync(page, "#update-status", "Bereit zur Installation");
+    }
+
+    private async Task LoginManagementAsync(IPage page)
+    {
+        await page.GotoAsync($"{_baseAddress}/login");
+        await page.FillAsync("#password", TestPassword);
+        await page.Locator("form[action='/account/login'] button[type='submit']").ClickAsync();
+        await page.WaitForURLAsync($"{_baseAddress}/");
     }
 
     [Fact]
