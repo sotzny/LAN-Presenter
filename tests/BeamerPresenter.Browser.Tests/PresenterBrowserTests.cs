@@ -17,7 +17,7 @@ using Microsoft.Playwright;
 
 namespace BeamerPresenter.Browser.Tests;
 
-public sealed class PresenterBrowserTests : IAsyncLifetime
+public sealed partial class PresenterBrowserTests : IAsyncLifetime
 {
     private const string TestPassword = "browser-test-password";
     private readonly string _dataDirectory = Path.Combine(Path.GetTempPath(), "BeamerPresenter.BrowserTests", Guid.NewGuid().ToString("N"));
@@ -120,7 +120,8 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
         Assert.Equal("OK", await page.TextContentAsync("#dashboard-ffprobe"));
         Assert.Equal("Bereit", await page.TextContentAsync("#dashboard-scanner"));
 
-        Assert.Equal(5, await page.Locator(".management-nav a").CountAsync());
+        Assert.Equal(6, await page.Locator(".management-nav a").CountAsync());
+        Assert.True(await page.GetByRole(AriaRole.Link, new() { Name = "Developer", Exact = true }).IsVisibleAsync());
         Assert.False(await page.Locator("#update-panel").IsVisibleAsync());
         Assert.True(await page.GetByText("AKTUELLE WIEDERGABE", new() { Exact = true }).IsVisibleAsync());
         Assert.False(await page.GetByText("Wiedergabe-Queue", new() { Exact = true }).IsVisibleAsync());
@@ -287,7 +288,8 @@ public sealed class PresenterBrowserTests : IAsyncLifetime
 
     private async Task LoginManagementAsync(IPage page)
     {
-        await page.GotoAsync($"{_baseAddress}/login");
+        var response = await page.GotoAsync($"{_baseAddress}/login");
+        Assert.Equal(200, response!.Status);
         await page.FillAsync("#password", TestPassword);
         await page.Locator("form[action='/account/login'] button[type='submit']").ClickAsync();
         await page.WaitForURLAsync($"{_baseAddress}/");

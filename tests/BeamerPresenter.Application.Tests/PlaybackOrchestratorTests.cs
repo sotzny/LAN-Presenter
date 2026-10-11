@@ -6,6 +6,54 @@ namespace BeamerPresenter.Application.Tests;
 public sealed class PlaybackOrchestratorTests
 {
     [Theory]
+    [InlineData(NewsMode.Ticker, NewsMode.SplitScreen)]
+    [InlineData(NewsMode.Ticker, NewsMode.Fullscreen)]
+    [InlineData(NewsMode.SplitScreen, NewsMode.Ticker)]
+    [InlineData(NewsMode.SplitScreen, NewsMode.Fullscreen)]
+    [InlineData(NewsMode.Fullscreen, NewsMode.Ticker)]
+    [InlineData(NewsMode.Fullscreen, NewsMode.SplitScreen)]
+    public async Task Redisplaying_edited_news_in_another_mode_removes_old_slot(NewsMode originalMode, NewsMode newMode)
+    {
+        var calls = new List<string>();
+        var settings = new StubSettingsService();
+        var orchestrator = new PlaybackOrchestrator(new PlaybackController(), new RecordingBrowser(calls), new RecordingPresenter(calls),
+            settings, new RecordingPowerManagement(calls), new PlaybackQueueService(new EmptyPlaybackStore(), new EmptyMediaLibrary(),
+                settings, new MediaSegmentPlanner(new ZeroRandomSource()), TimeProvider.System));
+        await orchestrator.ShowNewsAsync(new NewsItem { Id = 101, Title = "Original", Text = "Text", Mode = originalMode, Permanent = true });
+        var edited = new NewsItem { Id = 101, Title = "Bearbeitet", Text = "Text", Mode = newMode, Permanent = true };
+        Assert.True(await orchestrator.ShowNewsAndConfirmAsync(edited));
+        var display = await orchestrator.GetNewsDisplayAsync();
+        Assert.Equal(1, new[] { display.Main, display.Ticker }.Count(item => item?.Id == 101));
+        Assert.Equal("Bearbeitet", (newMode == NewsMode.Ticker ? display.Ticker : display.Main)!.Title);
+        await orchestrator.StopNewsAsync(101);
+        display = await orchestrator.GetNewsDisplayAsync();
+        Assert.Null(display.Main);
+        Assert.Null(display.Ticker);
+        await orchestrator.ShutdownAsync(default);
+    }
+
+    [Fact]
+    public async Task News_confirmation_reports_priority_rejection_and_suspended_mode_change_does_not_restore_old_copy()
+    {
+        var calls = new List<string>();
+        var settings = new StubSettingsService();
+        var orchestrator = new PlaybackOrchestrator(new PlaybackController(), new RecordingBrowser(calls), new RecordingPresenter(calls),
+            settings, new RecordingPowerManagement(calls), new PlaybackQueueService(new EmptyPlaybackStore(), new EmptyMediaLibrary(),
+                settings, new MediaSegmentPlanner(new ZeroRandomSource()), TimeProvider.System));
+        await orchestrator.ShowNewsAsync(new NewsItem { Id = 1, Title = "High", Text = "Text", Mode = NewsMode.Ticker, Permanent = true, Priority = 10 });
+        Assert.False(await orchestrator.ShowNewsAndConfirmAsync(new NewsItem { Id = 2, Title = "Low", Text = "Text", Mode = NewsMode.Ticker, Permanent = true }));
+        await orchestrator.StopTickerAsync();
+        await orchestrator.ShowNewsAsync(new NewsItem { Id = 3, Title = "Overlay", Text = "Text", Mode = NewsMode.SplitScreen, Permanent = true });
+        await orchestrator.ShowNewsAsync(new NewsItem { Id = 4, Title = "Fullscreen", Text = "Text", Mode = NewsMode.Fullscreen, Permanent = true });
+        Assert.False(await orchestrator.ShowNewsAndConfirmAsync(new NewsItem { Id = 5, Title = "Waiting", Text = "Text", Mode = NewsMode.SplitScreen, Permanent = true, Priority = -1 }));
+        Assert.True(await orchestrator.ShowNewsAndConfirmAsync(new NewsItem { Id = 3, Title = "Ticker", Text = "Text", Mode = NewsMode.Ticker, Permanent = true }));
+        await orchestrator.StopNewsAsync(4);
+        var display = await orchestrator.GetNewsDisplayAsync();
+        Assert.Null(display.Main);
+        Assert.Equal(3, display.Ticker?.Id);
+        await orchestrator.ShutdownAsync(default);
+    }
+    [Theory]
     [InlineData(PresenterState.Active, true)]
     [InlineData(PresenterState.Paused, false)]
     [InlineData(PresenterState.Hidden, false)]

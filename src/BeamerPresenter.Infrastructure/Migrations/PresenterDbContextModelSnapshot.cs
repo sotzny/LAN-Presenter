@@ -159,6 +159,12 @@ namespace BeamerPresenter.Infrastructure.Migrations
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(true);
 
+                    b.Property<string>("ApiKeyHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ApiKeySalt")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("AutomaticUpdatesEnabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")

@@ -344,24 +344,51 @@ public sealed class PlaybackOrchestrator(
         }, cancellationToken);
 
     public Task ShowNewsAsync(NewsItem item, CancellationToken cancellationToken = default) =>
+        ShowNewsAndConfirmAsync(item, cancellationToken);
+
+    public Task<bool> ShowNewsAndConfirmAsync(NewsItem item, CancellationToken cancellationToken = default) =>
         ExecuteSerializedAsync(async () =>
         {
             ArgumentNullException.ThrowIfNull(item);
             await EnsureDisplayActiveAsync(cancellationToken);
 
+            // A mode change must remove this ID from its previous slot, including a suspended overlay.
+            if (suspendedNews?.Id == item.Id) suspendedNews = null;
+            if (currentTicker?.Id == item.Id && item.Mode != NewsMode.Ticker)
+                await StopTickerCoreAsync(cancellationToken);
+            if (currentNews?.Id == item.Id && currentNews.Mode != item.Mode)
+            {
+                var wasFullscreen = currentNews.Mode == NewsMode.Fullscreen;
+                CancelNewsTimeout();
+                currentNews = null;
+                await presenter.HideNewsAsync(cancellationToken);
+                if (wasFullscreen)
+                {
+                    if (playback.State == PresenterState.Active) await presenter.PlayAsync(cancellationToken);
+                    currentNews = suspendedNews is null ? null : RestoreNews(new(suspendedNews, suspendedExpiresUtc));
+                    suspendedNews = null;
+                    if (currentNews is not null)
+                    {
+                        await presenter.ShowNewsAsync(currentNews, cancellationToken);
+                        ScheduleNewsTimeout(currentNews);
+                    }
+                }
+            }
+
             if (item.Mode == NewsMode.Ticker)
             {
                 await ShowTickerAsync(item, cancellationToken);
-                return;
+                return ReferenceEquals(currentTicker, item);
             }
 
             if (item.Mode == NewsMode.Fullscreen)
             {
                 await ShowFullscreenNewsAsync(item, cancellationToken);
-                return;
+                return ReferenceEquals(currentNews, item);
             }
 
             await ShowMainNewsAsync(item, cancellationToken);
+            return ReferenceEquals(currentNews, item);
         }, cancellationToken);
 
     private async Task ShowTickerAsync(NewsItem item, CancellationToken cancellationToken)

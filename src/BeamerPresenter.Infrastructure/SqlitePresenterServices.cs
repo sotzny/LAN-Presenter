@@ -15,7 +15,9 @@ public static class ServiceCollectionExtensions
     {
         Directory.CreateDirectory(dataDirectory);
         services.AddDbContextFactory<PresenterDbContext>(options => options.UseSqlite(PresenterDatabase.CreateConnectionString(dataDirectory)));
-        services.AddSingleton<IPresenterSettingsService, SqlitePresenterSettingsService>();
+        services.AddSingleton<SqlitePresenterSettingsService>();
+        services.AddSingleton<IPresenterSettingsService>(provider => provider.GetRequiredService<SqlitePresenterSettingsService>());
+        services.AddSingleton<IApiKeyService>(provider => provider.GetRequiredService<SqlitePresenterSettingsService>());
         services.AddSingleton<IMediaFolderService, SqliteMediaFolderService>();
         services.AddSingleton<IMediaLibraryService, SqliteMediaLibraryService>();
         services.AddSingleton<IYouTubeMediaStore, SqliteYouTubeMediaStore>();
@@ -275,10 +277,49 @@ internal sealed class PresenterBackupWorker(
     }
 }
 
-internal sealed class SqlitePresenterSettingsService(IDbContextFactory<PresenterDbContext> contextFactory) : IPresenterSettingsService
+internal sealed class SqlitePresenterSettingsService(IDbContextFactory<PresenterDbContext> contextFactory) : IPresenterSettingsService, IApiKeyService
 {
     private const int PasswordIterations = 600_000;
     private readonly SemaphoreSlim commandGate = new(1, 1);
+
+    public async Task<bool> HasKeyAsync(CancellationToken cancellationToken = default)
+    {
+        var settings = await GetAsync(cancellationToken);
+        return settings.ApiKeyHash is not null && settings.ApiKeySalt is not null;
+    }
+
+    public Task SetKeyAsync(string key, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(key) || key.Length is < 32 or > 512 || key.Any(character => char.IsWhiteSpace(character) || char.IsControl(character)))
+            throw new ArgumentException("Der API-Key muss 32 bis 512 Zeichen ohne Leer- oder Steuerzeichen enthalten.", nameof(key));
+        return ChangeKeyAsync(key, cancellationToken);
+    }
+
+    public Task DisableAsync(CancellationToken cancellationToken = default) => ChangeKeyAsync(null, cancellationToken);
+
+    private async Task ChangeKeyAsync(string? key, CancellationToken cancellationToken)
+    {
+        await commandGate.WaitAsync(cancellationToken);
+        try
+        {
+            await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+            var settings = await GetOrCreateAsync(context, cancellationToken);
+            var salt = key is null ? null : RandomNumberGenerator.GetBytes(32);
+            settings.ApiKeySalt = salt is null ? null : Convert.ToBase64String(salt);
+            settings.ApiKeyHash = key is null ? null : Convert.ToBase64String(Rfc2898DeriveBytes.Pbkdf2(key, salt!, PasswordIterations, HashAlgorithmName.SHA512, 64));
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        finally { commandGate.Release(); }
+    }
+
+    public async Task<bool> VerifyAsync(string key, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(key) || key.Length > 512) return false;
+        var settings = await GetAsync(cancellationToken);
+        if (settings.ApiKeyHash is null || settings.ApiKeySalt is null) return false;
+        var hash = Rfc2898DeriveBytes.Pbkdf2(key, Convert.FromBase64String(settings.ApiKeySalt), PasswordIterations, HashAlgorithmName.SHA512, 64);
+        return CryptographicOperations.FixedTimeEquals(hash, Convert.FromBase64String(settings.ApiKeyHash));
+    }
 
     public async Task<PresenterSettings> GetAsync(CancellationToken cancellationToken = default)
     {
@@ -490,6 +531,7 @@ internal sealed class SqliteNewsService(IDbContextFactory<PresenterDbContext> co
     private static void Validate(NewsItem item)
     {
         ArgumentNullException.ThrowIfNull(item);
+        if (!Enum.IsDefined(item.Mode)) throw new ArgumentException("Der News-Modus ist ungültig.", nameof(item));
         if (string.IsNullOrWhiteSpace(item.Title) || item.Title.Length > 200)
         {
             throw new ArgumentException("Der News-Titel muss zwischen 1 und 200 Zeichen lang sein.", nameof(item));

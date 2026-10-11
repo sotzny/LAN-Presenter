@@ -1236,3 +1236,9 @@ body .mud-button-text-secondary {
         opacity: .45;
     }
 }
+
+.developer-key-form { display: flex; gap: 1rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
+.developer-key-form input, .generated-key-page input { padding: .75rem; min-width: min(28rem, 80vw); }
+.generated-key-page { max-width: 48rem; margin: 4rem auto; padding: 2rem; background: var(--lan-surface); color: #e5eaf4; font-family: sans-serif; border-radius: 1rem; }
+.generated-key-page label { display: block; margin: 1rem 0; }
+.generated-key-page a { color: var(--lan-cyan); }

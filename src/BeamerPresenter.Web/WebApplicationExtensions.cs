@@ -24,6 +24,7 @@ public static class WebApplicationExtensions
     public static IServiceCollection AddPresenterWebUi(this IServiceCollection services)
     {
         services.AddRazorComponents();
+        services.AddHttpContextAccessor();
         services.AddMudServices();
         services.AddSignalR();
         services.AddSingleton<PresenterConnectionState>();
@@ -35,11 +36,21 @@ public static class WebApplicationExtensions
             options.LoginPath = "/login"; options.Cookie.Name = "BeamerPresenter.Auth"; options.Cookie.HttpOnly = true;
             options.Cookie.SameSite = SameSiteMode.Lax; options.SlidingExpiration = true; options.ExpireTimeSpan = TimeSpan.FromHours(12);
         });
-        services.AddAuthorization(); return services;
+        services.AddAuthorization();
+        services.AddManagementApi();
+        return services;
     }
 
     public static IEndpointRouteBuilder MapPresenterWebUi(this IEndpointRouteBuilder app)
     {
+        ((IApplicationBuilder)app).UseStatusCodePages(async status =>
+        {
+            if (status.HttpContext.Request.Path.StartsWithSegments("/api/v1"))
+                await Results.Problem(statusCode: status.HttpContext.Response.StatusCode,
+                    title: "Die API-Anfrage konnte nicht verarbeitet werden.").ExecuteAsync(status.HttpContext);
+        });
+        app.MapManagementApi();
+        app.MapDeveloperActions();
         app.MapPost("/account/login", (Delegate)LoginAsync).AllowAnonymous(); app.MapPost("/account/logout", (Delegate)LogoutAsync).RequireAuthorization();
         app.MapPost("/api/videos/upload", (Delegate)UploadAsync).RequireAuthorization();
         app.MapPost("/api/videos/set-enabled", (Delegate)SetVideoEnabledAsync).RequireAuthorization();
@@ -63,6 +74,7 @@ public static class WebApplicationExtensions
         app.MapPost("/api/youtube/next", (Delegate)PlayYouTubeNextAsync).RequireAuthorization();
         app.MapPost("/api/youtube/now", (Delegate)PlayYouTubeNowAsync).RequireAuthorization();
         app.MapPost("/api/news/create", (Delegate)CreateNewsAsync).RequireAuthorization();
+        app.MapPost("/api/news/update", (Delegate)UpdateNewsAsync).RequireAuthorization();
         app.MapPost("/api/news/show", (Delegate)ShowNewsAsync).RequireAuthorization();
         app.MapPost("/api/news/stop", (Delegate)StopNewsAsync).RequireAuthorization();
         app.MapPost("/api/news/stop-ticker", (Delegate)StopTickerAsync).RequireAuthorization();
@@ -528,8 +540,9 @@ public static class WebApplicationExtensions
 
             if (form.ContainsKey("showNow"))
             {
-                await commands.ShowNewsAsync(item, cancellationToken);
-                return Results.Redirect($"{NewsPath}?news=created-shown");
+                var result = await ManagementApiExtensions.CompleteNewsSaveAsync(item, true, commands, cancellationToken);
+                var feedback = result.DisplayError is not null ? "created-display-failed" : result.Displayed ? "created-shown" : "created-not-shown";
+                return Results.Redirect($"{NewsPath}?news={feedback}");
             }
 
             return Results.Redirect($"{NewsPath}?news=created");
@@ -538,6 +551,42 @@ public static class WebApplicationExtensions
         {
             return RedirectFailure(context, exception, NewsPath, "news", "Die News-Aktion ist fehlgeschlagen.");
         }
+    }
+
+    private static async Task<IResult> UpdateNewsAsync(HttpContext context, INewsService newsService,
+        INewsCommandService commands, Microsoft.AspNetCore.Antiforgery.IAntiforgery antiforgery, CancellationToken ct)
+    {
+        try { await antiforgery.ValidateRequestAsync(context); }
+        catch (Microsoft.AspNetCore.Antiforgery.AntiforgeryValidationException) { return Results.BadRequest(); }
+        try
+        {
+            var id = await ReadNewsIdAsync(context, ct);
+            var existing = await ManagementApiExtensions.RequireNewsAsync(id, newsService, ct);
+            var form = await context.Request.ReadFormAsync(ct);
+            if (!Enum.TryParse<NewsMode>(form["mode"], true, out var mode) || !Enum.IsDefined(mode) ||
+                !int.TryParse(form["priority"], out var priority)) throw new FormatException("Ungültige News-Felder.");
+            var item = new NewsItem
+            {
+                Id = id,
+                CreatedUtc = existing.CreatedUtc,
+                Title = form["title"].ToString().Trim(),
+                Text = form["text"].ToString().Trim(),
+                Mode = mode,
+                Duration = ParseOptionalTime(form[DurationField].ToString()),
+                Permanent = form.ContainsKey("permanent"),
+                ValidFrom = ParseOptionalDateTime(form["validFrom"].ToString()),
+                ValidUntil = ParseOptionalDateTime(form["validUntil"].ToString()),
+                Priority = priority
+            };
+            await newsService.UpdateAsync(item, ct);
+            var result = await ManagementApiExtensions.CompleteNewsSaveAsync(item, form.ContainsKey("showNow"), commands, ct);
+            var feedback = result.DisplayError is not null ? "updated-display-failed" :
+                !result.DisplayRequested ? "updated" : result.Displayed ? "updated-shown" : "updated-not-shown";
+            return Results.Redirect($"{NewsPath}?news={feedback}");
+        }
+        catch (ApiNotFoundException) { return Results.Redirect($"{NewsPath}?news=error"); }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException or FormatException)
+        { return RedirectFailure(context, exception, NewsPath, "news", "Die News-Aktion ist fehlgeschlagen."); }
     }
 
     private static async Task<IResult> ShowNewsAsync(
@@ -553,8 +602,8 @@ public static class WebApplicationExtensions
             return Results.Redirect($"{NewsPath}?news=error&message={Uri.EscapeDataString("News nicht gefunden")}");
         }
 
-        await commands.ShowNewsAsync(item, cancellationToken);
-        return Results.Redirect($"{NewsPath}?news=shown");
+        var displayed = await commands.ShowNewsAndConfirmAsync(item, cancellationToken);
+        return Results.Redirect($"{NewsPath}?news={(displayed ? "shown" : "not-shown")}");
     }
 
     private static async Task<IResult> StopNewsAsync(
@@ -726,7 +775,7 @@ public static class WebApplicationExtensions
             .CreateLogger("BeamerPresenter.Web")
             .LogWarning(exception, "Presenter request failed");
 
-    private static async Task<IResult> GetMediaPreviewAsync(
+    internal static async Task<IResult> GetMediaPreviewAsync(
         int mediaId,
         HttpContext context,
         IMediaLibraryService mediaLibraryService,

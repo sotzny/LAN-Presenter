@@ -1,0 +1,39 @@
+@using BeamerPresenter.Domain
+@using Microsoft.AspNetCore.Components.Forms
+
+<form method="post" action="@(Item is null ? "/api/news/create" : "/api/news/update")" class="news-form">
+    <AntiforgeryToken />
+    @if (Item is not null)
+    {
+        <input type="hidden" name="id" value="@Item.Id" />
+        <h3>@WebText.Get("News bearbeiten")</h3>
+    }
+    <label>@WebText.Get("Titel")<input name="title" maxlength="200" value="@Item?.Title" required /></label>
+    <label>@WebText.Get("Text")<textarea name="text" rows="4" maxlength="4000" required>@Item?.Text</textarea></label>
+    <div class="news-form-grid">
+        <label>@WebText.Get("Modus")
+            <select name="mode">
+                <option value="Ticker" selected="@(Item is null || Item.Mode == NewsMode.Ticker)">@WebText.Get("Ticker")</option>
+                <option value="SplitScreen" selected="@(Item?.Mode == NewsMode.SplitScreen)">@WebText.Get("Split-Screen 50:50")</option>
+                <option value="Fullscreen" selected="@(Item?.Mode == NewsMode.Fullscreen)">@WebText.Get("Fullscreen")</option>
+            </select>
+        </label>
+        <label>@WebText.Get("Dauer")<input name="duration" type="text" value="@(Item is null ? "00:05:00" : Item.Duration?.ToString("c", System.Globalization.CultureInfo.InvariantCulture))" /></label>
+        <label>@WebText.Get("Priorität")<input name="priority" type="number" value="@(Item?.Priority ?? 0)" min="-1000" max="1000" /></label>
+    </div>
+    <label class="news-checkbox"><input name="permanent" type="checkbox" value="true" checked="@(Item?.Permanent == true)" /> @WebText.Get("Permanent anzeigen")</label>
+    <div class="news-form-grid news-schedule-grid">
+        <label>@WebText.Get("Gültig ab") <span>@WebText.Get("(optional)")</span><input name="validFrom" type="datetime-local" value="@LocalDate(Item?.ValidFrom)" /></label>
+        <label>@WebText.Get("Gültig bis") <span>@WebText.Get("(optional)")</span><input name="validUntil" type="datetime-local" value="@LocalDate(Item?.ValidUntil)" /></label>
+    </div>
+    <div class="news-form-actions">
+        <button type="submit" name="showNow" value="true" class="news-create-button">@WebText.Get("Speichern & jetzt anzeigen")</button>
+        <button type="submit" class="news-save-button">@WebText.Get("Nur speichern")</button>
+        @if (Item is not null) { <a href="/news">@WebText.Get("Abbrechen")</a> }
+    </div>
+</form>
+
+@code {
+    [Parameter] public NewsItem? Item { get; set; }
+    private static string? LocalDate(DateTimeOffset? value) => value?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm", System.Globalization.CultureInfo.InvariantCulture);
+}
