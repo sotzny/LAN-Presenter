@@ -7,6 +7,8 @@ namespace BeamerPresenter.App;
 
 internal sealed class PresenterForm : Form
 {
+    private readonly TabControl _tabs = new() { Dock = DockStyle.Fill };
+    private readonly ToolTip _toolTip = new();
     private readonly IPresenterSettingsService _settingsService;
     private readonly IMediaFolderService _mediaFolderService;
     private readonly IFfprobeService _ffprobeService;
@@ -96,7 +98,12 @@ internal sealed class PresenterForm : Form
         _build.Text = buildInformation.BuildTimestampUtc?.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", System.Globalization.CultureInfo.InvariantCulture) ?? AppText.Get("Nicht verfügbar");
         _commit.Text = buildInformation.ShortGitCommitSha;
         _runtime.Text = buildInformation.RuntimeVersion;
-        Text = "Beamer Presenter for LAN-Parties"; MinimumSize = new Size(740, 800); StartPosition = FormStartPosition.CenterScreen;
+        Text = "Beamer Presenter for LAN-Parties";
+        AutoScaleDimensions = new SizeF(96, 96);
+        AutoScaleMode = AutoScaleMode.Dpi;
+        Size = new Size(780, 680);
+        MinimumSize = new Size(700, 610);
+        StartPosition = FormStartPosition.CenterScreen;
         Icon = _applicationIcon;
         Controls.Add(CreateContent()); FormClosing += OnFormClosing; Shown += async (_, _) =>
         {
@@ -132,6 +139,7 @@ internal sealed class PresenterForm : Form
     {
         if (disposing)
         {
+            _toolTip.Dispose();
             _firewallRevision++;
             _firewallCancellation?.Cancel();
             _firewallCancellation?.Dispose();
@@ -150,37 +158,151 @@ internal sealed class PresenterForm : Form
         return (Icon)icon.Clone();
     }
 
+    protected override void OnLoad(EventArgs e)
+    {
+        var area = Screen.FromControl(this).WorkingArea;
+        MinimumSize = new Size(Math.Min(MinimumSize.Width, area.Width), Math.Min(MinimumSize.Height, area.Height));
+        Size = new Size(Math.Min(Width, area.Width), Math.Min(Height, area.Height));
+        Location = new Point(Math.Clamp(Left, area.Left, area.Right - Width), Math.Clamp(Top, area.Top, area.Bottom - Height));
+        base.OnLoad(e);
+    }
+
     private TableLayoutPanel CreateContent()
     {
-        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(18), ColumnCount = 2, RowCount = 25, AutoScroll = true };
-        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 32)); root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 68));
-        AddRow(root, 0, AppText.Get("Version:"), _version); AddRow(root, 1, AppText.Get("Build:"), _build); AddRow(root, 2, AppText.Get("Commit:"), _commit); AddRow(root, 3, AppText.Get("Runtime:"), _runtime); AddRow(root, 4, AppText.Get("Presenter:"), _presenterStatus);
-        AddRow(root, 5, AppText.Get("Chrome-Status:"), _chromeStatus); AddRow(root, 6, AppText.Get("Monitor:"), _monitor); AddRow(root, 7, AppText.Get("Monitorstatus:"), _monitorStatus); AddRow(root, 8, AppText.Get("Chrome-Pfad:"), CreateChromePathControl()); AddRow(root, 9, AppText.Get("Presenter-Optionen:"), CreatePresenterOptionsControl());
-        AddRow(root, 10, AppText.Get("Autostart:"), _startWithWindows); AddRow(root, 11, AppText.Get("Web UI:"), _webUrl); AddRow(root, 12, AppText.Get("Web UI Port:"), _webPort); AddRow(root, 13, AppText.Get("Netzwerk:"), _allowLanAccess);
-        AddRow(root, 14, AppText.Get("Windows-Firewall:"), CreateFirewallControl());
-        AddRow(root, 15, AppText.Get("Videoordner:"), CreateMediaFolderControl()); AddRow(root, 16, AppText.Get("FFprobe-Pfad:"), CreateFfprobePathControl()); AddRow(root, 17, AppText.Get("FFprobe-Status:"), CreateFfprobeStatusControl()); AddRow(root, 18, AppText.Get("Web-Passwort:"), _password); AddRow(root, 19, AppText.Get("Passwort wiederholen:"), _passwordRepeat); AddRow(root, 20, AppText.Get("Schutzstatus:"), _passwordStatus);
-        AddRow(root, 21, AppText.Get("Sprache:"), _language);
+        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(12), ColumnCount = 1, RowCount = 2 };
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        root.Controls.Add(_tabs, 0, 0);
+
+        AddPage("Übersicht",
+            CreateColumns(
+                CreateStack(
+                    CreateGroup("Live-Status", ("Presenter:", _presenterStatus), ("Chrome-Status:", _chromeStatus)),
+                    CreateGroup("Allgemein", ("Sprache:", _language), ("Autostart:", _startWithWindows))),
+                CreateGroup("Anwendung", ("Version:", _version), ("Build:", _build), ("Commit:", _commit), ("Runtime:", _runtime))),
+            CreateGroup("Updates:", ("", CreateUpdateControl())));
+        AddPage("Presenter",
+            CreateGroup("Anzeige und Browser", ("Monitor:", _monitor), ("Monitorstatus:", _monitorStatus), ("Chrome-Pfad:", CreateChromePathControl())),
+            CreateGroup("Vordergrund", ("", CreateOptionsControl(_alwaysOnTop, _aggressiveTopmost))),
+            CreateGroup("Energie", ("", CreateOptionsControl(_preventDisplaySleep, _preventSystemSleep))));
+        AddPage("Medien",
+            CreateGroup("Videoordner:", ("", CreateMediaFolderControl())),
+            CreateGroup("Medienanalyse", ("FFprobe-Pfad:", CreateFfprobePathControl()), ("FFprobe-Status:", CreateFfprobeStatusControl())));
+        AddPage("Webzugriff",
+            CreateGroup("Verbindung", ("Web UI:", _webUrl), ("Web UI Port:", _webPort), ("Netzwerk:", _allowLanAccess)),
+            CreateColumns(
+                CreateGroup("Windows-Firewall:", ("", CreateFirewallControl())),
+                CreateGroup("Passwortschutz", ("Web-Passwort:", _password), ("Passwort wiederholen:", _passwordRepeat), ("Schutzstatus:", _passwordStatus)), leftPercent: 55));
         _language.Items.AddRange([
             new LanguageListItem(null, AppText.Get("Systemstandard")),
             new LanguageListItem("de", AppText.Get("Deutsch")),
             new LanguageListItem("en", AppText.Get("Englisch")),
             new LanguageListItem("es", AppText.Get("Spanisch"))
         ]);
-        _saveSettings.Click += async (_, _) => await SaveSettingsAsync(); root.Controls.Add(_saveSettings, 1, 22);
-        root.Controls.Add(new Label { AutoSize = true, Text = AppText.Get("Port-, Netzwerk- und Sprachänderungen gelten nach einem Neustart.") }, 1, 23);
-        AddRow(root, 24, AppText.Get("Updates:"), CreateUpdateControl()); return root;
+        var footer = new TableLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, ColumnCount = 2, Padding = new Padding(0, 10, 0, 0) };
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        var hint = new Label { AutoSize = true, ForeColor = SystemColors.GrayText, Text = AppText.Get("Port-, Netzwerk- und Sprachänderungen gelten nach einem Neustart."), Anchor = AnchorStyles.Left };
+        footer.Controls.Add(hint, 0, 0);
+        WrapLabel(hint);
+        _saveSettings.Click += async (_, _) => await SaveSettingsAsync();
+        footer.Controls.Add(_saveSettings, 1, 0);
+        root.Controls.Add(footer, 0, 1);
+        foreach (var control in new Control[] { _chromePath, _ffprobePath, _monitor })
+        {
+            control.TextChanged += (_, _) => _toolTip.SetToolTip(control, control.Text);
+        }
+        _monitor.SelectedIndexChanged += (_, _) => _toolTip.SetToolTip(_monitor, _monitor.SelectedItem?.ToString());
+        return root;
     }
+
+    private void AddPage(string title, params Control[] groups)
+    {
+        var page = new TabPage(AppText.Get(title)) { Padding = new Padding(10), UseVisualStyleBackColor = true };
+        var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = groups.Length + 1 };
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        for (var row = 0; row < groups.Length; row++)
+        {
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            layout.Controls.Add(groups[row], 0, row);
+        }
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        page.Controls.Add(layout);
+        _tabs.TabPages.Add(page);
+    }
+
+    private static TableLayoutPanel CreateStack(params Control[] groups)
+    {
+        var panel = new TableLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, ColumnCount = 1, RowCount = groups.Length, Margin = Padding.Empty };
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        for (var row = 0; row < groups.Length; row++)
+        {
+            panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            panel.Controls.Add(groups[row], 0, row);
+        }
+        return panel;
+    }
+
+    private static TableLayoutPanel CreateColumns(Control left, Control right, float leftPercent = 40)
+    {
+        var panel = new TableLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, ColumnCount = 2, RowCount = 1, Margin = Padding.Empty };
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, leftPercent));
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100 - leftPercent));
+        left.Margin = new Padding(0, 0, 6, 6);
+        panel.Controls.Add(left, 0, 0);
+        panel.Controls.Add(right, 1, 0);
+        return panel;
+    }
+
+    private static GroupBox CreateGroup(string title, params (string Label, Control Input)[] rows)
+    {
+        var group = new GroupBox { Text = AppText.Get(title).TrimEnd(':'), Dock = DockStyle.Fill, AutoSize = true, Padding = new Padding(10, 4, 10, 6), Margin = new Padding(0, 0, 0, 6) };
+        var table = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, ColumnCount = 2, RowCount = rows.Length };
+        table.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        for (var row = 0; row < rows.Length; row++)
+        {
+            table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            var (label, input) = rows[row];
+            input.Margin = new Padding(3, 2, 3, 2);
+            if (label.Length == 0)
+            {
+                table.Controls.Add(input, 0, row);
+                table.SetColumnSpan(input, 2);
+            }
+            else AddRow(table, row, AppText.Get(label), input);
+            if (input is Label text) WrapLabel(text);
+        }
+        group.Controls.Add(table);
+        return group;
+    }
+
+    private static void WrapLabel(Label label)
+    {
+        label.MaximumSize = Size.Empty;
+        label.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+        label.Parent!.Layout += (_, _) =>
+        {
+            var available = Math.Max(1, label.Parent.ClientSize.Width - label.Left - label.Margin.Right - label.Parent.Padding.Right);
+            if (label.MaximumSize.Width != available) label.MaximumSize = new Size(available, 0);
+        };
+    }
+
     private FlowLayoutPanel CreateUpdateControl()
     {
         var panel = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.TopDown, WrapContents = false };
         panel.Controls.Add(_updateStatus);
         panel.Controls.Add(_automaticUpdates);
+        var actions = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true };
+        panel.Controls.Add(actions);
+        WrapLabel(_updateStatus);
         foreach (var (label, action) in new (string, Func<CancellationToken, Task>)[] {
             ("Nach Updates suchen", _updates.CheckAsync), ("Sofort", _updates.InstallAsync), ("1 Stunde später", _updates.PostponeAsync) })
         {
             var button = new Button { AutoSize = true, Text = AppText.Get(label) };
             button.Click += async (_, _) => await RunUpdateActionAsync(action);
-            panel.Controls.Add(button);
+            actions.Controls.Add(button);
         }
         return panel;
     }
@@ -225,6 +347,8 @@ internal sealed class PresenterForm : Form
         panel.Controls.Add(_firewallStatus);
         panel.Controls.Add(actions);
         panel.Controls.Add(_firewallHint);
+        WrapLabel(_firewallStatus);
+        WrapLabel(_firewallHint);
         return panel;
     }
     private static void AddRow(TableLayoutPanel panel, int row, string label, Control input) { panel.Controls.Add(new Label { Text = label, AutoSize = true, Anchor = AnchorStyles.Left }, 0, row); panel.Controls.Add(input, 1, row); }
@@ -239,6 +363,10 @@ internal sealed class PresenterForm : Form
         actions.Controls.Add(remove);
         actions.Controls.Add(_includeSubdirectories);
         var panel = new TableLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, RowCount = 2, ColumnCount = 1 };
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 120));
+        panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        _mediaFolders.HorizontalScrollbar = true;
         panel.Controls.Add(_mediaFolders, 0, 0);
         panel.Controls.Add(actions, 0, 1);
         return panel;
@@ -265,13 +393,10 @@ internal sealed class PresenterForm : Form
         panel.Controls.Add(select, 1, 0);
         return panel;
     }
-    private FlowLayoutPanel CreatePresenterOptionsControl()
+    private static FlowLayoutPanel CreateOptionsControl(params CheckBox[] options)
     {
         var panel = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.TopDown, WrapContents = false };
-        panel.Controls.Add(_alwaysOnTop);
-        panel.Controls.Add(_aggressiveTopmost);
-        panel.Controls.Add(_preventDisplaySleep);
-        panel.Controls.Add(_preventSystemSleep);
+        panel.Controls.AddRange(options);
         return panel;
     }
     private FlowLayoutPanel CreateFfprobeStatusControl()
@@ -280,10 +405,13 @@ internal sealed class PresenterForm : Form
         check.Click += async (_, _) => await RefreshFfprobeStatusAsync();
         var install = new Button { Text = AppText.Get("FFmpeg installieren"), AutoSize = true };
         install.Click += async (_, _) => await InstallFfprobeAsync();
-        var panel = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true };
+        var panel = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.TopDown, WrapContents = false };
         panel.Controls.Add(_ffprobeStatus);
-        panel.Controls.Add(check);
-        panel.Controls.Add(install);
+        WrapLabel(_ffprobeStatus);
+        var actions = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true };
+        actions.Controls.Add(check);
+        actions.Controls.Add(install);
+        panel.Controls.Add(actions);
         return panel;
     }
     private ContextMenuStrip CreateTrayMenu()
@@ -457,9 +585,8 @@ internal sealed class PresenterForm : Form
         {
             Serilog.Log.Warning("FFprobe unavailable: {Error}", availability.Error);
         }
-        _ffprobeStatus.Text = availability.IsAvailable
-            ? $"✓ {availability.Version}"
-            : AppText.Get("✗ FFprobe ist nicht verfügbar. Details stehen im Log.");
+        _ffprobeStatus.Text = AppText.Get(availability.IsAvailable ? "✓ FFprobe verfügbar" : "✗ FFprobe ist nicht verfügbar. Details stehen im Log.");
+        _toolTip.SetToolTip(_ffprobeStatus, availability.IsAvailable ? availability.Version : _ffprobeStatus.Text);
     }
     private async Task InstallFfprobeAsync()
     {
@@ -469,19 +596,28 @@ internal sealed class PresenterForm : Form
         {
             Serilog.Log.Warning("FFprobe installation failed: {Error}", availability.Error);
         }
-        _ffprobeStatus.Text = availability.IsAvailable
-            ? $"✓ {availability.Version}"
-            : AppText.Get("✗ FFprobe ist nicht verfügbar. Details stehen im Log.");
+        _ffprobeStatus.Text = AppText.Get(availability.IsAvailable ? "✓ FFprobe verfügbar" : "✗ FFprobe ist nicht verfügbar. Details stehen im Log.");
+        _toolTip.SetToolTip(_ffprobeStatus, availability.IsAvailable ? availability.Version : _ffprobeStatus.Text);
     }
     private async Task SaveSettingsAsync()
     {
-        if (!int.TryParse(_webPort.Text, out var webPort) || webPort is < 1024 or > 65535) { MessageBox.Show(this, AppText.Get("Bitte einen Port zwischen 1024 und 65535 angeben."), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-        if (!string.IsNullOrWhiteSpace(_password.Text) && _password.Text != _passwordRepeat.Text) { MessageBox.Show(this, AppText.Get("Die Passwörter stimmen nicht überein."), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-        try { _startupRegistration.SetEnabled(_startWithWindows.Checked); } catch (UnauthorizedAccessException) { MessageBox.Show(this, AppText.Get("Der Windows-Autostart konnte nicht geändert werden."), Text, MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
-        if (_monitor.SelectedItem is not DisplayMonitorListItem selectedMonitor) { MessageBox.Show(this, AppText.Get("Bitte einen verfügbaren Monitor auswählen."), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+        if (!int.TryParse(_webPort.Text, out var webPort) || webPort is < 1024 or > 65535) { ShowSettingsWarning(_webPort, AppText.Get("Bitte einen Port zwischen 1024 und 65535 angeben."), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+        if (!string.IsNullOrWhiteSpace(_password.Text) && _password.Text != _passwordRepeat.Text) { ShowSettingsWarning(_passwordRepeat, AppText.Get("Die Passwörter stimmen nicht überein."), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+        try { _startupRegistration.SetEnabled(_startWithWindows.Checked); } catch (UnauthorizedAccessException) { ShowSettingsWarning(_startWithWindows, AppText.Get("Der Windows-Autostart konnte nicht geändert werden."), Text, MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
+        if (_monitor.SelectedItem is not DisplayMonitorListItem selectedMonitor) { ShowSettingsWarning(_monitor, AppText.Get("Bitte einen verfügbaren Monitor auswählen."), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
         var settings = await _settingsService.GetAsync(); settings.WebPort = webPort; settings.AllowLanAccess = _allowLanAccess.Checked; settings.LanguagePreference = (_language.SelectedItem as LanguageListItem)?.Code; settings.FfprobePath = string.IsNullOrWhiteSpace(_ffprobePath.Text) ? null : Path.GetFullPath(_ffprobePath.Text.Trim()); settings.ChromePath = string.IsNullOrWhiteSpace(_chromePath.Text) ? null : Path.GetFullPath(_chromePath.Text.Trim()); settings.MonitorDeviceName = selectedMonitor.DeviceName; settings.AlwaysOnTop = _alwaysOnTop.Checked; settings.AggressiveTopmost = _aggressiveTopmost.Checked; settings.PreventDisplaySleep = _preventDisplaySleep.Checked; settings.PreventSystemSleep = _preventSystemSleep.Checked; await _settingsService.SaveAsync(settings); if (!string.IsNullOrWhiteSpace(_password.Text)) await _settingsService.SetWebPasswordAsync(_password.Text);
         _password.Clear(); _passwordRepeat.Clear(); await LoadSettingsAsync(); MessageBox.Show(this, AppText.Get("Einstellungen gespeichert."), Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
+    private void ShowSettingsWarning(Control input, string message, string caption, MessageBoxButtons buttons, MessageBoxIcon icon)
+    {
+        for (Control? parent = input; parent is not null; parent = parent.Parent)
+        {
+            if (parent is TabPage page) { _tabs.SelectedTab = page; break; }
+        }
+        input.Focus();
+        MessageBox.Show(this, message, caption, buttons, icon);
+    }
+
     private bool TryGetFirewallPort(out int port) => int.TryParse(_webPort.Text, out port) && port is >= 1024 and <= 65535;
 
     private void ScheduleFirewallCheck()
