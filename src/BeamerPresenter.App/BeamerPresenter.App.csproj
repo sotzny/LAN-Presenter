@@ -9,6 +9,7 @@
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <ApplicationIcon>Assets\beamer-presenter.ico</ApplicationIcon>
   <Version>1.3.0</Version></PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +20,10 @@
     <ProjectReference Include="..\BeamerPresenter.Infrastructure\BeamerPresenter.Infrastructure.csproj" />
     <ProjectReference Include="..\BeamerPresenter.Updater\BeamerPresenter.Updater.csproj" />
     <ProjectReference Include="..\BeamerPresenter.Web\BeamerPresenter.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\beamer-presenter.ico" LogicalName="BeamerPresenter.App.ApplicationIcon" />
   </ItemGroup>
 
   <ItemGroup>
