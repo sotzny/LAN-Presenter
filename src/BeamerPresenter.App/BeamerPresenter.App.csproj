@@ -10,7 +10,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <ApplicationIcon>Assets\beamer-presenter.ico</ApplicationIcon>
-  <Version>1.6.0</Version></PropertyGroup>
+  <Version>1.7.0</Version></PropertyGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />

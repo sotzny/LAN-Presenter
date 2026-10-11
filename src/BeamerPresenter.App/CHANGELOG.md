@@ -1,4 +1,11 @@
 Beamerpresenter.App Changelog
+<a name="1.7.0"></a>
+## [1.7.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.7.0) (2026-10-11)
+
+### Features
+
+* **web:** add secured management API, Swagger and news editing ([fb9b6aa](https://www.github.com/sotzny/LAN-Presenter/commit/fb9b6aa0aae1c1d77f7dfa269729c2bd87552d38))
+
 <a name="1.6.0"></a>
 ## [1.6.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.6.0) (2026-10-11)
 
