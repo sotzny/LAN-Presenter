@@ -111,7 +111,7 @@ public static class WebApplicationExtensions
                 catch (Exception exception) { services.GetRequiredService<ILoggerFactory>().CreateLogger("Updates").LogWarning(exception, "Update action failed"); }
             }, CancellationToken.None);
         }
-        return Results.Redirect("/?update=requested");
+        return Results.Redirect("/updates?update=requested");
     }
 
     private static async Task<IResult> GetHealthAsync(

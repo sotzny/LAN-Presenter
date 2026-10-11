@@ -1,0 +1,37 @@
+@page "/updates"
+@using BeamerPresenter.Application
+@using Microsoft.AspNetCore.Components.Forms
+@using MudBlazor
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject IServiceProvider Services
+@inject TimeProvider Clock
+
+<MudPaper Elevation="0" Class="content-panel pa-6 update-panel" id="update-panel">
+    <MudText Typo="Typo.h5">@WebText.Get("Updates")</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2" id="update-versions">@WebText.Format("Installiert: {0} · Verfügbar: {1}", Snapshot?.InstalledVersion ?? "–", Snapshot?.AvailableVersion ?? "–")</MudText>
+    <p id="update-status" aria-live="polite">@WebText.Get(Snapshot?.Phase ?? "Nicht verfügbar")@(Snapshot?.Phase == "Downloading" ? $" {Snapshot.Progress}%" : "")</p>
+    <p id="update-countdown" class="update-detail">@Countdown</p>
+    <p id="update-error" class="update-error" role="alert">@WebText.Get(Snapshot?.Error ?? "")</p>
+    <p id="update-connection" class="update-detail" role="status" hidden>@WebText.Get("Updatestatus ist momentan nicht erreichbar.")</p>
+    <div class="presenter-controls update-actions">
+        <form method="post" action="/api/updates/check"><AntiforgeryToken /><button type="submit" id="update-check" disabled="@(Unavailable || Installing)">@WebText.Get("Nach Updates suchen")</button></form>
+        <form method="post" action="/api/updates/install"><AntiforgeryToken /><button type="submit" id="update-install" class="primary" disabled="@(Unavailable || Installing)">@WebText.Get("Sofort aktualisieren")</button></form>
+        <form method="post" action="/api/updates/postpone"><AntiforgeryToken /><button type="submit" id="update-postpone" disabled="@(Snapshot?.Phase != "Ready" || Snapshot?.AutomaticUpdatesEnabled != true)">@WebText.Get("1 Stunde später")</button></form>
+    </div>
+    <form method="post" action="/api/updates/settings" class="presenter-controls update-settings">
+        <AntiforgeryToken />
+        <label><input type="checkbox" name="enabled" value="true" id="update-automatic" checked="@(Snapshot?.AutomaticUpdatesEnabled ?? true)" disabled="@(Unavailable || Installing)" /> @WebText.Get("Automatische Updates")</label>
+        <button type="submit" disabled="@(Unavailable || Installing)">@WebText.Get("Speichern")</button>
+    </form>
+</MudPaper>
+
+@code {
+    private ApplicationUpdateSnapshot? Snapshot { get; set; }
+    private bool Unavailable => Snapshot is null;
+    private bool Installing => Snapshot?.Phase == "Installing";
+    private string Countdown => Snapshot?.InstallAtUtc is { } deadline
+        ? WebText.Format("Installation in {0} Sekunden", Math.Max(0, Math.Ceiling((deadline - Clock.GetUtcNow()).TotalSeconds)))
+        : "";
+
+    protected override void OnInitialized() => Snapshot = (Services.GetService(typeof(IApplicationUpdateService)) as IApplicationUpdateService)?.Current;
+}

@@ -91,6 +91,8 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         Assert.Contains("href=\"/playback\"", html, StringComparison.Ordinal);
         Assert.Contains("href=\"/media\"", html, StringComparison.Ordinal);
         Assert.Contains("href=\"/news\"", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/updates\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("id=\"update-panel\"", html, StringComparison.Ordinal);
         Assert.Contains("AKTUELLE WIEDERGABE", html, StringComparison.Ordinal);
         Assert.Contains("Gestoppt", html, StringComparison.Ordinal);
         Assert.Contains("\"Stopped\":\"Gestoppt\"", html, StringComparison.Ordinal);
@@ -114,7 +116,7 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         using var forged = await client.PostAsync("/api/updates/" + action, new FormUrlEncodedContent([]));
         Assert.Equal(HttpStatusCode.BadRequest, forged.StatusCode);
         Assert.Equal(0, _updates.Checks + _updates.Installs + _updates.Postpones);
-        using var page = await client.GetAsync("/");
+        using var page = await client.GetAsync("/updates");
         var html = await page.Content.ReadAsStringAsync();
         var token = System.Text.RegularExpressions.Regex.Match(html, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value;
         Assert.NotEmpty(token);
@@ -123,7 +125,7 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         using var valid = await client.PostAsync("/api/updates/" + action,
             new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = token, ["enabled"] = "false" }));
         Assert.Equal(HttpStatusCode.Redirect, valid.StatusCode);
-        Assert.Equal("/?update=requested", valid.Headers.Location!.OriginalString);
+        Assert.Equal("/updates?update=requested", valid.Headers.Location!.OriginalString);
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         while (action is "check" or "install" && _updates.Checks + _updates.Installs == 0) await Task.Delay(20, timeout.Token);
         using var status = await client.GetAsync("/api/status");
@@ -131,6 +133,82 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         Assert.Equal("1.2.0", document.RootElement.GetProperty("update").GetProperty("availableVersion").GetString());
         if (action == "settings") Assert.False(_updates.Current.AutomaticUpdatesEnabled);
         if (action == "postpone") Assert.InRange((_updates.Current.InstallAtUtc!.Value - DateTimeOffset.UtcNow).TotalMinutes, 59, 60);
+    }
+
+    [Theory]
+    [InlineData("127.0.0.1")]
+    [InlineData("192.168.10.42")]
+    public async Task Updates_page_requires_login_and_renders_shared_status_without_javascript(string remoteAddress)
+    {
+        using var client = _application!.GetTestClient();
+        client.DefaultRequestHeaders.Add("X-Test-Remote-IP", remoteAddress);
+        using var anonymous = await client.GetAsync("/updates");
+        Assert.Equal(HttpStatusCode.Redirect, anonymous.StatusCode);
+        Assert.Contains("/login", anonymous.Headers.Location!.OriginalString, StringComparison.Ordinal);
+        client.DefaultRequestHeaders.Add("Cookie", await LoginAsync(client));
+        using var page = await client.GetAsync("/updates");
+        var html = WebUtility.HtmlDecode(await page.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.OK, page.StatusCode);
+        Assert.Contains("id=\"update-panel\"", html, StringComparison.Ordinal);
+        Assert.Contains("Installiert: 1.1.1 · Verfügbar: 1.2.0", html, StringComparison.Ordinal);
+        Assert.Contains("Bereit zur Installation", html, StringComparison.Ordinal);
+        Assert.Contains("Installation in", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"__RequestVerificationToken\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("dashboard-presenter-state", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("id=\"update-indicator\" class=\"update-indicator\" hidden", html, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("/", true)]
+    [InlineData("/playback", true)]
+    [InlineData("/media", true)]
+    [InlineData("/news", true)]
+    [InlineData("/updates", true)]
+    [InlineData("/updates", false)]
+    public async Task Menu_renders_available_update_indicator_on_all_management_pages(string path, bool available)
+    {
+        _updates.Snapshot = _updates.Snapshot with { AvailableVersion = available ? "1.2.0" : null };
+        using var client = _application!.GetTestClient();
+        client.DefaultRequestHeaders.Add("Cookie", await LoginAsync(client));
+        using var page = await client.GetAsync(path);
+        var html = WebUtility.HtmlDecode(await page.Content.ReadAsStringAsync());
+        var indicator = System.Text.RegularExpressions.Regex.Match(html, "<span id=\"update-indicator\"[^>]*>").Value;
+        Assert.NotEmpty(indicator);
+        Assert.Equal(!available, indicator.Contains("hidden", StringComparison.Ordinal));
+        Assert.Contains("Update verfügbar", html, StringComparison.Ordinal);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "src=\"[^\"]*js/dashboard.js\""));
+    }
+
+    [Theory]
+    [InlineData("1.1.1")]
+    [InlineData("1.0.0")]
+    public async Task Restored_equal_or_older_available_version_does_not_mark_the_menu(string available)
+    {
+        _updates.Snapshot = _updates.Snapshot with { AvailableVersion = available, Phase = "Failed" };
+        using var client = _application!.GetTestClient();
+        client.DefaultRequestHeaders.Add("Cookie", await LoginAsync(client));
+        using var page = await client.GetAsync("/updates");
+        var html = await page.Content.ReadAsStringAsync();
+        var indicator = System.Text.RegularExpressions.Regex.Match(html, "<span id=\"update-indicator\"[^>]*>").Value;
+        Assert.Contains("hidden", indicator, StringComparison.Ordinal);
+        using var status = await client.GetAsync("/api/status");
+        using var document = JsonDocument.Parse(await status.Content.ReadAsStringAsync());
+        Assert.False(document.RootElement.GetProperty("update").GetProperty("hasAvailableUpdate").GetBoolean());
+    }
+
+    [Theory]
+    [InlineData("en-US", "Update now", "Update available", "Update status is currently unavailable.")]
+    [InlineData("es-ES", "Actualizar ahora", "Actualización disponible", "El estado de actualización no está disponible en este momento.")]
+    public async Task Updates_page_translates_actions_indicator_and_connection_notice(string culture, string action, string indicator, string notice)
+    {
+        using var client = _application!.GetTestClient();
+        client.DefaultRequestHeaders.Add("Cookie", await LoginAsync(client));
+        client.DefaultRequestHeaders.Add("X-Test-Culture", culture);
+        using var page = await client.GetAsync("/updates");
+        var html = WebUtility.HtmlDecode(await page.Content.ReadAsStringAsync());
+        Assert.Contains(action, html, StringComparison.Ordinal);
+        Assert.Contains(indicator, html, StringComparison.Ordinal);
+        Assert.Contains(notice, html, StringComparison.Ordinal);
     }
 
     [Theory]

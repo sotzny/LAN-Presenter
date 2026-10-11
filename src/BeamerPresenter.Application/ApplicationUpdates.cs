@@ -7,7 +7,11 @@ public sealed record UpdateAsset(string Name, string Url, long Size, string Sha2
 public sealed record ApplicationRelease(string Version, UpdateAsset Installer, UpdateAsset Portable);
 public sealed record PreparedUpdate(string Version, string PackagePath, bool Installed, string Sha256, long Size);
 public sealed record ApplicationUpdateSnapshot(string InstalledVersion, string? AvailableVersion, string Phase,
-    int Progress, DateTimeOffset? InstallAtUtc, bool AutomaticUpdatesEnabled, string? Error);
+    int Progress, DateTimeOffset? InstallAtUtc, bool AutomaticUpdatesEnabled, string? Error)
+{
+    public bool HasAvailableUpdate => StableReleaseVersion.Parse(AvailableVersion) is { } available
+        && Version.TryParse(InstalledVersion, out var installed) && available > installed;
+}
 public sealed record UpdatePersistentState(PreparedUpdate? Prepared = null, DateTimeOffset? InstallAtUtc = null,
     string? FailedVersion = null, string? Error = null);
 
