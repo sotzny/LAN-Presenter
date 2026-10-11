@@ -18,7 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BeamerPresenter.Web.Tests;
 
-public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
+public sealed partial class AuthenticatedWebRouteTests : IAsyncLifetime
 {
     private const string TestPassword = "integration-test-password";
     private readonly string _dataDirectory = Path.Combine(Path.GetTempPath(), "BeamerPresenter.Tests", Guid.NewGuid().ToString("N"));
@@ -43,6 +43,7 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         builder.Services.AddSingleton<IApplicationUpdateService>(_updates);
         builder.Services.AddSingleton<IPlaybackCommandService>(_playbackCommands);
         builder.Services.AddSingleton<INewsCommandService>(_playbackCommands);
+        builder.Services.AddSingleton<INewsDisplayState>(_playbackCommands);
         builder.Services.AddSingleton<IPresenterControlService>(_presenterControls);
 
         _application = builder.Build();
@@ -1312,7 +1313,7 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         }
     }
 
-    private sealed class RecordingPlaybackCommands : IPlaybackCommandService, INewsCommandService
+    private sealed class RecordingPlaybackCommands : IPlaybackCommandService, INewsCommandService, INewsDisplayState
     {
         public List<QueueCommand> NextCalls { get; } = [];
         public List<QueueCommand> NowCalls { get; } = [];
@@ -1323,6 +1324,17 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         public List<long> QueuedNowEntries { get; } = [];
         public TaskCompletionSource Advanced { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public List<NewsItem> ShownNews { get; } = [];
+        public bool ConfirmDisplay { get; set; } = true;
+        public bool FailDisplay { get; set; }
+        public TimeSpan? LastCurrentPosition { get; private set; }
+        public async Task<bool> ShowNewsAndConfirmAsync(NewsItem item, CancellationToken cancellationToken = default)
+        {
+            if (FailDisplay) throw new IOException("Internal path must not leak");
+            await ShowNewsAsync(item, cancellationToken);
+            return ConfirmDisplay;
+        }
+        public Task<NewsDisplaySnapshot> GetNewsDisplayAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new NewsDisplaySnapshot(ShownNews.LastOrDefault(item => item.Mode != NewsMode.Ticker), ShownNews.LastOrDefault(item => item.Mode == NewsMode.Ticker)));
         public int StopNewsCalls { get; private set; }
         public int StopTickerCalls { get; private set; }
 
@@ -1334,6 +1346,7 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
 
         public Task<QueueEntry> PlayNowAsync(int mediaId, TimeSpan? currentPosition, TimeSpan? start = null, TimeSpan? duration = null, CancellationToken cancellationToken = default)
         {
+            LastCurrentPosition = currentPosition;
             NowCalls.Add(new QueueCommand(mediaId, start, duration));
             return Task.FromResult(new QueueEntry { MediaId = mediaId, SourceType = MediaSourceType.Local });
         }
@@ -1358,6 +1371,7 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
 
         public Task<QueueEntry> PlayQueuedNowAsync(long queueEntryId, TimeSpan? currentPosition, CancellationToken cancellationToken = default)
         {
+            LastCurrentPosition = currentPosition;
             QueuedNowEntries.Add(queueEntryId);
             return Task.FromResult(new QueueEntry { Id = queueEntryId, SourceType = MediaSourceType.YouTube });
         }

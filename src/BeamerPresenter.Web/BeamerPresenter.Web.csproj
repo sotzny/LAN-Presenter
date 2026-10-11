@@ -15,6 +15,8 @@
   <ItemGroup>
     <InternalsVisibleTo Include="BeamerPresenter.Web.Tests" />
     <PackageReference Include="MudBlazor" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
     <ProjectReference Include="..\BeamerPresenter.Application\BeamerPresenter.Application.csproj" />
   </ItemGroup>
 

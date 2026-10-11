@@ -277,6 +277,21 @@
             <MudText Typo="Typo.h4">@WebText.Get("Einblendungen verwalten")</MudText>
             <MudText Typo="Typo.body1" Color="Color.Secondary">@WebText.Get("Ticker, Split-Screen und Fullscreen-Meldungen erstellen, planen und senden.")</MudText>
         </div>
+        @if (NewsResult is "updated" or "updated-shown" or "updated-not-shown" or "updated-display-failed" or "created-display-failed" or "created-not-shown" or "not-shown")
+        {
+            <MudAlert Severity="@(NewsResult is "updated-display-failed" or "created-display-failed" ? Severity.Warning : Severity.Success)">
+                @WebText.Get(NewsResult switch {
+                    "updated-shown" => "Die News wurde gespeichert und eingeblendet.",
+                    "updated-not-shown" or "created-not-shown" => "Die News wurde gespeichert. Die Anzeige wurde angefordert, ist aber durch eine andere News verdrängt.",
+                    "updated-display-failed" or "created-display-failed" => "Die News wurde gespeichert, die Anzeige ist jedoch fehlgeschlagen.",
+                    "not-shown" => "Die Anzeige wurde angefordert, ist aber durch eine andere News verdrängt.",
+                    _ => "Die News wurde gespeichert. Die laufende Anzeige wurde nicht aktualisiert." })
+            </MudAlert>
+        }
+        @if (EditNewsId.HasValue && EditedNews is null)
+        {
+            <MudAlert Severity="Severity.Error">@WebText.Get("News nicht gefunden")</MudAlert>
+        }
         @if (NewsResult == "created-shown")
         {
             <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@WebText.Get("Die News wurde gespeichert und wird jetzt auf dem Presenter angezeigt.")</MudAlert>
@@ -323,30 +338,7 @@
         </MudStack>
         <MudGrid Spacing="4">
             <MudItem xs="12" lg="5">
-                <form method="post" action="/api/news/create" class="news-form">
-                    <label>@WebText.Get("Titel")<input name="title" maxlength="200" required /></label>
-                    <label>@WebText.Get("Text")<textarea name="text" rows="4" maxlength="4000" required></textarea></label>
-                    <div class="news-form-grid">
-                        <label>@WebText.Get("Modus")
-                            <select name="mode">
-                                <option value="Ticker">@WebText.Get("Ticker")</option>
-                                <option value="SplitScreen">@WebText.Get("Split-Screen 50:50")</option>
-                                <option value="Fullscreen">@WebText.Get("Fullscreen")</option>
-                            </select>
-                        </label>
-                        <label>@WebText.Get("Dauer")<input name="duration" type="text" value="00:05:00" /></label>
-                        <label>@WebText.Get("Priorität")<input name="priority" type="number" value="0" min="-1000" max="1000" /></label>
-                    </div>
-                    <label class="news-checkbox"><input name="permanent" type="checkbox" value="true" /> @WebText.Get("Permanent anzeigen")</label>
-                    <div class="news-form-grid news-schedule-grid">
-                        <label>@WebText.Get("Gültig ab") <span>@WebText.Get("(optional)")</span><input name="validFrom" type="datetime-local" /></label>
-                        <label>@WebText.Get("Gültig bis") <span>@WebText.Get("(optional)")</span><input name="validUntil" type="datetime-local" /></label>
-                    </div>
-                    <div class="news-form-actions">
-                        <button type="submit" name="showNow" value="true" class="news-create-button">@WebText.Get("Speichern & jetzt anzeigen")</button>
-                        <button type="submit" class="news-save-button">@WebText.Get("Nur speichern")</button>
-                    </div>
-                </form>
+                <NewsEditor Item="EditedNews" />
             </MudItem>
             <MudItem xs="12" lg="7">
                 @if (_news.Count == 0)
@@ -371,6 +363,7 @@
                             <MudTd DataLabel="@WebText.Get("Laufzeit")">@(context.Permanent ? WebText.Get("Permanent") : FormatDuration(context.Duration))</MudTd>
                             <MudTd DataLabel="@WebText.Get("Aktion")">
                                 <div class="news-row-actions">
+                                    <a href="@($"/news?edit={context.Id}")">@WebText.Get("Bearbeiten")</a>
                                     <form method="post" action="/api/news/show"><input type="hidden" name="id" value="@context.Id" /><button type="submit">@WebText.Get("Jetzt anzeigen")</button></form>
                                     <form method="post" action="/api/news/delete"><input type="hidden" name="id" value="@context.Id" /><button type="submit" class="danger">@WebText.Get("Löschen")</button></form>
                                 </div>
@@ -581,6 +574,8 @@ else if (IsMedia)
     private bool IsPlayback => CurrentSection == "playback";
     private bool IsMedia => CurrentSection == "media";
     private bool IsNews => CurrentSection == "news";
+    [SupplyParameterFromQuery(Name = "edit")] public long? EditNewsId { get; set; }
+    private NewsItem? EditedNews => _news.SingleOrDefault(item => item.Id == EditNewsId);
 
     [Microsoft.AspNetCore.Components.SupplyParameterFromQuery(Name = "q")]
     public string? Search { get; set; }

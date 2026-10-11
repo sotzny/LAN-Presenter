@@ -15,13 +15,46 @@ Bei einer Veranstaltung soll der Beamer Inhalte zeigen, ohne dass jemand fortlau
 
 Die Wiedergabe lässt sich jederzeit pausieren, ausblenden, fortsetzen oder beenden. Für kurzfristige Ansagen können News als Lauftext, geteilter Bildschirm oder Vollbild eingeblendet werden.
 
+## Verwaltungs-API
+
+Im Menü **Developer** lässt sich ein API-Key erzeugen, selbst setzen, ersetzen oder deaktivieren. Ein erzeugter Key wird einmalig angezeigt. Gespeichert wird ausschließlich ein gesalzener PBKDF2-SHA512-Hash; eigene Keys benötigen 32 bis 512 Zeichen ohne Leer- oder Steuerzeichen. Ersetzen und Deaktivieren wirken sofort, auch ohne Neustart.
+
+Die JSON-API unter `/api/v1` bietet die Web-Funktionen für News, Presenter, Wiedergabe, Queue, Historie, Medien (einschließlich Upload) und YouTube. Jeder Aufruf benötigt den Header `X-API-Key`. Der Key erlaubt weder die Web-Anmeldung noch die Key-Verwaltung oder Software-Updates. Die API bleibt ohne eingerichteten Key gesperrt.
+
+**Swagger** unter `/swagger` verlangt die Web-Anmeldung. Über **Authorize** wird der API-Key für Testaufrufe eingetragen, ohne ihn dauerhaft im Browser zu speichern. Die **OpenAPI-Definition** unter `/openapi/v1.json` akzeptiert Web-Anmeldung oder API-Key. Swagger und seine Assets werden lokal bereitgestellt.
+
+```powershell
+curl.exe -H "X-API-Key: <API-KEY>" http://127.0.0.1:8765/api/v1/news
+curl.exe -X POST -H "X-API-Key: <API-KEY>" http://127.0.0.1:8765/api/v1/news/1/show
+```
+
+News werden mit `POST /api/v1/news` erstellt und mit `PUT /api/v1/news/{id}` bearbeitet. Beispiel:
+
+```json
+{
+  "title": "Turnierstart",
+  "text": "Bitte zur Turnierleitung kommen.",
+  "mode": "Ticker",
+  "durationSeconds": 120,
+  "permanent": false,
+  "priority": 0,
+  "showNow": true
+}
+```
+
+Zeitspannen und Positionen verwenden Sekunden, Zeitpunkte ISO 8601 mit Zeitzone, Modi benannte Werte (`Ticker`, `SplitScreen`, `Fullscreen`). `showNow` ist standardmäßig `false`. **Nur speichern** ersetzt keine laufende Anzeige; **Speichern & jetzt anzeigen** startet bei erfolgreicher Übernahme die Anzeigedauer neu. Geänderte Gültigkeitsfenster berücksichtigt der Scheduler weiterhin. Antworten unterscheiden `saved`, `displayRequested` und `displayed`: Eine durch Priorität oder Fullscreen verdrängte News ist nicht sichtbar. Scheitert das Anzeigen nach dem Speichern, enthält die HTTP-503-Problemantwort weiterhin `saved: true` und den gespeicherten News-Datensatz. Der Aufrufer kann anhand der ID gezielt erneut anzeigen, ohne die News nochmals anzulegen.
+
+API-Fehler liefern Problem Details und HTTP-Statuscodes, keine Login-Weiterleitungen oder internen Fehlertexte. Medienupload verwendet Multipart mit dem Feld `video` und dieselben Grenzen und Prüfungen wie die Webseite. Normales Desktop-Speichern überschreibt den API-Key nicht.
+
+Der Server bindet weiterhin standardmäßig an Loopback. LAN-Zugriff muss bewusst in den Desktop-Einstellungen aktiviert werden; Presenter-Ressourcen bleiben ausschließlich lokal. Über HTTP wird der Key unverschlüsselt übertragen. CORS bleibt deaktiviert.
+
 ## Funktionen
 
 - **Automatische Video-Queue:** lokale Videos werden erkannt, analysiert und nach konfigurierbaren Regeln für die Wiedergabe eingeplant.
 - **Kontrolle über den Browser:** Queue, Verlauf, Bibliothek, News und Presenter-Zustand sind in getrennten Verwaltungsbereichen erreichbar.
 - **Gezielte Wiedergabe:** Clips manuell sofort starten, als Nächstes einreihen, verschieben oder aus der Queue entfernen.
 - **YouTube-Import:** gültige YouTube-Links werden lokal geladen und nach der Medienanalyse in die Queue übernommen. Ganze Videos oder ausgewählte Segmente sind möglich.
-- **News-Einblendungen:** Meldungen als Ticker, 50:50-Split-Screen oder Vollbild erstellen, planen, priorisieren und anzeigen.
+- **News-Einblendungen:** Meldungen als Ticker, 50:50-Split-Screen oder Vollbild erstellen, bearbeiten, planen, priorisieren und anzeigen.
 - **Beamer-Steuerung:** Chrome startet im Kioskmodus auf dem gewählten Monitor. Aktivieren, Pause, Ausblenden und Stop lassen sich zentral steuern.
 - **Übersicht und Wiederherstellung:** Dashboard mit Live-Status, Medienanalyse und Scannerzustand; automatische Erholung bei Browser- oder Wiedergabeproblemen.
 - **Beamer-Vorschau:** Das Dashboard zeigt den gesamten ausgewählten Beamer-Monitor, einschließlich überdeckender Fenster. Umschaltbar zwischen einem Screenshot alle zehn Sekunden und Live mit einem Bild pro Sekunde, ohne Audio. Die Vorschau benötigt eine Anmeldung und pausiert bei verborgenem Browser-Tab; Aufnahmen bleiben ausschließlich im Arbeitsspeicher.

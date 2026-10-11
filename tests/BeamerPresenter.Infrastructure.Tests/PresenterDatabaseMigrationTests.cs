@@ -23,7 +23,7 @@ public sealed class PresenterDatabaseMigrationTests
 
             await using var connection = new SqliteConnection(PresenterDatabase.CreateConnectionString(dataDirectory));
             await connection.OpenAsync();
-            Assert.EndsWith("_AddAutomaticUpdates", await ReadAppliedMigrationAsync(connection), StringComparison.Ordinal);
+            Assert.EndsWith("_AddManagementApiKey", await ReadAppliedMigrationAsync(connection), StringComparison.Ordinal);
             Assert.Equal("YouTubeSourceKey", await ReadScalarAsync(connection,
                 "SELECT name FROM pragma_table_info('Videos') WHERE name = 'YouTubeSourceKey';"));
             Assert.Equal("LanguagePreference", await ReadScalarAsync(connection,
@@ -66,7 +66,7 @@ public sealed class PresenterDatabaseMigrationTests
 
             await using var connection = new SqliteConnection(PresenterDatabase.CreateConnectionString(dataDirectory));
             await connection.OpenAsync();
-            Assert.EndsWith("_AddAutomaticUpdates", await ReadAppliedMigrationAsync(connection), StringComparison.Ordinal);
+            Assert.EndsWith("_AddManagementApiKey", await ReadAppliedMigrationAsync(connection), StringComparison.Ordinal);
             Assert.Equal("1", await ReadScalarAsync(connection, "SELECT AutomaticUpdatesEnabled FROM Settings WHERE Id = 1;"));
             Assert.Equal("YouTubeSourceKey", await ReadScalarAsync(connection,
                 "SELECT name FROM pragma_table_info('Videos') WHERE name = 'YouTubeSourceKey';"));

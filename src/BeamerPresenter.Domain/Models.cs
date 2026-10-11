@@ -94,6 +94,8 @@ public sealed class PresenterSettings
     public int QueueTargetLength { get; set; } = DefaultQueueTargetLength;
     public string? PasswordHash { get; set; }
     public string? PasswordSalt { get; set; }
+    public string? ApiKeyHash { get; set; }
+    public string? ApiKeySalt { get; set; }
 }
 
 public sealed class VideoAsset

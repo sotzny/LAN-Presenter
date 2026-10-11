@@ -2,6 +2,14 @@ using BeamerPresenter.Domain;
 
 namespace BeamerPresenter.Application;
 
+public interface IApiKeyService
+{
+    Task<bool> HasKeyAsync(CancellationToken cancellationToken = default);
+    Task SetKeyAsync(string key, CancellationToken cancellationToken = default);
+    Task DisableAsync(CancellationToken cancellationToken = default);
+    Task<bool> VerifyAsync(string key, CancellationToken cancellationToken = default);
+}
+
 public interface IPresenterSettingsService
 {
     Task<PresenterSettings> GetAsync(CancellationToken cancellationToken = default);
@@ -216,6 +224,11 @@ public interface IPresenterControlService
 public interface INewsCommandService
 {
     Task ShowNewsAsync(NewsItem item, CancellationToken cancellationToken = default);
+    async Task<bool> ShowNewsAndConfirmAsync(NewsItem item, CancellationToken cancellationToken = default)
+    {
+        await ShowNewsAsync(item, cancellationToken);
+        return false;
+    }
     Task StopNewsAsync(long? newsId = null, CancellationToken cancellationToken = default);
     Task StopTickerAsync(CancellationToken cancellationToken = default);
 }

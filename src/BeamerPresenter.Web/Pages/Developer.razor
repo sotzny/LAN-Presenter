@@ -1,0 +1,56 @@
+@page "/developer"
+@using BeamerPresenter.Application
+@using Microsoft.AspNetCore.Components.Forms
+@using MudBlazor
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject IApiKeyService Keys
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor ContextAccessor
+
+<MudPaper Elevation="0" Class="content-panel pa-6">
+    <MudText Typo="Typo.h5">Developer</MudText>
+    <p>@WebText.Get("Die Verwaltungs-API steuert News, Presenter, Wiedergabe, Queue, Historie, Medien und YouTube. Software-Updates und die Key-Verwaltung bleiben auf der Webseite.")</p>
+    <p>@WebText.Get("Basisadresse"): <code>@BaseAddress/api/v1</code></p>
+    <p><a href="/swagger">Swagger</a> · <a href="/openapi/v1.json">OpenAPI JSON</a></p>
+    <p>@WebText.Get("Swagger verlangt die Web-Anmeldung. Für API-Aufrufe den Key über Authorize als X-API-Key eintragen. Die OpenAPI-Definition akzeptiert auch den API-Key.")</p>
+    <p>@WebText.Get("LAN-Zugriff wird ausschließlich in den Desktop-Einstellungen aktiviert. Über HTTP wird der Key unverschlüsselt übertragen.")</p>
+    <MudText Typo="Typo.h6">API-Key</MudText>
+    <p>@WebText.Get(HasKey ? "Ein API-Key ist eingerichtet." : "Kein API-Key eingerichtet. API-Zugriff ist deaktiviert.")</p>
+    @if (KeyResult is not null)
+    {
+        <MudAlert Severity="@(KeyResult == "invalid" ? Severity.Error : Severity.Success)">
+            @WebText.Get(KeyResult switch { "invalid" => "Der API-Key muss 32 bis 512 Zeichen ohne Leer- oder Steuerzeichen enthalten.", "disabled" => "API-Zugriff deaktiviert.", _ => "API-Key gespeichert. Der vorherige Key ist ungültig." })
+        </MudAlert>
+    }
+    <p>@WebText.Get("Ein Key gilt für alle API-Funktionen. Ersetzen und Deaktivieren wirken sofort. Der gespeicherte Key kann nicht ausgelesen werden.")</p>
+    <form method="post" action="/developer/key/generate" class="developer-key-form">
+        <AntiforgeryToken />
+        <button type="submit">@WebText.Get("Neuen API-Key erzeugen")</button>
+    </form>
+    <form method="post" action="/developer/key/set" class="developer-key-form">
+        <AntiforgeryToken />
+        <label>@WebText.Get("Eigenen API-Key setzen") <input type="password" name="key" minlength="32" maxlength="512" required autocomplete="new-password" /></label>
+        <button type="submit">@WebText.Get("Speichern und bisherigen Key ersetzen")</button>
+    </form>
+    <form method="post" action="/developer/key/disable" class="developer-key-form">
+        <AntiforgeryToken />
+        <button type="submit" disabled="@(!HasKey)">@WebText.Get("API-Zugriff deaktivieren")</button>
+    </form>
+    <MudText Typo="Typo.h6" Class="mt-6">@WebText.Get("Beispiele")</MudText>
+    <pre><code>curl -H "X-API-Key: &lt;API-KEY&gt;" "@BaseAddress/api/v1/news"</code></pre>
+    <pre><code>curl -X POST -H "X-API-Key: &lt;API-KEY&gt;" "@BaseAddress/api/v1/news/1/show"</code></pre>
+    <p>@WebText.Get("Dauer und Position werden in Sekunden angegeben, Zeitpunkte mit Zeitzone. News-Modi: SplitScreen, Ticker, Fullscreen. showNow ist standardmäßig false; beim Bearbeiten bleibt die laufende Anzeige bis zur ausdrücklichen Neuanzeige bestehen. Geänderte Gültigkeitsfenster berücksichtigt der Scheduler weiterhin.")</p>
+</MudPaper>
+
+@code {
+    [Microsoft.AspNetCore.Components.SupplyParameterFromQuery(Name = "key")]
+    public string? KeyResult { get; set; }
+    private bool HasKey;
+    private string BaseAddress = "";
+    protected override async Task OnInitializedAsync()
+    {
+        var context = ContextAccessor.HttpContext!;
+        context.Response.Headers.CacheControl = "no-store";
+        HasKey = await Keys.HasKeyAsync();
+        BaseAddress = $"{context.Request.Scheme}://{context.Request.Host}";
+    }
+}
