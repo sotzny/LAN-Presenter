@@ -1,4 +1,11 @@
 Beamerpresenter.App Changelog
+<a name="1.5.0"></a>
+## [1.5.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.5.0) (2026-10-11)
+
+### Features
+
+* **app:** organize settings in tabs without outer scrolling ([9ffd410](https://www.github.com/sotzny/LAN-Presenter/commit/9ffd4100e869bf07e6b7d63780c25fd488dcadb3))
+
 <a name="1.4.0"></a>
 ## [1.4.0](https://www.github.com/sotzny/LAN-Presenter/releases/tag/v1.4.0) (2026-10-11)
 
