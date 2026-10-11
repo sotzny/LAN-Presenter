@@ -59,6 +59,8 @@ Die stabilen Releases veröffentlichen einen Installer und eine portable Ausgabe
 
 Der Release-Workflow veröffentlicht stabile Versionen ab `v1.0.0`. Entwicklungs-Tags der Reihe `v0.x` erzeugen keinen GitHub-Release.
 
+Jeder GitHub-Release enthält die Änderungen aus dem von `versionize` erzeugten Changelog seit dem vorherigen veröffentlichten Release. Dabei werden auch Zwischenversionen ohne eigenen GitHub-Release berücksichtigt. Fehlen Changelog-Einträge oder enthält der Zeitraum keine Änderungen, bricht die Veröffentlichung ab.
+
 Beim ersten Start:
 
 1. Einen oder mehrere Medienordner festlegen.

@@ -20,6 +20,9 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet tool restore
+      - name: Verify release-note extraction
+        shell: pwsh
+        run: ./scripts/Test-ReleaseNotes.ps1
       - run: dotnet restore BeamerPresenterForLanParties.slnx --locked-mode
       - run: dotnet format BeamerPresenterForLanParties.slnx --verify-no-changes --no-restore
       - name: Set up Java for SonarQube

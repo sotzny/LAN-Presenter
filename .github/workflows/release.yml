@@ -20,6 +20,20 @@ jobs:
       - name: Set release version
         shell: pwsh
         run: '"VERSION=$($env:VERSION.TrimStart(''v''))" | Out-File -FilePath $env:GITHUB_ENV -Append'
+      - name: Prepare release notes from versionize changelog
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ./scripts/Test-ReleaseNotes.ps1
+          $releasesJson = gh api "repos/$env:GITHUB_REPOSITORY/releases" --paginate --slurp
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $previous = @($releasesJson | ConvertFrom-Json | ForEach-Object { $_ } |
+            Where-Object { !$_.draft -and !$_.prerelease -and $_.tag_name -match '^v[1-9]\d*\.\d+\.\d+$' } |
+            ForEach-Object { [version]$_.tag_name.TrimStart('v') } |
+            Where-Object { $_ -lt [version]$env:VERSION } | Sort-Object -Descending)
+          $previousVersion = if ($previous.Count) { $previous[0].ToString() } else { '0.0.0' }
+          ./scripts/New-ReleaseNotes.ps1 -Version $env:VERSION -PreviousVersion $previousVersion -Repository $env:GITHUB_REPOSITORY -OutputPath release-notes.md
       - run: dotnet restore BeamerPresenterForLanParties.slnx --locked-mode
       - run: dotnet format BeamerPresenterForLanParties.slnx --verify-no-changes --no-restore
       - run: dotnet build BeamerPresenterForLanParties.slnx -c Release --no-restore -p:Version=$env:VERSION
@@ -53,4 +67,4 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create $env:GITHUB_REF_NAME "BeamerPresenter-$env:VERSION-win-x64-portable.zip" "artifacts/BeamerPresenter-$env:VERSION-Setup.exe" --title "Beamer Presenter for LAN-Parties $env:VERSION" --generate-notes
+        run: gh release create $env:GITHUB_REF_NAME "BeamerPresenter-$env:VERSION-win-x64-portable.zip" "artifacts/BeamerPresenter-$env:VERSION-Setup.exe" --verify-tag --title "Beamer Presenter for LAN-Parties $env:VERSION" --notes-file release-notes.md

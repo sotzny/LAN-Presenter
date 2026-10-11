@@ -59,6 +59,8 @@ Stable releases provide an installer and a portable package. Open [Releases](htt
 
 The release workflow publishes stable versions starting with `v1.0.0`. Development tags in the `v0.x` series do not create a GitHub release.
 
+Each GitHub release includes changes from the `versionize` changelog since the previous published release, including intermediate versions without a separate GitHub release. Publication fails if the target version is missing from the changelog or the range contains no changes.
+
 On first run:
 
 1. Configure one or more media folders.
