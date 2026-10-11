@@ -115,8 +115,8 @@ public sealed class MediaScannerTests
 
             Assert.Equal(new MediaScanResult(0, 1, 1, 0), secondScan);
             var videos = await provider.GetRequiredService<IMediaLibraryService>().GetAllAsync();
-            Assert.True(videos.Single(video => video.FileName == "intro.mp4").IsAvailable);
-            Assert.False(videos.Single(video => video.FileName == "gameplay.mkv").IsAvailable);
+            Assert.Equal("intro.mp4", Assert.Single(videos).FileName);
+            Assert.True(videos[0].IsAvailable);
             Assert.Equal([topLevelVideo], probeQueue.Paths);
         }
         finally

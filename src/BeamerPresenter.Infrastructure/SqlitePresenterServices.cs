@@ -39,6 +39,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<INewsService, SqliteNewsService>();
         services.AddSingleton<SqliteMediaScanner>();
         services.AddSingleton<IMediaScanner>(provider => provider.GetRequiredService<SqliteMediaScanner>());
+        services.AddSingleton<IMediaCleanupService>(provider => provider.GetRequiredService<SqliteMediaScanner>());
         services.AddSingleton<IMediaScannerStatus>(provider => provider.GetRequiredService<SqliteMediaScanner>());
         services.AddSingleton<IFileStabilityChecker, FileStabilityChecker>();
         services.AddSingleton<MediaProbeQueue>();

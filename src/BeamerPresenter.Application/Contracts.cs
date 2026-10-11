@@ -33,6 +33,11 @@ public interface IMediaScanner
     Task<MediaScanResult> ScanAllAsync(CancellationToken cancellationToken = default);
 }
 
+public interface IMediaCleanupService
+{
+    Task<int> RemoveMissingAsync(int? mediaId = null, CancellationToken cancellationToken = default);
+}
+
 public sealed record MediaScanResult(int Added, int Updated, int Missing, int Unchanged);
 
 public interface IMediaScannerStatus

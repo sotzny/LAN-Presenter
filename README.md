@@ -29,6 +29,8 @@ Die Wiedergabe lässt sich jederzeit pausieren, ausblenden, fortsetzen oder been
 
 Unterstützte lokale Videoformate: `.mp4`, `.m4v`, `.mkv`, `.webm`, `.avi` und `.mov`.
 
+Fehlende Dateien werden beim Medienabgleich automatisch aus der Mediathek entfernt, sofern ihr aktiver Ordner vollständig durchsuchbar und weiterhin erreichbar ist. Bei abgezogenen Wechseldatenträgern oder Zugriffsproblemen bleiben die Einträge erhalten. Der Filter **Fehlt** sowie **Eintrag bereinigen** und **Alle fehlenden Einträge bereinigen** ermöglichen die manuelle Bereinigung auch solcher Einträge. Die Gesamtaktion gilt für die gesamte Mediathek unabhängig vom Suchfilter. Vorhandene Dateien und die Wiedergabehistorie bleiben erhalten.
+
 ## Updates und Beenden
 
 Desktop-Statusfenster, Tray und Web-Dashboard zeigen verfügbare Updates, Downloadfortschritt und Installationszeitpunkt. Die Anwendung prüft beim Start und alle sechs Stunden auf stabile GitHub-Releases. Automatische Updates sind standardmäßig aktiviert: Nach vollständig geprüftem Download beginnt ein fünfminütiger Countdown, auch bei laufender Wiedergabe.

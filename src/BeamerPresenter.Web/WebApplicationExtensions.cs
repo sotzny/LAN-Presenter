@@ -44,6 +44,8 @@ public static class WebApplicationExtensions
         app.MapPost("/api/videos/upload", (Delegate)UploadAsync).RequireAuthorization();
         app.MapPost("/api/videos/set-enabled", (Delegate)SetVideoEnabledAsync).RequireAuthorization();
         app.MapPost("/api/videos/reanalyze", (Delegate)ReanalyzeVideoAsync).RequireAuthorization();
+        app.MapPost("/api/videos/remove-missing", (Delegate)RemoveMissingVideoAsync).RequireAuthorization();
+        app.MapPost("/api/videos/cleanup-missing", (Delegate)CleanupMissingVideosAsync).RequireAuthorization();
         app.MapGet("/api/videos/{mediaId:int}/preview", (Delegate)GetMediaPreviewAsync).RequireAuthorization();
         app.MapPost("/api/queue/next", (Delegate)PlayNextAsync).RequireAuthorization();
         app.MapPost("/api/queue/now", (Delegate)PlayNowAsync).RequireAuthorization();
@@ -244,6 +246,51 @@ public static class WebApplicationExtensions
         return await ExecuteMediaCommandAsync(context,
             () => mediaLibrary.ReanalyzeAsync(id, cancellationToken),
             "reanalyzing");
+    }
+
+    private static Task<IResult> RemoveMissingVideoAsync(
+        HttpContext context,
+        IMediaCleanupService cleanup,
+        Microsoft.AspNetCore.Antiforgery.IAntiforgery antiforgery,
+        CancellationToken cancellationToken) =>
+        CleanupMissingAsync(context, cleanup, antiforgery, single: true, cancellationToken);
+
+    private static Task<IResult> CleanupMissingVideosAsync(
+        HttpContext context,
+        IMediaCleanupService cleanup,
+        Microsoft.AspNetCore.Antiforgery.IAntiforgery antiforgery,
+        CancellationToken cancellationToken) =>
+        CleanupMissingAsync(context, cleanup, antiforgery, single: false, cancellationToken);
+
+    private static async Task<IResult> CleanupMissingAsync(
+        HttpContext context,
+        IMediaCleanupService cleanup,
+        Microsoft.AspNetCore.Antiforgery.IAntiforgery antiforgery,
+        bool single,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await antiforgery.ValidateRequestAsync(context);
+        }
+        catch (Microsoft.AspNetCore.Antiforgery.AntiforgeryValidationException)
+        {
+            return Results.BadRequest();
+        }
+
+        int? mediaId = null;
+        if (single)
+        {
+            var form = await context.Request.ReadFormAsync(cancellationToken);
+            if (!int.TryParse(form["id"], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var id) || id <= 0)
+            {
+                return Results.BadRequest();
+            }
+            mediaId = id;
+        }
+
+        var removed = await cleanup.RemoveMissingAsync(mediaId, cancellationToken);
+        return Results.Redirect($"{MediaPath}?media=cleaned&removed={removed}");
     }
 
     private static async Task<IResult> ExecuteMediaCommandAsync(HttpContext context, Func<Task> command, string result)

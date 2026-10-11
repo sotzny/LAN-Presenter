@@ -188,6 +188,10 @@ Video ist in der Mediathek bereit.|Video ist in der Mediathek bereit.|The video 
 Video wird analysiert …|Video wird analysiert …|Analyzing video …|Analizando vídeo …
 Video wird lokal geladen …|Video wird lokal geladen …|Downloading video locally …|Descargando vídeo localmente …
 Videobibliothek|Videobibliothek|Video library|Biblioteca de vídeos
+Alle fehlenden Einträge bereinigen|Alle fehlenden Einträge bereinigen|Clean up all missing entries|Eliminar todas las entradas ausentes
+Eintrag bereinigen|Eintrag bereinigen|Clean up entry|Eliminar entrada
+{0} fehlende Einträge wurden aus der Mediathek entfernt.|{0} fehlende Einträge wurden aus der Mediathek entfernt.|{0} missing entries were removed from the media library.|Se eliminaron {0} entradas ausentes de la biblioteca multimedia.
+Nicht erreichbare Ordner bleiben automatisch erhalten. Manuelles Bereinigen entfernt auch deren fehlende Einträge, ohne Dateien zu löschen.|Nicht erreichbare Ordner bleiben automatisch erhalten. Manuelles Bereinigen entfernt auch deren fehlende Einträge, ohne Dateien zu löschen.|Entries in unavailable folders are kept automatically. Manual cleanup also removes their missing entries without deleting files.|Las entradas de carpetas no disponibles se conservan automáticamente. La limpieza manual también elimina sus entradas ausentes sin borrar archivos.
 Videobibliothek durchsuchen|Videobibliothek durchsuchen|Search video library|Buscar en la biblioteca de vídeos
 Videobibliothek nach Status filtern|Videobibliothek nach Status filtern|Filter video library by status|Filtrar biblioteca de vídeos por estado
 Videos gesamt|Videos gesamt|Total videos|Total de vídeos

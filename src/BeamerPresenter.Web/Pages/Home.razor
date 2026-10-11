@@ -401,6 +401,10 @@
         {
             <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@WebText.Get("Die Videoeinstellung wurde aktualisiert.")</MudAlert>
         }
+        else if (MediaResult == "cleaned")
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">@WebText.Format("{0} fehlende Einträge wurden aus der Mediathek entfernt.", RemovedCount ?? 0)</MudAlert>
+        }
         else if (MediaResult == "error")
         {
             <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@WebText.ForError(MediaMessage, "Die Videoaktion ist fehlgeschlagen.")</MudAlert>
@@ -440,11 +444,23 @@
                             <option value="ready" selected="@(MediaStatusFilter == "ready")">@WebText.Get("Bereit")</option>
                             <option value="analysis" selected="@(MediaStatusFilter == "analysis")">@WebText.Get("In Analyse")</option>
                             <option value="problems" selected="@(MediaStatusFilter == "problems")">@WebText.Get("Prüfen")</option>
+                            <option value="missing" selected="@(MediaStatusFilter == "missing")">@WebText.Get("Fehlt")</option>
                             <option value="disabled" selected="@(MediaStatusFilter == "disabled")">@WebText.Get("Deaktiviert")</option>
                         </select>
                         <button type="submit">@WebText.Get("Suchen")</button>
                     </form>
                 </MudStack>
+
+                @if (_videos.Any(video => !video.IsAvailable))
+                {
+                    <MudStack Spacing="2" Class="mb-4">
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">@WebText.Get("Nicht erreichbare Ordner bleiben automatisch erhalten. Manuelles Bereinigen entfernt auch deren fehlende Einträge, ohne Dateien zu löschen.")</MudText>
+                        <form method="post" action="/api/videos/cleanup-missing">
+                            <AntiforgeryToken />
+                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.DeleteSweep">@WebText.Get("Alle fehlenden Einträge bereinigen")</MudButton>
+                        </form>
+                    </MudStack>
+                }
 
                 @if (GetFilteredVideos().Count == 0)
                 {
@@ -517,6 +533,14 @@
                                             <form method="post" action="/api/videos/reanalyze">
                                                 <input type="hidden" name="id" value="@video.Id" />
                                                 <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh">@WebText.Get("Neu analysieren")</MudButton>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form method="post" action="/api/videos/remove-missing">
+                                                <AntiforgeryToken />
+                                                <input type="hidden" name="id" value="@video.Id" />
+                                                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text" Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.DeleteOutline">@WebText.Get("Eintrag bereinigen")</MudButton>
                                             </form>
                                         }
                                     </div>
@@ -600,6 +624,9 @@ else if (IsMedia)
     [Microsoft.AspNetCore.Components.SupplyParameterFromQuery(Name = "media")]
     public string? MediaResult { get; set; }
 
+    [SupplyParameterFromQuery(Name = "removed")]
+    public int? RemovedCount { get; set; }
+
     [Microsoft.AspNetCore.Components.SupplyParameterFromQuery(Name = "message")]
     public string? MediaMessage { get; set; }
 
@@ -679,6 +706,7 @@ else if (IsMedia)
         {
             "ready" => IsPlayable(video),
             "analysis" => video.Enabled && video.IsAvailable && video.ProbeStatus == MediaProbeStatus.Unknown,
+            "missing" => !video.IsAvailable,
             "problems" => video.Enabled && (!video.IsAvailable ||
                 video.ProbeStatus is MediaProbeStatus.Invalid or MediaProbeStatus.Missing or MediaProbeStatus.Unsupported ||
                 video.PlaybackStatus is MediaPlaybackStatus.Unsupported or MediaPlaybackStatus.Failed),

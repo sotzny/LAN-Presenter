@@ -515,6 +515,75 @@ public sealed class AuthenticatedWebRouteTests : IAsyncLifetime
         Assert.Equal("/media?media=reanalyzing", reanalyzeResponse.Headers.Location?.OriginalString);
     }
 
+    [Theory]
+    [InlineData("remove-missing", "127.0.0.1")]
+    [InlineData("cleanup-missing", "192.168.10.42")]
+    public async Task Missing_media_cleanup_requires_login_and_antiforgery_and_preserves_existing_files(string action, string remoteAddress)
+    {
+        var factory = _application!.Services.GetRequiredService<IDbContextFactory<PresenterDbContext>>();
+        var missing = CreateVideo("missing.mp4", "h264", MediaPlaybackStatus.Supported);
+        missing.FullPath = Path.Combine(_dataDirectory, "Disconnected", "missing.mp4");
+        missing.IsAvailable = false;
+        var otherMissing = CreateVideo("other.mp4", "h264", MediaPlaybackStatus.Supported);
+        otherMissing.FullPath = Path.Combine(_dataDirectory, "Disconnected", "other.mp4");
+        otherMissing.IsAvailable = false;
+        var present = CreateVideo("present.mp4", "h264", MediaPlaybackStatus.Supported);
+        present.FullPath = Path.Combine(_dataDirectory, "present.mp4");
+        await File.WriteAllBytesAsync(present.FullPath, [1, 2, 3]);
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            db.Videos.AddRange(missing, otherMissing, present);
+            await db.SaveChangesAsync();
+        }
+
+        var route = "/api/videos/" + action;
+        using var client = _application.GetTestClient();
+        client.DefaultRequestHeaders.Add("X-Test-Remote-IP", remoteAddress);
+        using var anonymous = await client.PostAsync(route, new FormUrlEncodedContent([]));
+        Assert.Equal(HttpStatusCode.Redirect, anonymous.StatusCode);
+        var cookie = await LoginAsync(client);
+        client.DefaultRequestHeaders.Add("Cookie", cookie);
+        using var forged = await client.PostAsync(route, new FormUrlEncodedContent([]));
+        Assert.Equal(HttpStatusCode.BadRequest, forged.StatusCode);
+        Assert.NotNull(await _application.Services.GetRequiredService<IMediaLibraryService>().GetByIdAsync(missing.Id));
+
+        using var page = await client.GetAsync("/media?mediaStatus=missing&q=missing.mp4");
+        var html = await page.Content.ReadAsStringAsync();
+        Assert.Contains("action=\"/api/videos/remove-missing\"", html, StringComparison.Ordinal);
+        Assert.Contains("action=\"/api/videos/cleanup-missing\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("present.mp4", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("other.mp4", html, StringComparison.Ordinal);
+        var token = System.Text.RegularExpressions.Regex.Match(html, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value;
+        Assert.NotEmpty(token);
+        var antiCookie = string.Join("; ", page.Headers.GetValues("Set-Cookie").Select(value => value.Split(';')[0]));
+        client.DefaultRequestHeaders.Remove("Cookie");
+        client.DefaultRequestHeaders.Add("Cookie", cookie + "; " + antiCookie);
+        if (action == "remove-missing")
+        {
+            using var malformed = await client.PostAsync(route, new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = token,
+                ["id"] = "-1"
+            }));
+            Assert.Equal(HttpStatusCode.BadRequest, malformed.StatusCode);
+        }
+        using var valid = await client.PostAsync(route, new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = token,
+            ["id"] = missing.Id.ToString(CultureInfo.InvariantCulture)
+        }));
+        Assert.Equal(HttpStatusCode.Redirect, valid.StatusCode);
+        var removedCount = action == "remove-missing" ? 1 : 2;
+        Assert.Equal($"/media?media=cleaned&removed={removedCount}", valid.Headers.Location?.OriginalString);
+        var library = _application.Services.GetRequiredService<IMediaLibraryService>();
+        Assert.Null(await library.GetByIdAsync(missing.Id));
+        Assert.NotNull(await library.GetByIdAsync(present.Id));
+        Assert.Equal(action == "remove-missing", await library.GetByIdAsync(otherMissing.Id) is not null);
+        Assert.True(File.Exists(present.FullPath));
+        using var resultPage = await client.GetAsync(valid.Headers.Location);
+        Assert.Contains($"{removedCount} fehlende Einträge", WebUtility.HtmlDecode(await resultPage.Content.ReadAsStringAsync()), StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task Authenticated_form_upload_redirects_to_success_message()
     {

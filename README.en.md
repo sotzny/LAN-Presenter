@@ -29,6 +29,8 @@ Playback can be paused, hidden, resumed, or stopped at any time. Announcements c
 
 Supported local video formats: `.mp4`, `.m4v`, `.mkv`, `.webm`, `.avi`, and `.mov`.
 
+Missing files are automatically removed from the library during reconciliation when their enabled folder was fully scanned and remains accessible. Entries on disconnected removable drives or in inaccessible folders are retained. The **Missing** filter, **Clean up entry**, and **Clean up all missing entries** allow manual cleanup of these records too. Bulk cleanup covers the entire library regardless of the search filter. Existing files and playback history are preserved.
+
 ## Updates and shutdown
 
 The desktop status window, tray and authenticated web dashboard show available updates, download progress and the installation deadline. Stable GitHub releases are checked at startup and every six hours. Automatic updates are enabled by default: a five-minute countdown starts after a fully verified download, including during playback.
