@@ -61,6 +61,7 @@ internal sealed class PresenterForm : Form
     private readonly ToolStripMenuItem _hidePresenter = new() { Text = AppText.Get("Presenter ausblenden") };
     private readonly ToolStripMenuItem _stopPresenter = new() { Text = AppText.Get("Presenter stoppen") };
     private readonly NotifyIcon _notifyIcon;
+    private readonly Icon _applicationIcon = LoadApplicationIcon();
     private readonly System.Windows.Forms.Timer _statusTimer = new() { Interval = 2000 };
     private readonly System.Windows.Forms.Timer _firewallTimer = new() { Interval = 500 };
     private CancellationTokenSource? _firewallCancellation;
@@ -96,6 +97,7 @@ internal sealed class PresenterForm : Form
         _commit.Text = buildInformation.ShortGitCommitSha;
         _runtime.Text = buildInformation.RuntimeVersion;
         Text = "Beamer Presenter for LAN-Parties"; MinimumSize = new Size(740, 800); StartPosition = FormStartPosition.CenterScreen;
+        Icon = _applicationIcon;
         Controls.Add(CreateContent()); FormClosing += OnFormClosing; Shown += async (_, _) =>
         {
             await LoadSettingsAsync();
@@ -121,7 +123,7 @@ internal sealed class PresenterForm : Form
         _checkFirewall.Click += async (_, _) => await RefreshFirewallAsync();
         _allowFirewall.Click += async (_, _) => await AllowFirewallAsync();
         var menu = CreateTrayMenu();
-        _notifyIcon = new NotifyIcon { Icon = SystemIcons.Application, Text = "Beamer Presenter for LAN-Parties", Visible = true, ContextMenuStrip = menu };
+        _notifyIcon = new NotifyIcon { Icon = _applicationIcon, Text = "Beamer Presenter for LAN-Parties", Visible = true, ContextMenuStrip = menu };
         _notifyIcon.DoubleClick += (_, _) => ShowFromTray();
         UpdatePresenterStatus();
     }
@@ -136,9 +138,18 @@ internal sealed class PresenterForm : Form
             _firewallTimer.Dispose();
             _statusTimer.Dispose();
             _notifyIcon.Dispose();
+            _applicationIcon.Dispose();
         }
         base.Dispose(disposing);
     }
+    private static Icon LoadApplicationIcon()
+    {
+        using var stream = typeof(PresenterForm).Assembly.GetManifestResourceStream("BeamerPresenter.App.ApplicationIcon")
+            ?? throw new InvalidOperationException("The application icon resource is missing.");
+        using var icon = new Icon(stream);
+        return (Icon)icon.Clone();
+    }
+
     private TableLayoutPanel CreateContent()
     {
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(18), ColumnCount = 2, RowCount = 25, AutoScroll = true };
